@@ -1,7 +1,7 @@
 ---
 title: "見積もりの3スタンス"
 emoji: "🔢"
-case: "idea" # tech: 技術記事 / idea: アイデア
+type: "idea" # tech: 技術記事 / idea: アイデア
 topics: ["見積もり"]
 published: true
 ---
