@@ -30,9 +30,9 @@ https://kentcdodds.com/blog/application-state-management-with-react#server-cache
 
 これらの参考記事は非常に勉強になるので時間のある方はそれぞれ一読することをお勧めします。ここで主張したいこととしては、多くの場合Stateは参照スコープやデータカテゴリによってStateを分類しているということです。
 
-ここに冒頭にあったように時間軸という観点を追加すると、Global Stateとまとめられているものには**生存期間が異なるものが混在している**ことがわかります。
-
 ## Stateライフタイム
+
+前述の分類に冒頭にあったように時間軸という観点を追加すると、これらの分類には**生存期間が異なるものが混在している**ことがわかります。例えばLocal Stateだけど変更のたびにsession storageに保存して`useEffect`で取得・復元することも可能です。session storageのkeyに復元可能な一意な値を指定することを考えれば、この例は実質的にGlobal Stateと見なすことができますが、先述の分類しか考えられてなかった時点では`useState`＝Local Stateと見なしてしまっていました。一方Global Stateでも同様に、一部の値をsession storageに保存するようなケースは十分考えられます。このことから前述の分類だけだと「生存期間が異なるものが混在している」ということになるわけです。
 
 e.g. アコーディオンの開閉
 
@@ -41,6 +41,9 @@ e.g. アコーディオンの開閉
 ### Javascript memory
 
 ### Browser history
+
+next.jsだと全部置き換えられてしまうので、使えなそう
+https://github.com/vercel/next.js/blob/fe3d6b7aed5e39c19bd4a5fbbf1c9c890e239ea4/packages/next/shared/lib/router/router.ts#L1432
 
 - Navigation API
 
@@ -54,6 +57,8 @@ e.g. アコーディオンの開閉
 ## State Managementライブラリを分類
 
 ## まとめ
+
+- 利用するライブラリの選定や、実装方針を考える時は時間軸によるStateの分類も考慮して考えよう。
 
 Todo
 
