@@ -1,0 +1,23 @@
+{
+  "name": "zenn-article",
+  "version": "1.0.0",
+  "description": "- [📘 How to use](https://zenn.dev/zenn/articles/zenn-cli-guide)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AkifumiSato/zenn-article.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AkifumiSato/zenn-article/issues"
+  },
+  "homepage": "https://github.com/AkifumiSato/zenn-article#readme",
+  "dependencies": {
+    "zenn-cli": "^0.1.110"
+  }
+}
