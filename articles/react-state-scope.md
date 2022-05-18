@@ -6,8 +6,7 @@ topics: ["react"]
 published: false
 ---
 
-ReactはじめSPAのStateは大きく3種類、ローカルState・グローバルState・サーバーStateの3種類、これでおおよそのStateの分類が可能であると考えていました。これに対し会社の先輩から「参照スコープだけでなく、時間的グローバルなStateもあるよね」という意見をもらい、非常に納得しました。この値
-の生存期間をRustから言葉を借りてStateの**ライフタイム**と呼称し、ライフタイム別にStateを再分類しState戦略について自分なりに考察したいと思います。
+ReactはじめSPAのStateは大きく3種類、ローカルState・グローバルState・サーバーStateの3種類、これでおおよそのStateの分類が可能であると考えていました。これに対し会社の先輩から「参照スコープだけでなく、時間的グローバルなStateもあるよね」という意見をもらい、非常に納得しました。この値の生存期間をRustから言葉を借りてStateの**ライフタイム**と呼称し、ライフタイム別にStateを再分類しState戦略について自分なりに考察したいと思います。
 
 Reactで何かしらのStateを実装する時に、本稿の分類が実装の参考になれば幸いです。
 
@@ -19,8 +18,8 @@ Rustのライフタイムはコンパイラによってチェックされる機�
 
 まずこれまで自分が認識してた参照スコープにおけるStateの分類について触れておきます。以下の3種類で分類可能と考えていました。
 
-- **Local State**: これは`useState`を利用することとほぼ同義です。コンポーネントがアンマウントされるまで生存する状態のことです。
-- **Global State**: 複数のコンポーネントから参照されうるStateです。ReduxやRecoil、Context APIなどを通じて管理されることが多いかと思います。 
+- **Local State**: コンポーネント単位のStateで、`useState`で管理します。コンポーネントがアンマウントされるまで生存します。
+- **Global State**: 複数のコンポーネントから参照されうる、もしくはSPAのページ遷移を跨いで保持するStateです。ReduxやRecoil、Context APIなどを通じて管理されることが多いかと思います。
 - **Server State**: クライアントサイドでキャッシュしてるAPIサーバーからのレスポンス値などです。SWRやReact Queryの内部で管理されてるものなどを指します。
 
 細かい用語は違えど、以下の参考リンクではそれぞれ同じよう分類を行っています。
@@ -35,13 +34,30 @@ Remixのコントリビュータのブログでは、Local/Globalなどの分類
 
 https://kentcdodds.com/blog/application-state-management-with-react#server-cache-vs-ui-state
 
-これらの参考記事は非常に勉強になるので時間のある方はそれぞれ一読することをお勧めします。ここで主張したいこととしては、多くの場合Stateは参照スコープやデータカテゴリによってStateを分類しているということです。
+これらの参考記事は非常に勉強になるので時間のある方はそれぞれ一読することをお勧めします。ここで主張したいこととしては、多くの場合参照スコープやデータカテゴリによってStateは分類されているということです。
 
-## ライフタイムの定義と重要性
+## ライフタイムと参照スコープ
 
-前述の分類に冒頭にあったように時間軸という観点を追加すると、これらの分類には**生存期間が異なるものが混在している**ことがわかります。例えばLocal Stateだけど変更のたびにsession storageに保存して`useEffect`で取得・復元することも可能です。session storageのkeyに復元可能な一意な値を指定することを考えれば、このStateは実質的にGlobal Stateと見なすことができますが、先述の分類しか考えられてなかった時点では`useState`=Local Stateと見なしてしまっていました。一方Global Stateでも同様に、一部の値をsession storageに保存するようなケースは十分考えられます。
+一方Stateのライフタイムを意識して再度参照スコープの分類を考えてみると、分類がややこしいケースがあることに気づくことでしょう。例としてあるStateをSession Storageに同期する例を考えてみましょう。
 
-このように先の分類のStateには実際には生存期間が異なるものが混在しており、時間軸に対する考慮や共通認識の欠落が起きやすい状態にあります。この生存期間を改めて認識・共有するために、生存期間を**ライフタイム**と呼称し、以降ではライフタイムによるStateを再分類してみます。
+```ts
+const useCount = () => {
+  const [count, setCount] = React.useState(0);
+  React.useEffect(() => {
+    if (count === 0) {
+      const value = parseInt(sessionStorage.getItem('count')) ?? 0
+      setCount(value)
+    } else {
+      sessionStorage.setItem('count', count)
+    }
+  }, [count])
+  return { count, setCount }
+}
+```
+
+これは「SPAのページ遷移を跨いで保持するState」というGlobal Stateの定義と照らし合わせても相違ないので、Global Stateです。一方`useState`で管理しているので、Local Stateを拡張しているように思える方もいるでしょう。これは「Local Stateは`useState`で管理する」の逆条件である「`useState`を使ってるからLocal State」は必ずしも成り立たないという例です。
+
+このように、ライフタイムを意識すると分類がややこしいものがGlobal Stateに含まれていることがわかります。以降ではこのライフタイムによるStateの再分類を行ってみます。
 
 ### Rustにおけるライフタイム
 
@@ -132,7 +148,7 @@ Stateはライフタイムによって大きく以下5つに分類できます�
 
 ### 3. Browser history
 
-**Browser history**はブラウザの履歴が破棄されるまで、実装的には[history.push](https://developer.mozilla.org/ja/docs/Web/API/History/pushState) によって履歴に対してObjectが関連付けられるので、このObjectが破棄されるまでになります。実際にObjectが破棄されるタイミングはブラウザの実装によりそうですが、documentが非アクティブなタイミングで破棄されうるようです。
+**Browser history**はブラウザの履歴が破棄されるまで、実装的には[history.push](https://developer.mozilla.org/ja/docs/Web/API/History/pushState) や[replaceState](https://developer.mozilla.org/ja/docs/Web/API/History/replaceState) によって履歴に対してObjectが関連付けられるので、このObjectが破棄されるまでになります。実際にObjectが破棄されるタイミングは以下仕様を確認した限りブラウザの実装によりそうですが、documentが非アクティブなタイミングで破棄されうるようです。
 
 https://triple-underscore.github.io/HTML-history-ja.html#session-history
 
@@ -145,16 +161,17 @@ https://github.com/vercel/next.js/blob/fe3d6b7aed5e39c19bd4a5fbbf1c9c890e239ea4/
 - session
 - local
 
-### 5. Logical
-
-- expireなど
-
 ## State Managementライブラリを分類
 
 ## まとめ
 
-- 利用するライブラリの選定や、実装方針を考える時は時間軸によるStateの分類も考慮して考えよう。
-
-Todo
-
-- 図で主要ライブラリを分類
+- Global Stateには時間的Globalなものが含まれている
+- 一方で時間軸でみると本来Historyに紐づいてて欲しいStateもある
+  - アコーディオン開いて遷移して戻ったら開いてて欲しいよね？
+  - でも開いて回遊して戻ってきて開いてるってなんか不思議
+- Stateをライフタイムで再分類してみる
+- 再分類した上で、最適と考える実装例
+  - いつRecoilなのか、いつuseStateなのか
+- Historyに紐づくState管理はNextはしづらい
+  - scroll 
+  - PR出してる
