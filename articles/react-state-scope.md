@@ -132,11 +132,13 @@ Stateはライフタイムによって大きく以下5つに分類できます�
 
 ### 3. Browser history
 
+**Browser history**はブラウザの履歴が破棄されるまで、実装的には[history.push](https://developer.mozilla.org/ja/docs/Web/API/History/pushState) によって履歴に対してObjectが関連付けられるので、このObjectが破棄されるまでになります。実際にObjectが破棄されるタイミングはブラウザの実装によりそうですが、documentが非アクティブなタイミングで破棄されうるようです。
+
+https://triple-underscore.github.io/HTML-history-ja.html#session-history
+
 ちなみにnext.jsだと内部的に`replaceState`で全て独自のObjectで置き換えられてしまうため、実質利用できないようです。
 
 https://github.com/vercel/next.js/blob/fe3d6b7aed5e39c19bd4a5fbbf1c9c890e239ea4/packages/next/shared/lib/router/router.ts#L1432
-
-- Navigation API
 
 ### 4. Browser storage
 
