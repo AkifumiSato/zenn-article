@@ -9,28 +9,24 @@ published: false
 ReactはじめSPAのStateは大きく2種類、Local State・Global Stateの2種類でおおよそのStateの分類が可能であると考えていました。これに対し会社の先輩から意見をもらって、以下2点に気づきました。
 
 - Global Stateには大きく、**UI State**と**Server State**の2つがある
-- Global Stateにはスコープ的Globalな意味合いと時間的Globalな意味合いが含まれている
+- Stateには**ライフタイム**（生存期間）が存在し、Global Stateにはスコープ的Globalと**時間的Global**の2つが含まれている
 
-なんとなくで実装してしまってたのでこの3種類のStateの分類を整理し、さらにこの値の生存期間をRustから言葉を借りてStateの**ライフタイム**と呼称し、ライフタイム別にStateを再分類しState戦略について自分なりに考察したいと思います。
-
-Reactで何かしらのStateを実装する時に、本稿の分類が実装の参考になれば幸いです。
-
-:::message
-Rustのライフタイムはコンパイラによってチェックされる機能名を兼ねていますが、ここではスコープとは別の分類軸のための概念として表記しています。
-:::
+これらを意識すると、自分はStateの実装を結構感覚的にやってしまっていたなと気づいたので、Stateの分類について改めてまとめてみようと思います。Reactで何かしらのStateを実装する時に、本稿の分類が実装の参考になれば幸いです。
 
 ## スコープによるStateの分類
 
-まずこれまで自分が認識してた参照スコープにおけるStateの分類について触れておきます。以下の2種類で分類可能と考えていました。
+まずこれまで自分が認識してたスコープにおけるStateの分類について触れておきます。以下の2種類で分類可能と考えていました。
 
-- **Local State**: コンポーネント単位のStateで、`useState`で管理します。コンポーネントがアンマウントされるまで生存します。
-- **Global State**: 複数のコンポーネントから利用されうる、もしくはページを跨いで利用するState。APIレスポンスやUIの状態などで、ReduxやRecoil、Context APIなどを通じて管理されることが多いかと思います。
+- **Local State**: コンポーネント単位のState。`useState`によって管理し、コンポーネントがアンマウントされるまで生存する。
+- **Global State**: 複数のコンポーネントから利用されうる、もしくはページを跨いで利用するState。APIレスポンスやUIの状態などで、ReduxやRecoil、Context APIなどを通じて管理されることが多い。
 
-RecoilやRedux tool kitなどを使ってると、APIレスポンスとUIの状態を同じライブラリで管理できるのでこのように考えていたわけですが、本稿の1つ目の主題は先述の通り、Global Stateと一纏めにしてしまっているものが**Global State**と**Server State**に分離できるということです。分離後の定義は以下です。
+RecoilやRedux tool kitなどを使ってると、APIレスポンスとUIの状態を同じライブラリで管理できるのでこのように考えていたわけですが、先述の通りGlobal Stateと一纏めにしてしまっているものは**Global State**と**Server State**に分離できます。分離後の定義は以下です。
 
-- **Local State**: コンポーネント単位のState。`useState`で管理します。コンポーネントがアンマウントされるまで生存します。
-- **UI State**: 複数のコンポーネントから利用されうる、もしくはページを跨いで利用するState。~~APIレスポンスや~~UIの状態などで、ReduxやRecoil、Context APIなどを通じて管理されることが多いかと思います。
-- **Server State**: クライアントサイドでキャッシュしてるAPIサーバーからのレスポンス値などです。SWRやReact Queryの内部で管理されてるものなどを指します。捉え方次第では、APIに保存されている状態も同様にServer Stateと見なすこともできます。
+- **Local State**: コンポーネント単位のState。`useState`によって管理し、コンポーネントがアンマウントされるまで生存する。
+- **UI State**: 複数のコンポーネントから利用されうる、もしくはページを跨いで利用するState。~~APIレスポンスや~~UIの状態などで、ReduxやRecoil、Context APIなどを通じて管理されることが多い。
+- **Server State**: APIサーバーからのレスポンスやそのキャッシュ。SWRやReact Queryの内部で管理されてるものなどを指す。
+
+UI Stateはクライアントサイドに閉じたスコープですが、Server Stateはクライアントサイドからサーバーサイドまで含む、非常に大きなスコープのStateです。UI Stateは基本内部実装で完結しますが、Server Stateは当然fetchなどを介すため、UI StateとServer Stateは同じGlobal Stateで括られていましたが実装は大きく異なります。
 
 以下参考記事です。
 
@@ -50,13 +46,13 @@ Remixのコントリビュータのブログでは、Local/Globalなどの分類
 
 ### State分類とライブラリ
 
-ここで主張したいこととしては、UI StateとServer Stateは同じライブラリで扱うこともできますが、**それぞれ用途に応じて別々に選択するという手段もある**ということです。具体的には
+前述の通り、UI StateとServer Stateは実装が大きく異なるのでそれぞれ個別に実装戦略を練ることができます。個人的には以下のような実装（ライブラリ選定）がお勧めです。
 
 - Local State: React.useState
 - UI State: Recoil
 - Server State: SWR
 
-というような選択などです。Recoilでもasync selectorを使えばSWRのようにAPIレスポンスのキャッシュなどを扱うこともできますが、技術選定としてはそれぞれ用途ごとに分けるという選択肢もあるということです。個人的には上記例にあげたように、RecoilとSWRを併用して実装するのがおすすめです。Recoilのasync selectorは実装がSWRより少々冗長な気がするのと、キャッシュをpurgeしようと思った時に依存するatomsを更新するなどするのがまた冗長な気がするからです。以下は実際に利用する時のコード例です。
+Recoilでもasync selectorを使えばSWRのようにAPIレスポンスのキャッシュなどを扱うこともできますが、実装がSWRより少々冗長な気がするのでServer Stateに対してそれに特化したライブラリを選定するのがお勧めです。以下は実際に利用する時のコード例です。
 
 ```ts
 // Recoil
@@ -70,27 +66,30 @@ const { data: user } = useSWR(['/api/user', userId], fetchWithUserId)
 
 利用するコンポーネント内でも上記のように3つのhooksが必要になってきますし、`currentUserIDState`/`userInfoQuery`/`useRefreshUserInfo`の定義も必要になってきます。一方SWRでは1行で利用でき、必要な定義も`userId`と`fetchWithUserId`のみです。
 
-### スコープによるStateの分類まとめ
+### スコープによるStateの分類問題点
 
-このように、Stateを3つに分けて考えることでそれぞれ役割に適したライブラリ選定を行う余地が生まれます。もちろん、必ずしもUI StateとServer Stateでライブラリ選定を分ける必要はありませんが、それでも「最初からまとめて検討する」より「State分類ごとに検討する」の方が選択の幅が広がります。
-
-また、一言にGlobal Stateと言っても人によってUI StateかServer Stateどちらかに主軸を置いて考えてしまうこともあるので、共通認識が取りやすいという面でもこの3つの分類に分けて会話するメリットがあるんじゃないかと思います。
+スコープによる分類によって実装分担が明確になりましたが、ここでStateの**ライフタイム**の観点を持って考えてみるとまだ問題が混在してる箇所があります。UI Stateの一部をStorageと同期させる場合や、Historyに関連づける場合です。同じUI Stateを名乗っていてもこれらは生存期間が異なり、個別の実装や関連ライブラリが必要になります。
 
 ## ライフタイムによるStateの分類
 
-次にライフタイムによるStateの分類ですが、スコープによるStateの分類は「**どういう状態があってどう実装するのか**」という話でしたが、ライフタイムによるStateの分類は「**どういう生存期間があってどう実装するのか**」という話になります。
+スコープによって大きく3つに分けられたStateの分類を、ライフタイムでより細分化して実装戦略を考察したいと思います。
 
-UI Stateはページを跨いで保存するようなものも含まれると定義しましたが、ページ遷移を跨いで保存する方法は1つではありません。例えば「アコーディオンを開いた」というStateは**SPAでなかった場合には履歴に紐づくもの**です。SPAだとブラウザバックしたら全てのアコーディオンが閉じてしまってるような経験がある方もいるでしょうが、これらの望ましい体験としてはやはり「履歴に紐づいて復元される」ことだと考えられます。JSで扱ってるStateを履歴に紐づけるには[history.push](https://developer.mozilla.org/ja/docs/Web/API/History/pushState) や[replaceState](https://developer.mozilla.org/ja/docs/Web/API/History/replaceState) を利用してStateを保存する必要があります。
+先に分類したStateをライフタイムで細分化すると以下のようになります。
 
-このように、Stateには履歴に紐づく生存期間が適切なものや、コンポーネントが破棄されたらStateも破棄してよいようなものまでいくつかの分類が存在します。
+- Local State
+  - Component unmount
+- UI State
+  - Javascript memory
+  - Browser history
+  - Browser storage
+- Server State
+  - Server
 
-## ライフタイムによるStateの分類
-
-Stateはライフタイムによって大きく以下5つに分類できます。
+Local StateとServer Stateは対応するものが1つづつですが、UI Stateは3つのライフタイムを含んでいます。
 
 ### 1. Component unmount
 
-1つ目のライフタイム分類は**Component mount**、文字通りコンポーネントがアンマウントされるまでになります。これは`useState`のみで利用することとほぼ同義なので、先のスコープによる分類で言うところの**Local State**になります。
+**Component mount**は文字通りコンポーネントがアンマウントされるまでになります。これは`useState`のみで利用することとほぼ同義なので、先のスコープによる分類で言うところの**Local State**と同義になります。
 
 ### 2. Javascript memory
 
@@ -102,22 +101,56 @@ Stateはライフタイムによって大きく以下5つに分類できます�
 
 https://triple-underscore.github.io/HTML-history-ja.html#session-history
 
-ちなみにnext.jsだと内部的に`replaceState`で全て独自のObjectで置き換えられてしまうため、実質利用できないようです。
+ちなみにnext.jsだと**内部的に`replaceState`で全て独自のObjectで置き換えられてしまう**ため、実質利用できないようです。
 
 https://github.com/vercel/next.js/blob/fe3d6b7aed5e39c19bd4a5fbbf1c9c890e239ea4/packages/next/shared/lib/router/router.ts#L1432
 
------ ここまでみた -----
 
 ### 4. Browser storage
 
-- session
-- local
+**Browser storage**はLocal StorageやSession StorageなどのWeb Storageに保存した場合、つまりこれらがブラウザによって破棄されるまでになります。これも要件としては多いようで、UI Stateの関連ライブラリでStorageと一部同期するようなライブラリは多数存在します。
 
 ### 5. Server
 
-## State Managementライブラリを分類
+最後は**Server**、サーバー側でStateが破棄される（=データベースから削除される）までです。これはもちろんServer Stateと同義です。
+
+### State分類とライブラリ
+
+一部のライフタイムはスコープによる分類と同義なので、対応する実装方針を組むことができます。
+
+- Component unmount: React.useState
+- Javascript memory: Recoil
+- Server: SWR
+
+一方、UI Stateに含まれているライフタイムのBrowser historyとBrowser storageはRecoilの関連ライブラリなどを必要とする場合があります。
+
+Browser storageなStateの実装は[recoil-persist](https://github.com/polemius/recoil-persist) や[redux-persist](https://github.com/rt2zz/redux-persist) など、要望が多いのか関連ライブラリがよく提供されるのでこれらを利用することで簡単に実装できます。
+
+一方でBrowser historyは僕が知らないだけかもしれませんが、History APIによって履歴のエントリーにStateを同期するようなライブラリはあまり見つかりませんでした。これらは[react-router](https://v5.reactrouter.com/web/api/history) などのState Managementライブラリ以外でサポートされていることの方が多いようです。一方、Next.jsは先述の通り内部で独自のObjectでreplaceしてしまうので、実装自体不可能だったりします。
+
+ここまでまとめると、ライフタイム別にStateを分類し
+
+- Component unmount: React.useState
+- Javascript memory: Recoil
+- Browser history: **自前で実装or不可能**
+- Browser storage: recoil-persistなど
+- Server: SWR
+
+## ライフタイムの分類から見えてくるSPAの問題点
+
+----- ここまでみた -----
+
+- historyに紐づくStateって望ましい体験を考えると実は多い
+  - scroll amnesiaとかアコーディオンの開閉とか
+- でもhistory API自前でごにょごにょは結構つらいし、Nextに関してはもはやできない
+  - Navigation APIとか検討されてるらしい。きっとみんな辛いのだろう
+  - PR投げてみたけどなかなかレビュー進まない。共感できる人はコメントとかリアクションしてくれると嬉しい。
 
 ## まとめ
+
+- stateって一言で言っても奥が深い
+- Stateごとにあるべきライフタイム
+- スコープとライフタイムに応じて実装方針を選ぼう
 
 ## 参考
 
@@ -214,3 +247,6 @@ To learn more, run the command again with --verbose.
 - まとめ
   - Stateのライブラリ選定や実装戦略はStateを3つに分けて考えると良い
   - あるStateの生存期間は5つのlifetimeに分けてどれに当てはめるのが最適か考えると仕様を決めやすい
+
+
+UI Stateはページを跨いで保存するようなものも含まれると定義しましたが、ページ遷移を跨いで保存する方法は1つではありません。例えば「アコーディオンを開いた」というStateは**SPAでなかった場合には履歴に紐づくもの**です。SPAだとブラウザバックしたら全てのアコーディオンが閉じてしまってるような経験がある方もいるでしょうが、これらの望ましい体験としてはやはり「履歴に紐づいて復元される」ことだと考えられます。JSで扱ってるStateを履歴に紐づけるには[history.push](https://developer.mozilla.org/ja/docs/Web/API/History/pushState) や[replaceState](https://developer.mozilla.org/ja/docs/Web/API/History/replaceState) を利用してStateを保存する必要があります。
