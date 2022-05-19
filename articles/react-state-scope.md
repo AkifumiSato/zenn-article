@@ -6,7 +6,12 @@ topics: ["react"]
 published: false
 ---
 
-ReactはじめSPAのStateは大きく2種類、Local State・Global Stateの2種類でおおよそのStateの分類が可能であると考えていました。これに対し会社の先輩から「実際にはアプリケーションにはServer Stateもあるよね」「スコープだけでなく、時間的グローバルなStateもあるよね」という意見をもらい、非常に納得しました。なんとなくで実装してしまってたのでこの3種類のStateの分類を整理し、さらにこの値の生存期間をRustから言葉を借りてStateの**ライフタイム**と呼称し、ライフタイム別にStateを再分類しState戦略について自分なりに考察したいと思います。
+ReactはじめSPAのStateは大きく2種類、Local State・Global Stateの2種類でおおよそのStateの分類が可能であると考えていました。これに対し会社の先輩から意見をもらって、以下2点に気づきました。
+
+- Global Stateには大きく、**UI State**と**Server State**の2つがある
+- Global Stateにはスコープ的Globalな意味合いと時間的Globalな意味合いが含まれている
+
+なんとなくで実装してしまってたのでこの3種類のStateの分類を整理し、さらにこの値の生存期間をRustから言葉を借りてStateの**ライフタイム**と呼称し、ライフタイム別にStateを再分類しState戦略について自分なりに考察したいと思います。
 
 Reactで何かしらのStateを実装する時に、本稿の分類が実装の参考になれば幸いです。
 
@@ -14,41 +19,66 @@ Reactで何かしらのStateを実装する時に、本稿の分類が実装の�
 Rustのライフタイムはコンパイラによってチェックされる機能名を兼ねていますが、ここではスコープとは別の分類軸のための概念として表記しています。
 :::
 
-## スコープ軸によるStateの分類
+## スコープによるStateの分類
 
 まずこれまで自分が認識してた参照スコープにおけるStateの分類について触れておきます。以下の2種類で分類可能と考えていました。
 
 - **Local State**: コンポーネント単位のStateで、`useState`で管理します。コンポーネントがアンマウントされるまで生存します。
-- **Global State**: 複数のコンポーネントから参照されうるState。APIレスポンスやUIの状態などで、ReduxやRecoil、Context APIなどを通じて管理されることが多いかと思います。
+- **Global State**: 複数のコンポーネントから利用されうる、もしくはページを跨いで利用するState。APIレスポンスやUIの状態などで、ReduxやRecoil、Context APIなどを通じて管理されることが多いかと思います。
 
-RecoilやRedux tool kitなどを使ってると、APIレスポンスとUIの状態を同じライブラリで管理できるのでこのように考えていたわけですが、本稿の1つ目の主題はこのGlobal Stateと一纏めにしてしまっているものから**Server State**が分離できるということです。Server Stateを分離した後の分類は以下です。
+RecoilやRedux tool kitなどを使ってると、APIレスポンスとUIの状態を同じライブラリで管理できるのでこのように考えていたわけですが、本稿の1つ目の主題は先述の通り、Global Stateと一纏めにしてしまっているものが**Global State**と**Server State**に分離できるということです。分離後の定義は以下です。
 
-- **Local State**: コンポーネント単位のStateで、`useState`で管理します。コンポーネントがアンマウントされるまで生存します。
-- **Global State**: 複数のコンポーネントから参照されうるState。~~APIレスポンスや~~UIの状態などで、ReduxやRecoil、Context APIなどを通じて管理されることが多いかと思います。
+- **Local State**: コンポーネント単位のState。`useState`で管理します。コンポーネントがアンマウントされるまで生存します。
+- **UI State**: 複数のコンポーネントから利用されうる、もしくはページを跨いで利用するState。~~APIレスポンスや~~UIの状態などで、ReduxやRecoil、Context APIなどを通じて管理されることが多いかと思います。
 - **Server State**: クライアントサイドでキャッシュしてるAPIサーバーからのレスポンス値などです。SWRやReact Queryの内部で管理されてるものなどを指します。捉え方次第では、APIに保存されている状態も同様にServer Stateと見なすこともできます。
 
-細かい用語は違えど、以下の参考リンクではそれぞれ同じよう分類を行っています。
+以下参考記事です。
 
 https://zenn.dev/yoshiko/articles/607ec0c9b0408d
 
-以下のリンクでは上記と同様の分類か、データカテゴリによる分類（Data,Control/UI,Session,Communication,Locationの5つ）が可能とされています。
+細かい用語は違えど、上記記事でもそれぞれ同じよう分類を行っています。
 
 https://react-community-tools-practices-cheatsheet.netlify.app/state-management/overview/#types-of-state
 
-Remixのコントリビュータのブログでは、Local/Globalなどの分類ではなく「全てのStateはUI Stateかサーバーキャッシュの2つに分けられる」と主張しています。
+こちらでは本稿同様3種類の分類か、データカテゴリによる分類（Data,Control/UI,Session,Communication,Locationの5つ）が可能とされています。
 
 https://kentcdodds.com/blog/application-state-management-with-react#server-cache-vs-ui-state
 
-これらの参考記事は非常に勉強になるので時間のある方はそれぞれ一読することをお勧めします。ここで主張したいこととしては、Global StateとServer Stateは同じライブラリで扱うこともできますが、**それぞれ用途に応じて別々に選択するという手段もある**ということです。具体的には
+Remixのコントリビュータのブログでは、Local/Globalなどの分類ではなく「全てのStateはUI Stateかサーバーキャッシュの2つに分けられる」と主張しています。
 
-- Global State: Recoil
+これらの参考記事は非常に勉強になるので時間のある方はそれぞれ一読することをお勧めします。
+
+### State分類とライブラリ
+
+ここで主張したいこととしては、UI StateとServer Stateは同じライブラリで扱うこともできますが、**それぞれ用途に応じて別々に選択するという手段もある**ということです。具体的には
+
+- Local State: React.useState
+- UI State: Recoil
 - Server State: SWR
 
-というような選択などです。Recoilでもasync selectorを使えばSWRのようにAPIレスポンスのキャッシュなどを扱うこともできますが、技術選定としてはそれぞれ用途ごとに分けるという選択肢もあるということです。
+というような選択などです。Recoilでもasync selectorを使えばSWRのようにAPIレスポンスのキャッシュなどを扱うこともできますが、技術選定としてはそれぞれ用途ごとに分けるという選択肢もあるということです。個人的には上記例にあげたように、RecoilとSWRを併用して実装するのがおすすめです。Recoilのasync selectorは実装がSWRより少々冗長な気がするのと、キャッシュをpurgeしようと思った時に依存するatomsを更新するなどするのがまた冗長な気がするからです。以下は実際に利用する時のコード例です。
 
------ ここまでみた -----
+```ts
+// Recoil
+const currentUserID = useRecoilValue(currentUserIDState);
+const currentUserInfo = useRecoilValue(userInfoQuery(currentUserID));
+const refreshUserInfo = useRefreshUserInfo(currentUserID);
+
+// SWR
+const { data: user } = useSWR(['/api/user', userId], fetchWithUserId)
+```
+
+利用するコンポーネント内でも上記のように3つのhooksが必要になってきますし、`currentUserIDState`/`userInfoQuery`/`useRefreshUserInfo`の定義も必要になってきます。一方SWRでは1行で利用でき、必要な定義も`userId`と`fetchWithUserId`のみです。
+
+### Stateの分類を分けて考えるメリット
+
+このように、Stateを3つに分けて考えることでそれぞれ役割に適したライブラリ選定を行う余地が生まれます。もちろん、必ずしもUI StateとServer Stateでライブラリ選定を分ける必要はありませんが、それでも「最初からまとめて検討する」より「State分類ごとに検討する」の方が選択の幅が広がります。
+
+また、一言にGlobal Stateと言っても人によってUI StateかServer Stateどちらかに主軸を置いて考えてしまうこともあるので、共通認識が取りやすいという面でもこの3つの分類に分けて会話するメリットがあるんじゃないかと思います。
 
 ## ライフタイムと参照スコープ
+
+----- ここまでみた -----
 
 一方Stateのライフタイムを意識して再度参照スコープの分類を考えてみると、分類がややこしいケースがあることに気づくことでしょう。例としてあるStateをSession Storageに同期する例を考えてみましょう。
 
@@ -180,6 +210,7 @@ https://github.com/vercel/next.js/blob/fe3d6b7aed5e39c19bd4a5fbbf1c9c890e239ea4/
 - 2種類だと思ってた＋なんとなくでやってしまってた
 - 3種類目、サーバーState
 - Global Stateには時間的Globalなものが含まれている
+  - ここを分けて選定するのも手（というかそれがおすすめ）
 - 一方で時間軸でみると本来Historyに紐づいてて欲しいStateもある
   - アコーディオン開いて遷移して戻ったら開いてて欲しいよね？
   - でも開いて回遊して戻ってきて開いてるってなんか不思議
