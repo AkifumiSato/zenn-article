@@ -70,36 +70,56 @@ const { data: user } = useSWR(['/api/user', userId], fetchWithUserId)
 
 利用するコンポーネント内でも上記のように3つのhooksが必要になってきますし、`currentUserIDState`/`userInfoQuery`/`useRefreshUserInfo`の定義も必要になってきます。一方SWRでは1行で利用でき、必要な定義も`userId`と`fetchWithUserId`のみです。
 
-### Stateの分類を分けて考えるメリット
+### スコープによるStateの分類まとめ
 
 このように、Stateを3つに分けて考えることでそれぞれ役割に適したライブラリ選定を行う余地が生まれます。もちろん、必ずしもUI StateとServer Stateでライブラリ選定を分ける必要はありませんが、それでも「最初からまとめて検討する」より「State分類ごとに検討する」の方が選択の幅が広がります。
 
 また、一言にGlobal Stateと言っても人によってUI StateかServer Stateどちらかに主軸を置いて考えてしまうこともあるので、共通認識が取りやすいという面でもこの3つの分類に分けて会話するメリットがあるんじゃないかと思います。
 
-## ライフタイムと参照スコープ
+## ライフタイムによるStateの分類
+
+次にライフタイムによるStateの分類ですが、スコープによるStateの分類は「**どういう状態があってどう実装するのか**」という話でしたが、ライフタイムによるStateの分類は「**どういう生存期間があってどう実装するのか**」という話になります。
+
+UI Stateはページを跨いで保存するようなものも含まれると定義しましたが、ページ遷移を跨いで保存する方法は1つではありません。例えば「アコーディオンを開いた」というStateは**SPAでなかった場合には履歴に紐づくもの**です。SPAだとブラウザバックしたら全てのアコーディオンが閉じてしまってるような経験がある方もいるでしょうが、これらの望ましい体験としてはやはり「履歴に紐づいて復元される」ことだと考えられます。JSで扱ってるStateを履歴に紐づけるには[history.push](https://developer.mozilla.org/ja/docs/Web/API/History/pushState) や[replaceState](https://developer.mozilla.org/ja/docs/Web/API/History/replaceState) を利用してStateを保存する必要があります。
+
+このように、Stateには履歴に紐づく生存期間が適切なものや、コンポーネントが破棄されたらStateも破棄してよいようなものまでいくつかの分類が存在します。
+
+## ライフタイムによるStateの分類
+
+Stateはライフタイムによって大きく以下5つに分類できます。
+
+### 1. Component unmount
+
+1つ目のライフタイム分類は**Component mount**、文字通りコンポーネントがアンマウントされるまでになります。これは`useState`のみで利用することとほぼ同義なので、先のスコープによる分類で言うところの**Local State**になります。
+
+### 2. Javascript memory
+
+**Javascript memory**はJavascriptのメモリが解放されるまで、つまりSPAにおいては「リロードや離脱が発生するまで」になります。スコープにおける分類の**Global State**の最もベーシックな使い方（単に値をGlobalに持つだけ）がこの分類にあたります。
+
+### 3. Browser history
+
+**Browser history**はブラウザの履歴が破棄されるまで、実装的には[history.push](https://developer.mozilla.org/ja/docs/Web/API/History/pushState) や[replaceState](https://developer.mozilla.org/ja/docs/Web/API/History/replaceState) によって履歴に対してObjectが関連付けられるので、このObjectが破棄されるまでになります。実際にObjectが破棄されるタイミングは以下仕様を確認した限りブラウザの実装によりそうですが、documentが非アクティブなタイミングで破棄されうるようです。
+
+https://triple-underscore.github.io/HTML-history-ja.html#session-history
+
+ちなみにnext.jsだと内部的に`replaceState`で全て独自のObjectで置き換えられてしまうため、実質利用できないようです。
+
+https://github.com/vercel/next.js/blob/fe3d6b7aed5e39c19bd4a5fbbf1c9c890e239ea4/packages/next/shared/lib/router/router.ts#L1432
 
 ----- ここまでみた -----
 
-一方Stateのライフタイムを意識して再度参照スコープの分類を考えてみると、分類がややこしいケースがあることに気づくことでしょう。例としてあるStateをSession Storageに同期する例を考えてみましょう。
+### 4. Browser storage
 
-```ts
-const useCount = () => {
-  const [count, setCount] = React.useState(0);
-  React.useEffect(() => {
-    if (count === 0) {
-      const value = parseInt(sessionStorage.getItem('count')) ?? 0
-      setCount(value)
-    } else {
-      sessionStorage.setItem('count', count)
-    }
-  }, [count])
-  return { count, setCount }
-}
-```
+- session
+- local
 
-これは「SPAのページ遷移を跨いで保持するState」というGlobal Stateの定義と照らし合わせても相違ないので、Global Stateです。一方`useState`で管理しているので、Local Stateを拡張しているように思える方もいるでしょう。これは「Local Stateは`useState`で管理する」の逆条件である「`useState`を使ってるからLocal State」は必ずしも成り立たないという例です。
+### 5. Server
 
-このように、ライフタイムを意識すると分類がややこしいものがGlobal Stateに含まれていることがわかります。以降ではこのライフタイムによるStateの再分類を行ってみます。
+## State Managementライブラリを分類
+
+## まとめ
+
+## 参考
 
 ### Rustにおけるライフタイム
 
@@ -176,47 +196,21 @@ To learn more, run the command again with --verbose.
 
 関数の戻り値などでライフタイムをコンパイラに明示するために、`<'a>`のようにライフタイムを明示することもできますが、本稿では触れないので気になる方は前述の[The Book](https://doc.rust-jp.rs/book-ja/ch10-03-lifetime-syntax.html) を参照ください。
 
-## ライフタイムによるStateの分類
-
-Stateはライフタイムによって大きく以下5つに分類できます。
-
-### 1. Component unmount
-
-1つ目のライフタイム分類は**Component mount**、文字通りコンポーネントがアンマウントされるまでになります。これは`useState`のみで利用することとほぼ同義なので、先のスコープによる分類で言うところの**Local State**になります。
-
-### 2. Javascript memory
-
-**Javascript memory**はJavascriptのメモリが解放されるまで、つまりSPAにおいては「リロードや離脱が発生するまで」になります。スコープにおける分類の**Global State**の最もベーシックな使い方（単に値をGlobalに持つだけ）がこの分類にあたります。
-
-### 3. Browser history
-
-**Browser history**はブラウザの履歴が破棄されるまで、実装的には[history.push](https://developer.mozilla.org/ja/docs/Web/API/History/pushState) や[replaceState](https://developer.mozilla.org/ja/docs/Web/API/History/replaceState) によって履歴に対してObjectが関連付けられるので、このObjectが破棄されるまでになります。実際にObjectが破棄されるタイミングは以下仕様を確認した限りブラウザの実装によりそうですが、documentが非アクティブなタイミングで破棄されうるようです。
-
-https://triple-underscore.github.io/HTML-history-ja.html#session-history
-
-ちなみにnext.jsだと内部的に`replaceState`で全て独自のObjectで置き換えられてしまうため、実質利用できないようです。
-
-https://github.com/vercel/next.js/blob/fe3d6b7aed5e39c19bd4a5fbbf1c9c890e239ea4/packages/next/shared/lib/router/router.ts#L1432
-
-### 4. Browser storage
-
-- session
-- local
-
-## State Managementライブラリを分類
-
-## まとめ
-
-- 2種類だと思ってた＋なんとなくでやってしまってた
-- 3種類目、サーバーState
-- Global Stateには時間的Globalなものが含まれている
-  - ここを分けて選定するのも手（というかそれがおすすめ）
-- 一方で時間軸でみると本来Historyに紐づいてて欲しいStateもある
-  - アコーディオン開いて遷移して戻ったら開いてて欲しいよね？
-  - でも開いて回遊して戻ってきて開いてるってなんか不思議
-- Stateをライフタイムで再分類してみる
-- 再分類した上で、最適と考える実装例
-  - いつRecoilなのか、いつuseStateなのか
-- Historyに紐づくState管理はNextはしづらい
-  - scroll 
-  - PR出してる
+- Scope of State
+  - 2種類だと思ってた＋なんとなくでやってしまってた
+  - 3種類目、サーバーState
+- Lifetime of State
+  - Global Stateには時間的Globalなものが含まれている
+    - これは技術選定より、仕様の定義に近い
+  - 仕様的にこの値はいつまで生存すべきなのかを意識する必要がある
+    - アコーディオン開いて遷移して戻ったら開いてて欲しいよね？
+    - でも開いて回遊して戻ってきて開いてるってなんか不思議
+  - Stateをライフタイムで再分類してみる
+  - 再分類した上で、最適と考える実装例
+    - いつRecoilなのか、いつuseStateなのか、いつどうやって実装するのか
+  - Historyに紐づくState管理はNextはしづらい
+    - scroll 
+    - PR出してる
+- まとめ
+  - Stateのライブラリ選定や実装戦略はStateを3つに分けて考えると良い
+  - あるStateの生存期間は5つのlifetimeに分けてどれに当てはめるのが最適か考えると仕様を決めやすい
