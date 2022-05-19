@@ -128,7 +128,7 @@ Browser storageなStateの実装は[recoil-persist](https://github.com/polemius/
 
 一方でBrowser historyは僕が知らないだけかもしれませんが、History APIによって履歴のエントリーにStateを同期するようなライブラリはあまり見つかりませんでした。これらは[react-router](https://v5.reactrouter.com/web/api/history) などのState Managementライブラリ以外でサポートされていることの方が多いようです。一方、Next.jsは先述の通り内部で独自のObjectでreplaceしてしまうので、実装自体不可能だったりします。
 
-ここまでまとめると、ライフタイム別にStateを分類し
+以下まとめです。
 
 - Component unmount: React.useState
 - Javascript memory: Recoil
@@ -138,19 +138,28 @@ Browser storageなStateの実装は[recoil-persist](https://github.com/polemius/
 
 ## ライフタイムの分類から見えてくるSPAの問題点
 
------ ここまでみた -----
+ここまででBrowser historyなライフタイムStateの実装だけ難易度が高いことはおわかりいただけたかと思います。しかしUX面で言うと、**本来多くのStateはBrowser historyなライフタイムであって欲しい**ものです。例えば「アコーディオンを開いた」というStateはSPAでなかった場合には履歴に紐づくものです。SPAだとブラウザバックしたら全てのアコーディオンが閉じてしまってるような経験がある方もいるでしょうが、これらの望ましい体験としてはやはり「履歴に紐づいて復元される」ことだと考えられます。
 
-- historyに紐づくStateって望ましい体験を考えると実は多い
-  - scroll amnesiaとかアコーディオンの開閉とか
-- でもhistory API自前でごにょごにょは結構つらいし、Nextに関してはもはやできない
-  - Navigation APIとか検討されてるらしい。きっとみんな辛いのだろう
-  - PR投げてみたけどなかなかレビュー進まない。共感できる人はコメントとかリアクションしてくれると嬉しい。
+しかし現実には復元されないSPAが多いように感じますし、関連ライブラリの少なさなどからも実装難易度が高いのが現状です。Recoilの場合、[recoil-sync](https://recoiljs.org/docs/recoil-sync/introduction/) というライブラリを公式が開発中で、これによりURLに対して一意に状態を保持することが容易になりそうなので、こういったライブラリが増えることを個人的には期待しています。
+
+### 余談: Next.jsのscroll amnesiaのFix PR
+
+Browser historyなライフタイムStateの代表格の1つに、スクロール位置があります。ブラウザバック時などにスクロール位置を復元することを`scroll restoration`と呼び、Next.jsではconfigで`experimental.scrollRestoration = true`にすると、ブラウザバック時にスクロール位置が復元されます。
+
+これがリロード時した後に復元に失敗してしまうのを修正したPRを出しているんですが、なかなかマージされません。
+
+https://github.com/vercel/next.js/pull/36861
+
+おそらくレビューアーの中で優先度が低いのでしょう。。。このPRで議論してることとして、「`history`の`key`を公開したい」という話があります。`key`を公開するとhistoryのエントリを一意に識別することができるので、**Browser historyなStateをNext.jsでも実装できるようになります**。個人的には是非とも欲しい機能なので、賛同いただける方はレビューが早く進むかもしれないので、上記PRにリアクションやコメント下さるとありがたいです🙇‍。
 
 ## まとめ
 
-- stateって一言で言っても奥が深い
-- Stateごとにあるべきライフタイム
-- スコープとライフタイムに応じて実装方針を選ぼう
+少し長くなってしまいましたが、大きく主張したいこととしては大きく以下のみです。
+
+- Stateはスコープやライフタイムによって分類され、分類ごとに実装戦略を検討するのが良さそう
+- Stateごとにあるべきライフタイムを考えて実装しよう
+
+ご覧いただき、ありがとうございました。
 
 ## 参考
 
@@ -228,25 +237,3 @@ To learn more, run the command again with --verbose.
 ```
 
 関数の戻り値などでライフタイムをコンパイラに明示するために、`<'a>`のようにライフタイムを明示することもできますが、本稿では触れないので気になる方は前述の[The Book](https://doc.rust-jp.rs/book-ja/ch10-03-lifetime-syntax.html) を参照ください。
-
-- Scope of State
-  - 2種類だと思ってた＋なんとなくでやってしまってた
-  - 3種類目、サーバーState
-- Lifetime of State
-  - Global Stateには時間的Globalなものが含まれている
-    - これは技術選定より、仕様の定義に近い
-  - 仕様的にこの値はいつまで生存すべきなのかを意識する必要がある
-    - アコーディオン開いて遷移して戻ったら開いてて欲しいよね？
-    - でも開いて回遊して戻ってきて開いてるってなんか不思議
-  - Stateをライフタイムで再分類してみる
-  - 再分類した上で、最適と考える実装例
-    - いつRecoilなのか、いつuseStateなのか、いつどうやって実装するのか
-  - Historyに紐づくState管理はNextはしづらい
-    - scroll 
-    - PR出してる
-- まとめ
-  - Stateのライブラリ選定や実装戦略はStateを3つに分けて考えると良い
-  - あるStateの生存期間は5つのlifetimeに分けてどれに当てはめるのが最適か考えると仕様を決めやすい
-
-
-UI Stateはページを跨いで保存するようなものも含まれると定義しましたが、ページ遷移を跨いで保存する方法は1つではありません。例えば「アコーディオンを開いた」というStateは**SPAでなかった場合には履歴に紐づくもの**です。SPAだとブラウザバックしたら全てのアコーディオンが閉じてしまってるような経験がある方もいるでしょうが、これらの望ましい体験としてはやはり「履歴に紐づいて復元される」ことだと考えられます。JSで扱ってるStateを履歴に紐づけるには[history.push](https://developer.mozilla.org/ja/docs/Web/API/History/pushState) や[replaceState](https://developer.mozilla.org/ja/docs/Web/API/History/replaceState) を利用してStateを保存する必要があります。
