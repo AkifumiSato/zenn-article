@@ -108,7 +108,7 @@ https://github.com/vercel/next.js/blob/fe3d6b7aed5e39c19bd4a5fbbf1c9c890e239ea4/
 
 ### 4. URL Persistence
 
-Browser history同様、履歴やブックマークなどが残ってる限り生存可能なStateが**URL Persistence**です。URLに基づきStateを初期化・Stateが更新されるたびにURLを更新をおこないます。こちらも[history.push](https://developer.mozilla.org/ja/docs/Web/API/History/pushState) や[replaceState](https://developer.mozilla.org/ja/docs/Web/API/History/replaceState) を駆使して実装する（もしくはライブラリを通して利用する）ことになります。
+**URL Persistence**はBrowser historyに近しいですが、こちらはURLが履歴やブックマークに存在する限り生存可能なライフタイムです。URLに基づきStateを初期化・Stateが更新されるたびにURLを更新をおこないます。こちらも[history.push](https://developer.mozilla.org/ja/docs/Web/API/History/pushState) や[replaceState](https://developer.mozilla.org/ja/docs/Web/API/History/replaceState) を駆使して実装する（もしくはライブラリを通して利用する）ことになります。
 
 ### 5. Browser storage
 
