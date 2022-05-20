@@ -81,6 +81,7 @@ const { data: user } = useSWR(['/api/user', userId], fetchWithUserId)
 - Client State
   - Javascript memory
   - Browser history
+  - URL Persistence
   - Browser storage
 - Server State
   - Server
@@ -105,11 +106,15 @@ https://triple-underscore.github.io/HTML-history-ja.html#session-history
 
 https://github.com/vercel/next.js/blob/fe3d6b7aed5e39c19bd4a5fbbf1c9c890e239ea4/packages/next/shared/lib/router/router.ts#L1432-L1445
 
-### 4. Browser storage
+### 4. URL Persistence
+
+**URL Persistence**はBrowser historyに近しいですが、こちらはURLが履歴やブックマークに存在する限り生存可能なライフタイムです。URLに基づきStateを初期化・Stateが更新されるたびにURLを更新をおこないます。こちらも[history.push](https://developer.mozilla.org/ja/docs/Web/API/History/pushState) や[replaceState](https://developer.mozilla.org/ja/docs/Web/API/History/replaceState) を駆使して実装する（もしくはライブラリを通して利用する）ことになります。
+
+### 5. Browser storage
 
 **Browser storage**はLocal StorageやSession StorageなどのWeb Storageに保存した場合、つまりこれらがブラウザによって破棄されるまでになります。要件・要望としては多いようで、State管理の関連ライブラリでStorageと一部同期するもの（後述の[recoil-persist](https://github.com/polemius/recoil-persist) や[redux-persist](https://github.com/rt2zz/redux-persist) ）が多数存在します。
 
-### 5. Server
+### 6. Server
 
 最後は**Server**、管理者によってサーバー側のデータベースから削除されるまでです。これはもちろんServer Stateのみが持つことができるライフタイムです。
 
@@ -130,14 +135,15 @@ Browser storageなStateの実装は[recoil-persist](https://github.com/polemius/
 - Component unmount: React.useState
 - Javascript memory: Recoil
 - Browser history: **routerなどのhistoryを利用/自前で実装/不可能**
-- Browser storage: recoil-persistなど
+- URL Persistence: **後述の[recoil-sync](https://recoiljs.org/docs/recoil-sync/introduction/)/自前で実装**
+- Browser storage: recoil-persist
 - Server: SWR
 
 ## ライフタイムの分類から見えてくるSPAの問題点
 
 ここまででBrowser historyなライフタイムStateの実装だけ難易度が高いことはおわかりいただけたかと思います。しかしUX面で言うと、**本来多くのStateはBrowser historyなライフタイムであって欲しい**ものです。例えば「アコーディオンを開いた」というStateはSPAでなかった場合には履歴に紐づくものです。SPAだとブラウザバックしたら全てのアコーディオンが閉じてしまってるような経験がある方もいるでしょうが、これらの望ましい体験としてはやはり「履歴に紐づいて復元される」ことだと考えられます。
 
-しかし現実には復元されないSPAが多いように感じますし、関連ライブラリの少なさなどからも実装難易度が高いのが現状です。Recoilの場合、[recoil-sync](https://recoiljs.org/docs/recoil-sync/introduction/) というライブラリを公式が開発中で、これによりURLに対して一意に状態を保持することが容易になりそうなので、こういったライブラリが増えることを個人的には期待しています。
+しかし現実には復元されないSPAが多いように感じますし、関連ライブラリの少なさなどからも実装難易度が高いのが現状です。Recoilの場合、[recoil-sync](https://recoiljs.org/docs/recoil-sync/introduction/) というライブラリを公式が開発中で、これによりURL PersistenceなStateの実装が容易になりそうなので、個人的にはこういったライブラリが増えることを期待しています。
 
 ### 余談: Next.jsのscroll amnesiaのFix PR
 
