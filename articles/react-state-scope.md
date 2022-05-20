@@ -1,5 +1,5 @@
 ---
-title: "スコープとライフタイムで考えるReactのState再考"
+title: "スコープとライフタイムで考えるReact State再考"
 emoji: "⌚️"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["react", "recoil", "swr"]
@@ -40,13 +40,13 @@ https://react-community-tools-practices-cheatsheet.netlify.app/state-management/
 
 https://kentcdodds.com/blog/application-state-management-with-react#server-cache-vs-ui-state
 
-Remixのコントリビュータのブログでは、Local/Globalなどの分類ではなく「全てのStateはClient Stateかサーバーキャッシュの2つに分けられる」と主張しています。
+Remixのコントリビュータのブログでは、Local/Globalなどの分類ではなく「全てのStateはUI StateかServer Cacheの2つに分けられる」と主張しています。
 
 これらの参考記事は非常に勉強になるので時間のある方はそれぞれ一読することをお勧めします。
 
 ### State分類とライブラリ
 
-前述の通り、Client StateとServer Stateは実装が大きく異なるのでそれぞれ個別に実方針を練ることができます。個人的には以下のような実装（ライブラリ選定）がお勧めです。
+前述の通り、Client StateとServer Stateは実装が大きく異なるのでそれぞれ個別に実装方針を練ることができます。個人的には以下のような実装がお勧めです。
 
 - Local State: React.useState
 - Client State: Recoil
@@ -72,7 +72,7 @@ const { data: user } = useSWR(['/api/user', userId], fetchWithUserId)
 
 ## ライフタイムによるStateの分類
 
-スコープによって大きく3つに分けられたStateの分類を、ライフタイムでより細分化して実装方針を考察したいと思います。
+スコープによって大きく3つに分けられたStateの分類を、ライフタイムでより細分化して実装方針を考察したいと思います。改めて定義すると、本稿で言うライフタイムはStateの**生存可能期間**を指しています。なのでユーザーのインタラクションによるStateの削除などは含めず、システム的に生存が可能な期間でのみ分類を行なっています。
 
 先に分類したStateをライフタイムで細分化すると以下のようになります。
 
@@ -89,19 +89,19 @@ Local StateとServer Stateは対応するものが1つづつですが、Client S
 
 ### 1. Component unmount
 
-**Component mount**は文字通りコンポーネントがアンマウントされるまでになります。これは`useState`のみで利用することとほぼ同義で、Local Stateのみがこのライフタイムを持ちます。（Client Stateでアンマウント時にリセットすることで同様の挙動になりますが、そういった実装より`useState`の方が最適と考えられます）
+**Component mount**は文字通りコンポーネントがアンマウントされるまでになります。これは`useState`のみで利用することとほぼ同義で、Local Stateのみがこのライフタイムを持ちます。（Client Stateでアンマウント時にリセットすることで同様の実装は一応可能ですが、Global Stateにする意味はないので`useState`の方が最適と考えられます）
 
 ### 2. Javascript memory
 
-**Javascript memory**はJavascriptのメモリが解放されるまで、つまりSPAにおいては「リロードや離脱が発生するまで」になります。スコープにおける分類の**Client State**の最もベーシックな使い方（単に値をGlobalに持つだけ）がこの分類にあたります。
+**Javascript memory**はJavascriptのメモリが解放されるまで、つまりSPAにおいては「リロードや離脱が発生するまで」になります。スコープにおける分類のClient Stateの最もベーシックな使い方（単に値をGlobalに持つだけ）がこの分類にあたります。
 
 ### 3. Browser history
 
-**Browser history**はブラウザの履歴が破棄されるまで、実装的には[history.push](https://developer.mozilla.org/ja/docs/Web/API/History/pushState) や[replaceState](https://developer.mozilla.org/ja/docs/Web/API/History/replaceState) によって履歴に対してObjectが関連付けられるので、このObjectが破棄されるまでになります。実際にObjectが破棄されるタイミングは以下仕様を確認した限りブラウザの実装によりそうですが、documentが非アクティブなタイミングで破棄されうるようです。
+**Browser history**はブラウザの履歴が破棄されるまで、実装的には[history.push](https://developer.mozilla.org/ja/docs/Web/API/History/pushState) や[replaceState](https://developer.mozilla.org/ja/docs/Web/API/History/replaceState) によって履歴に対してState Objectが関連付けられるので、このObjectが破棄されるまでになります。実際にObjectが破棄されるタイミングは以下仕様を確認した限りブラウザの実装によりそうですが、documentが非アクティブなタイミングで破棄されうるようです。
 
 https://triple-underscore.github.io/HTML-history-ja.html#session-history
 
-ちなみにnext.jsだと**内部的に`replaceState`で全て独自のObjectで置き換えられてしまうため、実質利用できない**ようです。
+ちなみにnext.jsだと**内部的に`replaceState`で全て独自のObjectで置き換えられてしまうため、Browser historyなStateは実装できない**ようです。
 
 https://github.com/vercel/next.js/blob/fe3d6b7aed5e39c19bd4a5fbbf1c9c890e239ea4/packages/next/shared/lib/router/router.ts#L1432-L1445
 
@@ -111,7 +111,7 @@ https://github.com/vercel/next.js/blob/fe3d6b7aed5e39c19bd4a5fbbf1c9c890e239ea4/
 
 ### 5. Server
 
-最後は**Server**、サーバー側でStateが破棄される（=データベースから削除される）までです。これはもちろんServer Stateのみが持つことができるライフタイムです。
+最後は**Server**、管理者によってサーバー側のデータベースから削除されるまでです。これはもちろんServer Stateのみが持つことができるライフタイムです。
 
 ### State分類とライブラリ
 
@@ -125,9 +125,9 @@ https://github.com/vercel/next.js/blob/fe3d6b7aed5e39c19bd4a5fbbf1c9c890e239ea4/
 
 Browser storageなStateの実装は[recoil-persist](https://github.com/polemius/recoil-persist) や[redux-persist](https://github.com/rt2zz/redux-persist) など、要望が多いのか関連ライブラリがよく提供されるのでこれらを利用することで簡単に実装できます。
 
-一方でBrowser historyは僕が知らないだけかもしれませんが、History APIによって履歴のエントリーにStateを同期するようなライブラリはあまり見つかりませんでした。これらは[react-router](https://v5.reactrouter.com/web/api/history) などのStat管理ライブラリ以外でサポートされていることの方が多いようです。一方、Next.jsは先述の通り内部で独自のObjectでreplaceしてしまうので、実装自体不可能だったりします。
+一方でBrowser historyは僕が知らないだけかもしれませんが、History APIによって履歴のエントリーにStateを同期するようなライブラリは見つかりませんでした。これらは[react-router](https://v5.reactrouter.com/web/api/history) などのState管理ライブラリ以外でサポートされていることの方が多いようです。一方、Next.jsは先述の通り内部で独自のObjectでreplaceしてしまうので、実装自体不可能だったりします。
 
-以下はこれらを踏まえた、対応する実装方針のまとめです。
+以下はこれらを踏まえた、ライフタイムに対応する実装方針の1案です。
 
 - Component unmount: React.useState
 - Javascript memory: Recoil
@@ -149,13 +149,13 @@ Browser historyなライフタイムStateの代表格の1つに、スクロー�
 
 https://github.com/vercel/next.js/pull/36861
 
-おそらくレビューアーの中で優先度が低いのでしょう。。。このPRで議論してることとして、「`history`の`key`を公開したい」という話があります。`key`を公開するとhistoryのエントリを一意に識別することができるので、**Browser historyなStateをNext.jsでも実装できるようになります**。[Remix](https://github.com/remix-run/history/blob/main/docs/api-reference.md#locationkey) やWICGで検討されてる[navigation-api](https://github.com/WICG/navigation-api#the-current-entry) では`key`は公開されていますし、個人的にはやはり公開したいところなんですが、以前出したPRでもなかなかレスが得られませんでした。Browser historyなライフタイムのStateの実装には`key`は必須なので、賛同いただける方上記PRにリアクションやコメント下さるとありがたいです🙇‍
+おそらくレビューアーの中で優先度が低いのでしょう。。。このPRで議論してることとして、「`history`の`key`を公開したい」という話があります。`key`を公開するとhistoryのエントリを一意に識別することができるので、**Browser historyなStateをNext.jsでも実装できるようになります**。[RemixのLocation](https://github.com/remix-run/history/blob/main/docs/api-reference.md#locationkey) やWICGで検討されてる[navigation-api](https://github.com/WICG/navigation-api#the-current-entry) では`key`は公開されていますし、個人的にはやはり公開したいところなんですが、以前出したPRでもなかなかレスが得られませんでした。Browser historyなライフタイムのStateの実装には`key`は必須なので、賛同いただける方上記PRにリアクションやコメント下さるとありがたいです🙇‍
 
 ## まとめ
 
 少し長くなってしまいましたが、大きく主張したいこととしては大きく以下のみです。
 
-- Stateはスコープやライフタイムによって分類され、分類ごとに実方針を検討するのが良さそう
+- Stateはスコープやライフタイムによって分類され、分類ごとに実装方針を検討するのが良さそう
 - Stateごとにあるべきライフタイムを考えて実装しよう
 
 ご覧いただき、ありがとうございました。
@@ -164,7 +164,7 @@ https://github.com/vercel/next.js/pull/36861
 
 ### Rustにおけるライフタイム
 
-Stateの再分類に入る前に、単語の借用元であるRustのライフタイムについても軽く触れておきます。興味のある方はRustの[The Book](https://doc.rust-jp.rs/book-ja/ch10-03-lifetime-syntax.html) と呼ばれる入門サイトがあるので、こちらを参照ください。
+単語の借用元であるRustのライフタイムについても軽く触れておきます。興味のある方はRustの[The Book](https://doc.rust-jp.rs/book-ja/ch10-03-lifetime-syntax.html) と呼ばれる入門サイトがあるので、こちらを参照ください。
 
 Rustのライフタイムは簡単にいうと、変数の生存期間を管理し生存期間を抜けた変数はメモリ的に解放されます。例えばJavascriptでは以下のコードが成り立ちます。
 
