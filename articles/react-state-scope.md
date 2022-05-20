@@ -121,8 +121,6 @@ https://github.com/vercel/next.js/blob/fe3d6b7aed5e39c19bd4a5fbbf1c9c890e239ea4/
 - Javascript memory: Recoil
 - Server: SWR
 
-一方、Client Stateに含まれているライフタイムのBrowser historyとBrowser storageはRecoilの関連ライブラリなどを必要とする場合があります。
-
 Browser storageなStateの実装は[recoil-persist](https://github.com/polemius/recoil-persist) や[redux-persist](https://github.com/rt2zz/redux-persist) など、要望が多いのか関連ライブラリがよく提供されるのでこれらを利用することで簡単に実装できます。
 
 一方でBrowser historyは僕が知らないだけかもしれませんが、History APIによって履歴のエントリーにStateを同期するようなライブラリは見つかりませんでした。これらは[react-router](https://v5.reactrouter.com/web/api/history) などのState管理ライブラリ以外でサポートされていることの方が多いようです。一方、Next.jsは先述の通り内部で独自のObjectでreplaceしてしまうので、実装自体不可能だったりします。
@@ -131,7 +129,7 @@ Browser storageなStateの実装は[recoil-persist](https://github.com/polemius/
 
 - Component unmount: React.useState
 - Javascript memory: Recoil
-- Browser history: **自前で実装or不可能**
+- Browser history: **routerなどのhistoryを利用/自前で実装/不可能**
 - Browser storage: recoil-persistなど
 - Server: SWR
 
