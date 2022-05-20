@@ -97,13 +97,17 @@ Local StateとServer Stateは対応するものが1つづつですが、Client S
 
 ### 3. Browser history
 
-**Browser history**はブラウザの履歴が破棄されるまで、実装的には[history.push](https://developer.mozilla.org/ja/docs/Web/API/History/pushState) や[replaceState](https://developer.mozilla.org/ja/docs/Web/API/History/replaceState) によって履歴に対してState Objectが関連付けられるので、このObjectが破棄されるまでになります。実際にObjectが破棄されるタイミングは以下仕様を確認した限りブラウザの実装によりそうですが、documentが非アクティブなタイミングで破棄されうるようです。
+**Browser history**はブラウザの履歴が破棄されるまで、実装的には[History API](https://developer.mozilla.org/ja/docs/Web/API/History_API) を使って履歴に保存するか、URL自体を置き換えるなどしてクエリパラメータにStateを同期させるかの2つがあげられます。
+
+履歴に保存する場合には、[history.push](https://developer.mozilla.org/ja/docs/Web/API/History/pushState) や[replaceState](https://developer.mozilla.org/ja/docs/Web/API/History/replaceState) によって履歴のエントリに対してState Objectが関連付けられるので、このObjectが破棄されるまでになります。実際にObjectが破棄されるタイミングは以下仕様を確認した限りブラウザの実装によりそうですが、documentが非アクティブなタイミングで破棄されうるようです。
 
 https://triple-underscore.github.io/HTML-history-ja.html#session-history
 
 ちなみにnext.jsだと**内部的に`replaceState`で全て独自のObjectで置き換えられてしまうため、Browser historyなStateは実装できない**ようです。
 
 https://github.com/vercel/next.js/blob/fe3d6b7aed5e39c19bd4a5fbbf1c9c890e239ea4/packages/next/shared/lib/router/router.ts#L1432-L1445
+
+もう1つのURLにStateを同期する場合には、URLに基づきStateを初期化・Stateが更新されるたびにURLを更新をおこないます。これはURLのクエリパラメータなどをStateの一部と同期させることで、そのURLが履歴やブックマークにある限り（厳密にはそのURLとStateを同期させる実装がある限り）生存可能となります。
 
 ### 4. Browser storage
 
@@ -130,7 +134,7 @@ Browser storageなStateの実装は[recoil-persist](https://github.com/polemius/
 - Component unmount: React.useState
 - Javascript memory: Recoil
 - Browser history: **routerなどのhistoryを利用/自前で実装/不可能**
-- Browser storage: recoil-persistなど
+- Browser storage: recoil-persist
 - Server: SWR
 
 ## ライフタイムの分類から見えてくるSPAの問題点
