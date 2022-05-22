@@ -90,7 +90,7 @@ Local StateとServer Stateは対応するものが1つづつですが、Client S
 
 ### 1. Component unmount
 
-**Component mount**は文字通りコンポーネントがアンマウントされるまでになります。これは`useState`のみで利用することとほぼ同義で、Local Stateのみがこのライフタイムを持ちます。（Client Stateでアンマウント時にリセットすることで同様の実装は一応可能ですが、Global Stateにする意味はないので`useState`の方が最適と考えられます）
+**Component unmount**は文字通りコンポーネントがアンマウントされるまでになります。これは`useState`のみで利用することとほぼ同義で、Local Stateのみがこのライフタイムを持ちます。（Client Stateでアンマウント時にリセットすることで同様の実装は一応可能ですが、Global Stateにする意味はないので`useState`の方が最適と考えられます）。
 
 ### 2. Javascript memory
 
