@@ -151,6 +151,8 @@ Browser historyなライフタイムStateの代表格の1つに、スクロー�
 
 これにリロードが絡むと履歴とスクロール位置の紐付けが壊れて、復元に失敗してしまうケースがあるのを修正したPRを出しているんですが、なかなかマージされません。
 
+**2022/05/23 追記** こちらマージされました。リアクションなどいただいた方ありがとうございました。
+
 https://github.com/vercel/next.js/pull/36861
 
 そこそこケース的に気付きづらいというのもあるのでしょうが、おそらくレビューアーの中で優先度が低いのでしょう。。。このPRで議論してることとして、「`history`の`key`を公開したい」という話があります。`key`を公開するとhistoryのエントリを一意に識別することができるので、**Browser historyなStateをNext.jsでも実装できるようになります**。[RemixのLocation](https://github.com/remix-run/history/blob/main/docs/api-reference.md#locationkey) やWICGで検討されてる[navigation-api](https://github.com/WICG/navigation-api#the-current-entry) では`key`は公開されていますし、個人的にはやはり公開したいところなんですが、以前出したPRでもなかなかレスが得られませんでした。Browser historyなライフタイムのStateの実装には`key`は必須なので、賛同いただける方上記PRにリアクションやコメント下さるとありがたいです🙇‍
