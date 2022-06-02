@@ -3,7 +3,7 @@ title: "Next.jsと型安全session"
 emoji: "😺"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["nextjs"]
-published: false
+published: true
 ---
 
 Next.jsをBFFサーバーで使う時、セッションを使いたいケースもあるかと思います。この際に[next-session](https://github.com/hoangvvo/next-session) が結構便利で一工夫すれば型安全なセッション管理ができるので紹介です。
