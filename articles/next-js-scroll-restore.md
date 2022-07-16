@@ -27,6 +27,6 @@ published: false
   - ちょっと余談
   - SPAでは遷移時に状態が破壊されがち
   - vercelの社長とnext.jsの方針が噛み合ってない
-      - history壊してる
-      - 発火順おかしいとき
+    - history壊してる
+    - 発火順おかしいとき
   - recoil-sync-next
