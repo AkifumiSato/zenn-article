@@ -6,22 +6,35 @@ topics: ["nextjs"]
 published: false
 ---
 
-[Next.js](https://nextjs.org/)にはexperimental(実験的機能)で`scrollRestoration`というフラグが存在します。デフォルトでもSSGなど静的buildの場合にはスクロール位置を復元してくれますが、`getServerSideProps`利用時にはこのフラグを有効にしないとスクロール位置が復元されません。最近会社の先輩とこの辺りをいじってNext.jsに修正プルリクなど送っていたので、自分では気付けないような部分の知見も多く得られたので、備忘録兼ねてこのフラグが何を解決しようとして、どう実装されているのか解説したいと思います。
+[Next.js](https://nextjs.org/)にはexperimental(実験的機能)で`scrollRestoration`というフラグが存在します。デフォルトでもSSGなど静的buildの場合にはスクロール位置を復元してくれますが、`getServerSideProps`利用時にはこのフラグを有効にしないとスクロール位置が復元されません。最近この辺りについて識者の方々から色々アドバイスももらい、自分では気付けないような部分の知見も多く得られたので、備忘録兼ねて`scrollRestoration`が何を解決しようとして、どう実装されているのか解説したいと思います。
 
 ## Next.jsのスクロール復元挙動
 
+多くのMPA(Multi Page Application)では、ブラウザバック/フォワードを行った際にはスクロール位置はブラウザによって復元されます。こういった挙動が各ブラウザにいつからあるのかは不明ですが、スマホでのブラウジング(特にスワイプ)との相性を考えると自然な挙動に思えます。この辺りの使用についてはwhatwgでも明記されています。
+
+https://html.spec.whatwg.org/multipage/browsing-the-web.html#persisted-user-state-restoration
+
+> If entry's scroll restoration mode is "auto", then the user agent may use entry's scroll position data to restore the scroll positions of entry's document's restorable scrollable regions.
+
+browser historyとして格納されるentry stateにはscroll position dataというものがあり、「scroll restoration modeが`auto`(`History.scrollRestoration = auto`と同義)ならscroll position dataをもとにスクロール位置を復元することができる」とされています。
+
+Next.js始めSPAでは、これらの挙動がうまく動作しないことがあります。
+
 ### `getServerSideProps`なしのページの場合
 
-- スクロール位置はブラウザによって復元される
+`getServerSideProps`を含まない場合、ページのレンダリングは即座に行われます。ブラウザは`popstate`イベントで行われる処理の完了を待ってスクロール位置を復元していると思われるため、正常に位置は復元されます。
+
+- demoの動画
 
 ### `getServerSideProps`ありのページの場合
 
 - 非同期処理の場合、ブラウザ側での復元が先にきてしまう
-- こう言った問題を scroll amnesiaと呼ぶ
+- demoの動画
 
 ### SPAではこう言った問題起きがち
 
-- MPAだとブラウザがやってくれてるがSPAだと起きがち
+- こう言った問題を scroll amnesiaと呼ぶ
+  - MPAだとブラウザがやってくれてるがSPAだと起きがち
 - Vercelの社長の解説
 
 ### `experimental.scrollRestoration`
@@ -46,13 +59,9 @@ published: false
 - リロード時に復元できない
 - PRのリンク
 
-## 余談:実はNext.jsで失ってるのはスクロールだけではない
+## 余談:Next.jsで状態を復元する
 
-### SPAでは遷移時に状態が破壊されがち
-
-### vercelの社長とnext.jsの方針が噛み合ってない
-
-- history壊してる
-- 発火順おかしいとき
-
-### recoil-sync-next
+- スクロールだけでなく、状態もよく失われれる
+- recoil + recoil-sync + koichikさんが作ったライブラリでそれが補完できる
+- recoil-sync-next
+- 近々こっちも解説詳細に書こうと思う
