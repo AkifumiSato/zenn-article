@@ -18,14 +18,20 @@ https://html.spec.whatwg.org/multipage/browsing-the-web.html#persisted-user-stat
 
 browser historyとして格納されるentry stateにはscroll position dataというものがあり、「scroll restoration modeが`auto`(`History.scrollRestoration = auto`と同義)ならscroll position dataをもとにスクロール位置を復元することができる」とされています。
 
-Next.js始めSPAでは、これらの挙動がうまく動作しないことがあります。
+Next.js始めSPAでは、これらの挙動がデフォルトではうまく動作しないことがあります。デフォルト(`experimental.scrollRestoration = false`)の際の挙動について確認してみましょう。
 
 ### `getServerSideProps`なしのページの場合
 
 `getServerSideProps`を含まない場合、ページのレンダリングは即座に行われます。ブラウザは`popstate`イベントで行われる処理の完了を待ってスクロール位置を復元していると思われるため、正常に位置は復元されます。
 
-- demoの動画
+:::details demo
+![](/images/next-js-scroll-restore/default_gssp_demo.gif)
+:::
 
+- todo
+  - gsspとgspでどう動くのか
+  - demo
+  
 ### `getServerSideProps`ありのページの場合
 
 - 非同期処理の場合、ブラウザ側での復元が先にきてしまう
