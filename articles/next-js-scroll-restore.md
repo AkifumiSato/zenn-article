@@ -1,4 +1,4 @@
----
+_---
 title: "Next.jsはどうやってスクロール位置を復元するのか"
 emoji: "📜"
 type: "tech" # tech: 技術記事 / idea: アイデア
@@ -73,27 +73,43 @@ another pageからブラウザバックする際に先にURLが変更され、�
 
 https://blog.jxck.io/entries/2022-04-22/navigation-api.html#%E3%83%95%E3%82%A9%E3%83%BC%E3%82%AB%E3%82%B9%E3%81%AE%E7%AE%A1%E7%90%86
 
-### `experimental.scrollRestoration`
+## experimental.scrollRestorationの実装
 
-- このフラグによってgSSPもサポートできる
-- 内部的にはgSSP完了後に頑張って位置を復元してる
+Navigation APIはまだChromeでしか実装されておらず、実用の段階にはないたSPAでScroll amnesiaに対応するには別途実装が必要です。これを有効にするのが冒頭で述べた`experimental.scrollRestoration`フラグです。このフラグを有効にした際にNext.jsがどうやって位置を復元しているか見てみましょう。
 
-## next.jsのscrollRestoration実装
+### 処理の概要
 
-### 12.2.0まで
+大まかな処理の概要は以下です。
 
-- indexを内部にもってる
-- 遷移時やpopstate時に更新してる
+1. 履歴に対してkeyを作成
+2. `next/link`で遷移時(`pushState`)時にkeyとスクロール位置をSession Storageに保存
+3. ブラウザバック/フォワード時にkeyをもとにSession Storageからスクロール位置を取得
+4. Next.jsのrender関数内でスクロール位置を復元
 
-### 12.2.0以降
+これらの処理について、詳細にみていきましょう。
 
-- 連番はよく壊れる
-- PRのリンク
+#### 1. 履歴に対してkeyを作成
+
+Next.jsには`next/link`や`useRouter`などで利用される`Router` classが存在します。主にこのclassはクライアントサイドで利用され、サーバー側では共通のinterfaceをもった`ServerRouter`classが利用されます。
+
+https://github.com/vercel/next.js/blob/v12.2.0/packages/next/shared/lib/router/router.ts#L620
+
+`Router`はクライアントサイドのルーティングや[pushState](https://developer.mozilla.org/ja/docs/Web/API/History/pushState)によるURL更新、`getServerSideProps`を実行するfetchの発行など、Next.jsのライフサイクルに対する責務を負っています。この`Router`で、新規の履歴に対してユニークなkeyが作成されます。
+
+実は12.2.0まではkeyはユニークな文字列ではなく単純なindexでしたが、indexだと容易に履歴が破綻するためリロードを挟むと復元できなくなっていました。これを修正するためにユニークなkeyで管理するよう修正したプルリクをNext.jsに投げて、無事マージ・リリースされたので現在はユニークな文字列がkeyとなっています(Next.jsへ初PR&マージでした、やったー！)。
+
+https://github.com/vercel/next.js/pull/36861
+
+#### 2. keyとスクロール位置をSession Storageに保存
+
+#### 3. ブラウザバック/フォワード時にkeyをもとにスクロール位置を取得
+
+#### 4. Next.jsのrender関数内でスクロール位置を復元
 
 ### 残ってる問題点
 
 - リロード時に復元できない
-- PRのリンク
+  - PRのリンク
 
 ## (予想)Navigation APIを利用した実装
 
@@ -104,4 +120,4 @@ https://blog.jxck.io/entries/2022-04-22/navigation-api.html#%E3%83%95%E3%82%A9%E
   - https://yosuke-furukawa.hatenablog.com/entry/2014/11/14/141415#5
 - recoil + recoil-sync + koichikさんが作ったライブラリでそれが補完できる
 - recoil-sync-next
-- 近々こっちも解説詳細に書こうと思う
+- 近々こっちも解説詳細に書こうと思う_
