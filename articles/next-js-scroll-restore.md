@@ -81,9 +81,9 @@ Safariでは復元されない(=ブラウザ差異がある)ことからもChrom
 ![](/images/next-js-scroll-restore/default_static.gif)
 :::
 
-## Scroll of amnesia
+## スクロール位置の喪失
 
-こういったスクロール位置の喪失は**Scroll of amnesia**と呼ばれます。SPAではScroll of amnesiaであったり、状態の復元というのが軽視されがちな状況にあります。SPAの擬似遷移はシームレスな遷移や必要最低限のネットワークのラウンドトリップによるページ描画の高速化が見込める一方で、スクロールや状態の復元を軽視してしまうとブラウザバック/フォワードのUXが悪化してしまいます。
+SPAではスクロール位置や、状態の復元というのが軽視されがちな状況にあります。SPAの擬似遷移はシームレスな遷移や必要最低限のネットワークのラウンドトリップによるページ描画の高速化が見込める一方で、スクロールや状態の復元を軽視してしまうとブラウザバック/フォワードのUXが悪化してしまいます。
 
 こういった状況を改善するためにも、whatwgでは[Navigation API](https://github.com/WICG/navigation-api/blob/main/README.md)という新たなブラウザAPIによってSPAの擬似遷移の体験改善が検討されています。
 
@@ -91,7 +91,7 @@ https://blog.jxck.io/entries/2022-04-22/navigation-api.html#%E3%83%95%E3%82%A9%E
 
 ## experimental.scrollRestorationの実装
 
-Navigation APIはまだChromeでしか実装されておらず、実用の段階にはないためSPAでScroll of amnesiaに対応するには別途実装が必要です。これを有効にするのが冒頭で述べた`experimental.scrollRestoration`フラグです。このフラグを有効にした際にNext.jsがどうやってスクロール位置を復元しているか見てみましょう。
+Navigation APIはまだChromeでしか実装されておらず、実用の段階にはないためSPAでスクロール位置の復元に対応するには別途実装が必要です。これを有効にするのが冒頭で述べた`experimental.scrollRestoration`フラグです。このフラグを有効にした際にNext.jsがどうやってスクロール位置を復元しているか見てみましょう。
 
 ### 処理の概要
 
