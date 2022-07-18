@@ -1,4 +1,4 @@
-_---
+---
 title: "Next.jsはどうやってスクロール位置を復元するのか"
 emoji: "📜"
 type: "tech" # tech: 技術記事 / idea: アイデア
@@ -10,7 +10,7 @@ published: false
 
 ## Next.jsのスクロール復元挙動
 
-多くのMPA(Multi Page Application)では、ブラウザバック/フォワードを行った際にはスクロール位置はブラウザによって復元されます。こういった挙動が各ブラウザにいつからあるのかは把握していませんが、スマホでのブラウジング(特にスワイプ)との相性を考えると自然な挙動に思えます。この辺りの使用についてはwhatwgでも明記されています。
+多くのMPA(Multi Page Application)では、ブラウザバック/フォワードを行った際にはスクロール位置はブラウザによって復元されます。こういった挙動が各ブラウザにいつからあるのかは把握していませんが、スマホでのブラウジング(特にスワイプ)との相性を考えると自然な挙動に思えます。この辺りの仕様についてはwhatwgでも明記されています。
 
 https://html.spec.whatwg.org/multipage/browsing-the-web.html#persisted-user-state-restoration
 
@@ -132,7 +132,7 @@ https://github.com/vercel/next.js/pull/37127
 
 現在Vercel内で実装が進んでると思われる[Nested Layout](https://nextjs.org/blog/layouts-rfc)によっておそらく`Router`も大きく変更されるでしょうから、その前にレビューしてもらいたいところです。
 
-## (予想)Navigation APIを利用した実装
+## 将来的な実装: Navigation APIの利用
 
 将来的にNavigation APIが広くサポートされNext.jsでも利用されることになった場合には、履歴の管理やSession Storageの操作は不要になります。Navigation APIでは`navigate`イベント時に**遷移を定義できるようになります**。
 
@@ -162,11 +162,18 @@ navigation.addEventListener("navigate", e => {
 })
 ```
 
-## 余談:Next.jsで状態を復元する
+## まとめ
 
-- スクロールだけでなく、状態もよく失われれる
-- Vercelの社長も大事な原則として上げてる
-  - https://yosuke-furukawa.hatenablog.com/entry/2014/11/14/141415#5
-- recoil + recoil-sync + koichikさんが作ったライブラリでそれが補完できる
-- recoil-sync-next
-- 近々こっちも解説詳細に書こうと思う_
+ブラウザの復元処理とNext.jsの挙動、`experimental.scrollRestoration = true`でどう挙動が変わりどう実装されているのかみてきました。jxckさんの記事にもありますが、スクロール位置の復元の体験はSPAでは軽視されがちです。Navigation APIによってブラウザの遷移ローダーがSPA遷移でも有効になってくる未来が早く来ることを願っています。
+
+https://twitter.com/domenic/status/1471604621470846979
+
+同様にSPAで軽視されがちなものとして、UI状態の復元が挙げられます。こちらについては本稿ではあまり触れませんでしたが、以前書いた[スコープとライフタイムで考えるReact State再考](https://zenn.dev/akfm/articles/react-state-scope)という記事で詳しく触れています。
+
+https://zenn.dev/akfm/articles/react-state-scope
+
+この記事の後recoil-syncがリリースされ、recoil-syncとNext.jsを連携する[recoil-sync-next](https://github.com/recruit-tech/recoil-sync-next)というライブラリ開発に微力ながら携わらせていただきました。
+
+https://twitter.com/koichik/status/1547866613944201218
+
+近々こちらについてもできれば記事にしたいなと思います。多分。。。
