@@ -142,7 +142,7 @@ https://github.com/vercel/next.js/blob/v12.2.0/packages/next/client/index.tsx#L9
 
 ### 残ってる課題
 
-以上が`experimental.scrollRestoration`有効時の復元処理になります。ただし、この復元処理にはまだ課題があります。リロード時に`Router`の`key`がリセットされてしまうため、リロード時のみスクロール位置が復元できないのです。
+以上が`experimental.scrollRestoration`有効時の復元処理になります。ただし、この復元処理にはまだ課題があります。リロード時に`Router`の`key`がリセットされてしまうため、リロード時のみスクロール位置が復元できないのです。例えばZennもNext.jsで作られており、`experimental.scrollRestoration`を有効にしているようなので、本稿の執筆時点ではこの記事をこの位置でリロードしてもスクロール位置が復元されず先頭に移ってしまいます。
 
 これについても修正プルリクを作成しています。
 
