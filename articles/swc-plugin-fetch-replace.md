@@ -275,7 +275,7 @@ impl VisitMut for TransformVisitor {
 
 これでテストが通り、置き換えられることが確認できました。
 
-### `window.fetch/global.fetch`の置き換え
+### `window.fetch/globalThis.fetch`の置き換え
 
 `fetch`はグローバルスコープなので、`window.fetch`や`globalThis.fetch`でも呼び出せます。これらも置き換えをやってみます。
 
