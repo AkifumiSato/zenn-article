@@ -82,27 +82,143 @@ FSDはfeatures/processes/entitiesの作成方法を示す必要があります�
 
 ![low-coupling](/images/feature-sliced-design/low-coupling.png)
 
-### public API
+### Public API
 
-public APIとして`index.ts`(.tsとしていますが.jsなどでも同様)でre exportしているもののみが外部(他レイヤーのモジュール)から利用することが可能です。これにより、モジュールと外部の契約が`index.ts`集約されます。
+Public APIとして`index.ts`(.tsとしていますが.jsなどでも同様)でre exportしているもののみが外部(他レイヤーのモジュール)から利用することが可能です。これにより、モジュールと外部の契約が`index.ts`集約されます。
 
 これにより、モジュールの内部構造のリファクタは外部に影響せず安全に行うことができ、逆に破壊的変更は影響範囲の特定を容易にします。
 
+## FSDの設計とルール概要
 
+以降はこれらの目的やコンセプトに基づく、FSDの設計ルールについて概要を記載します。
+
+### Layers・Slices・Segments
+
+FSD最大の特徴は冒頭にあった図のような**Layers・Slices・Segments**の3つの階層構造です。以下再掲です。
+
+![schema](/images/feature-sliced-design/schema.png)
+
+#### Layers
+
+昨今のフロントエンドのアプリケーションコードは大抵`src`ディレクトリに配置されます。FSDにおいてもこれが踏襲されており、全てのアプリケーションコードは`src`に格納されます。FSDにおいて`src`配下は**Layers**と呼ばれる階層で、以下の7つのディレクトリに分類されます。
+
+1. **app**: アプリ全体の設定、スタイル、Providerなど。
+1. **processes**: 認証などの複雑なpages間のプロセス。
+1. **pages**: entities/features/widgetsからページを構成するLayer。
+1. **widgets**: entitiesとfeaturesを意味のあるブロックに結合するLayer。(e.g. IssuesList、UserProfile)
+1. **features**: ユーザーとのインタラクションや、ビジネス価値をもたらす機能。(e.g. SendComment、AddToCart、UsersSearch)
+1. **entities**: ビジネスドメインのエンティティ。(e.g. User, Product, Order)
+1. **shared**: プロジェクト/ビジネスの詳細から切り離された、再利用可能な機能。(e.g. UIKit、ライブラリ、API)
+
+これらのLayer間の依存は一方向にのみ許可され、上位のLayerは下位のLayerにのみ依存できます。
+
+```
+app > processes > pages > features > entities > shared
+```
+
+#### Slices
+
+Layers直下は**Slices**と呼ばれる第2階層を持ちます。SlicesはFSDによる命名ではなく、ビジネスロジックに基づいてディレクトリが作成されるため、プロジェクトに強く依存します。
+
+以下はディレクトリ構成の例と、各LayersにおけるSlicesの切り方の指針です。
+
+```
+├── app/
+|   # Does not have specific slices, 
+|   # Because it contains meta-logic on the project and its initialization
+├── processes/
+|   # Slices implementing processes on pages
+|   ├── payment
+|   ├── auth
+|   ├── quick-tour
+|   └── ...
+├── pages/
+|   # Slices implementing application pages
+|   # At the same time, due to the specifics of routing, they can be invested in each other
+|   ├── profile
+|   ├── sign-up
+|   ├── feed
+|   └── ...
+├── widgets/
+|   # Slices implementing independent page blocks
+|   ├── header
+|   ├── feed
+|   └── ...
+├── features/
+|   # Slices implementing user scenarios on pages
+|   ├── auth-by-phone
+|   ├── inline-post
+|   └── ...
+├── entities/
+|   # Slices of business entities for implementing a more complex BL
+|   ├── viewer
+|   ├── posts
+|   ├── i18n
+|   └── ...
+├── shared/
+|    # Does not have specific slices
+|    # is rather a set of commonly used segments, without binding to the BL
+```
+
+**同じLayerに属するSlicesは、お互いに依存してはいけません**。これは依存関係を明確にすること、そしてビジネスロジックを凝集するために非常に重要なルールです。
+
+また、基本的にはSlicesはネストしてはいけません。ただし、`pages`などはフレームワークの要件によってネストが必要になる場合があります。例えばNext.jsはファイルルーティングに基づくため、URL構造と同様のネストが必要となります。
+
+#### Segments
+
+Slices配下は`Segments`と呼ばれ、実装の目的に応じてファイルやディレクトリが分けられます。以下は例です。
+
+```
+{layer}/
+    ├── {slice}/
+    |   ├── ui/                     # UI-logic (components, ui-widgets,...)
+    |   ├── model/                  # Business logic (store, actions, effects, reducers,...)
+    |   ├── lib/                    # Infrastructure logic (utils/helpers)
+    |   ├── config*/                # Configuration (of the project / slice)
+    |   └── api*/                   # Logic of API requests (api instances, requests,...)
+```
+
+### Public API
+
+コンセプト:Public APIにもありましたが、FSDでは公開モジュールはすべてSlicesやSegmentsの`index.ts`のみに存在します。外部公開前のモジュールは、`AuthForm`ではなく`Form`のように短い命名にしてre export時にユニークな命名に変更することが推奨されています。
+
+```ts
+// features/auth-form/index.ts
+export { Form as AuthForm } from "./ui"
+export * as authFormModel from "./model"
+```
+
+```ts
+// features/post-form/index.ts
+export { Form as PostForm } from "./ui"
+export * as postFormModel from "./model"
+```
+
+```ts
+// usecase
+import { AuthForm, authFormModel } from "features/auth-form"
+import { PostForm, postFormModel } from "features/post-form"
+```
+
+なお、この際にtree shakingが難しくなるためバンドルサイズが肥大化することが気になるケースもあるでしょう。webpackの[sideEffects](https://webpack.js.org/guides/tree-shaking/#mark-the-file-as-side-effect-free)オプションを有効にすることでこれを最適化できる可能性があります。利用するフレームワークにてこのオプションが有効化可能かどうか、検証することをお勧めします。
+
+## 段階的な導入
+
+FSDは段階的な導入が可能です。FSDでは過去の経験や研究に基づき、以下のような段階的導入を提案しています。プロジェクトに応じて調整しつつ、基本は以下の手順に則ることが推奨されています。
+
+1. `app`と`shared`から作成し、土台を気づきます。通常これらのLayerは最小です。
+1. FSD の規則に違反する依存関係がある場合でも、すべてのUIを`widget`と`pages`に分類します。
+1. `features`と`entities`を分離し、`pages`と`widgets`を純粋な合成Layerに徐々に変えていくことで、分解の精度を徐々に高めていきます。
+
+## 実装の参考例
+
+コンセプトや概要を理解することと同様に、実際の実装例を学ぶことも重要です。公式のチュートリアルやexamplesが参考になることでしょう。本稿は概要説明に留まるため、以下公式のリンクを参考にしてください。
+
+https://feature-sliced.design/docs/get-started/tutorial
+
+https://feature-sliced.design/examples
 
 ## memo
 
-- 設計概要
-  - Layers・Slices・Segments
-  - 依存関係のルール
-    - https://feature-sliced.design/docs/concepts/app-splitting#layers-order
-  - 公開ルール
-    - https://feature-sliced.design/docs/concepts/public-api#1-access-control
-- 各Layers
-- Slices（ドメイン）
-- Segments
-- 導入
-- 参考
-
-https://profy.dev/article/react-folder-structure
-https://feature-sliced.design/docs/get-started/quick-start
+- featuresディレクトリがよく使われる話す
+- 全体見直し
