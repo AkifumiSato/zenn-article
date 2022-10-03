@@ -4,6 +4,7 @@
   "description": "- [📘 How to use](https://zenn.dev/zenn/articles/zenn-cli-guide)",
   "main": "index.js",
   "scripts": {
+    "dev": "zenn preview",
     "test": "echo \"Error: no test specified\" && exit 1",
     "format": "dprint fmt ./articles/**",
     "prepare": "simple-git-hooks"
@@ -23,7 +24,7 @@
   },
   "homepage": "https://github.com/AkifumiSato/zenn-article#readme",
   "dependencies": {
-    "zenn-cli": "^0.1.110"
+    "zenn-cli": "^0.1.125"
   },
   "devDependencies": {
     "prettier": "^2.7.1",
