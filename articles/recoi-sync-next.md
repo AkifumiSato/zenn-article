@@ -27,12 +27,30 @@ https://rentwi.hyuki.net/?1576010373357965312
 
 以前会社で、自身を指して先輩が「戻る厨」と表現していたのを拝借し、本稿ではブラウザバック/フォワード時のUI復元について使い勝手を求める人を「戻る厨」と記載していますが、ブラウザバック/フォワード時のUI復元は多くのWebユーザーが求める一般的な要件だと筆者は考えています。本稿Next.jsにおけるこのUI復元問題について解決する[recoil-sync-next](https://www.npmjs.com/package/recoil-sync-next)の紹介記事です。
 
-## ブラウザバック時のDomの復元
+## ブラウザバック時のUI状態の復元
 
-まずはブラウザバック/フォワード時のUI復元のあり方について考えてみましょう。
+### MPAにおけるUI状態の復元
 
-todo: whatwg読む
-https://html.spec.whatwg.org/multipage/browsing-the-web.html
+まずはブラウザバック/フォワード時のUI復元のあり方について考えてみましょう。whatwgではブラウザバック/フォワード時のUI復元についてはどのように定義されているのでしょう？
+
+https://html.spec.whatwg.org/multipage/browsing-the-web.html#restore-persisted-user-state
+
+> Optionally, update other aspects of entry's document and its rendering, for instance values of form fields, that the user agent had previously recorded in entry's persisted user state.
+
+ユーザーエージェント(ここではブラウザ)における履歴の実態であるhistory entry内に保存される、`persisted user state`にユーザーエージェントが復元したいstateを格納することができるようです。ここでは例として、form valueが挙げられています。つまり、UI復元についても以前の記事で挙げた`scroll position data`同様に、ユーザーエージェントによって復元**できる**≒ユーザーエージェント側が何をどこまで復元するか決めることができるようです。
+
+実際にChromeとSafariで雑にhtml作って試してみました。以下はテスト内容を実施後、遷移＋ブラウザバックした時の結果です。
+
+| テスト内容 | Chrome | Safari |
+|-----|------|------|
+| formに値を入力 | 値が復元される | 値が復元される |
+| アコーディオンを開閉 | 復元されない | 復元される |
+| scriptタグでconsole出力 | 出力される | 出力されない |
+
+このように、UI状態で何を復元するかはユーザーエージェントによって決められているようです。
+
+ちなみに、consoleが出力されなかったことからSafariではページload時のJavaScriptを実行をしていないようでしたが、アコーディオンの開閉はできる≒イベントハンドラがDomに残っていることからイベントハンドラなども含めてDomを復元しているように見えました(そんな記事を昔見た気がしたんですが、見つからなかったのでこの辺は正確には誤りかもしれませんが...)。
+
 
 
 ## 構成
@@ -42,11 +60,7 @@ https://html.spec.whatwg.org/multipage/browsing-the-web.html
   - スクロール位置同様に、UIの復元もMPAではなされる
   - SPAでは軽視されがち
 - ブラウザバック時のDomの復元
-  - MPA(no javascript)
-    - アコーディオン
-    - form
-  - MPA(with javascript)
-    - 無限スクロール
+  - MPA <- ここまで
   - SPA
   - Next.js
 - recoil-sync-next
