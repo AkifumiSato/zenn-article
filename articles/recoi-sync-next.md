@@ -14,7 +14,7 @@ https://zenn.dev/akfm/articles/next-js-scroll-restore
 
 この記事でSPAとMPA(Multi Page Application)における、ブラウザバック/フォワード時のスクロール位置復元について言及しました。
 
-- MPAではスクロール位置がブラウザによって復元される
+- MPAではスクロール位置がブラウザによって復元されることがある(ブラウザの実装に依存)
 - SPAではこれらが軽視されがち
 - Next.jsでもデフォルトでは復元されない(ChromeでSSGページなど一部条件下では復元される)
 - Next.jsでは`experimental.scrollRestoration`を有効にするとスクロール位置をsession storageに保存し復元する
@@ -23,9 +23,17 @@ https://zenn.dev/akfm/articles/next-js-scroll-restore
 
 https://rentwi.hyuki.net/?1576010373357965312
 
-ブラウザバック/フォワード時のUI復元についてはSPAに限った話ではなく、JavaScriptで実現してるUIパーツ全般において軽視されがちで、代表的なのが上記の最初で言われている無限スクロールです。
+ブラウザバック/フォワード時のUI復元についてはSPAに限った話ではなく、JavaScriptで実現してるUIパーツ全般において軽視されがちで、代表的なのが上記ツイートの冒頭で言われている無限スクロールです。
 
-このブラウザバック/フォワード時のUI復元について使い勝手を求める人を「戻る厨」と表現しましたが、これは多くのWebユーザーが求める一般的な体験だと筆者は思っています(会社の先輩が自身を指して「戻る厨」と表現していたのを拝借しました)。本稿はこの問題に対して特に、Next.jsにおけるこのUI復元について解決する[recoil-sync-next](https://www.npmjs.com/package/recoil-sync-next)についての紹介記事です。
+以前会社で、自身を指して先輩が「戻る厨」と表現していたのを拝借し、本稿ではブラウザバック/フォワード時のUI復元について使い勝手を求める人を「戻る厨」と記載していますが、ブラウザバック/フォワード時のUI復元は多くのWebユーザーが求める一般的な要件だと筆者は考えています。本稿Next.jsにおけるこのUI復元問題について解決する[recoil-sync-next](https://www.npmjs.com/package/recoil-sync-next)の紹介記事です。
+
+## ブラウザバック時のDomの復元
+
+まずはブラウザバック/フォワード時のUI復元のあり方について考えてみましょう。
+
+todo: whatwg読む
+https://html.spec.whatwg.org/multipage/browsing-the-web.html
+
 
 ## 構成
 
@@ -34,9 +42,10 @@ https://rentwi.hyuki.net/?1576010373357965312
   - スクロール位置同様に、UIの復元もMPAではなされる
   - SPAでは軽視されがち
 - ブラウザバック時のDomの復元
-  - MPAでみてみる
+  - MPA(no javascript)
     - アコーディオン
     - form
+  - MPA(with javascript)
     - 無限スクロール
   - SPA
   - Next.js
