@@ -53,12 +53,28 @@ UI状態で何を復元するかはユーザーエージェントによって決
 
 ### Next.js(SPA)におけるUI復元
 
-一方でSPAにおいてはどうでしょうか？フレームワークにもよるかもしれませんが、本稿ではNext.jsで考えてみます。
+一方でSPAにおいてはどうでしょうか？フレームワークにもよるかもしれませんが、本稿ではNext.jsで考えてみます。Next.jsでは初回のページリクエスト以降の遷移、特に`Link`コンポーネントによる内部遷移はNext.jsのRouterによってJavaScript制御の擬似遷移となります。遷移と同時にページに対応するコンポーネントが画面に描画されます。
 
-Todo
+formの値などについては`setState`や[react-hook-form](https://react-hook-form.com/)による制御が基本ですが、この擬似遷移時にNext.jsでは**Reactコンポーネントをアンマウントするので、これらの状態については破棄されます**。詳しく調査していませんが、おそらく他のRouter系ライブラリも同様の実装になっているかと思われます。
 
-- Next.jsで実験
-  - ブラウザバック時もgSSPなどは実行されるのか
+では`getServerSideProps`についてはどうでしょうか？擬似遷移の際、サーバー側から`getServerSideProps`の結果を取得するためにページからは`/_next/data/[hash]/[page].json`のようなfetchリクエストが発生します。ブラウザバック/フォワード時には、このリクエストが毎回飛ぶので、同様に古い`getServerSideProps`の情報は破棄されます。
+
+実験に以下のような`getServerSideProps`を用意しました。
+
+```ts
+export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) => {
+  const date = new Date()
+
+  return {
+    props: {
+      miniutes: `${date.getMinutes()}`,
+    },
+  }
+}
+```
+
+ページには現在の分数が表示されるようにしておき、`Link`経由で回遊後ブラウザバックすると、現在の分数が取得されました。
+
 
 
 ## 構成
@@ -68,13 +84,15 @@ Todo
   - スクロール位置同様に、UIの復元もMPAではなされる
   - SPAでは軽視されがち
 - ブラウザバック時のDomの復元
-  - MPA <- ここまで
+  - MPA
   - SPA(Next.js)
-- recoil-sync-next
+  - SPAで履歴を保持するには
+    - 履歴を一意に特定する必要がある
+    - フレームワークから↑が提供される必要があります
+- recoil-sync-next <- ここまで
   - 概要説明
     - URLやhistoryに紐づけてrecoil stateをURLやSession Storageへ保存する
     - これにはNext.jsの実装とrecoil-syncを理解する必要がある
-  - recoil
   - recoil-sync
   - Next.js
   - recoil-sync-nextの実装
