@@ -55,7 +55,16 @@ UI状態で何を復元するかはユーザーエージェントによって決
 
 一方でSPAにおいてはどうでしょうか？フレームワークにもよるかもしれませんが、本稿ではNext.jsで考えてみます。Next.jsでは初回のページリクエスト以降の遷移、特に`Link`コンポーネントによる内部遷移はNext.jsのRouterによってJavaScript制御の擬似遷移となります。遷移と同時にページに対応するコンポーネントが画面に描画されます。
 
-formの値などについては`setState`や[react-hook-form](https://react-hook-form.com/)による制御が基本ですが、この擬似遷移時にNext.jsでは**Reactコンポーネントをアンマウントするので、これらの状態については破棄されます**。詳しく調査していませんが、おそらく他のRouter系ライブラリも同様の実装になっているかと思われます。
+formの値などについては`setState`や[react-hook-form](https://react-hook-form.com/)による制御が基本です。Next.jsなどの擬似遷移はページ遷移ごとに元々表示していたコンポーネントをアンマウントするので、多くの場合**これらで保持されている状態は破棄**されます。グローバルな状態管理や`_app.tsx`、新たにNext.jsに導入される[Layout](https://nextjs.org/blog/layouts-rfc)を利用することでページを跨いだ状態管理も可能ですが、これらは履歴に紐づく状態ではなくグローバルな状態のため、以下のような挙動の違いがあります。
+
+| No | アクション      | ブラウザバック時に望ましい復元 | グローバルな状態管理による復元 |
+|---|------------|----|---|
+| 1 | page Aへ遷移  | -  | - |
+| 2 | アコーディオンを開く | アコーディオンは開いてる | アコーディオンは開いてる |
+| 3 | page Bへ遷移  | -  | - |
+| 4 | page Aへ遷移  | アコーディオンは**閉じている** | アコーディオンは**開いてる** |
+
+グローバルな状態管理はURLや履歴を超えて持ち運べるものなので、当然こうなります。(キーに履歴idを入れれば、と思った方は[こちらへ](https://dic.pixiv.net/a/%E5%90%9B%E3%81%AE%E3%82%88%E3%81%86%E3%81%AA%E5%8B%98%E3%81%AE%E3%81%84%E3%81%84%E3%82%AC%E3%82%AD%E3%81%AF%E5%AB%8C%E3%81%84%E3%81%A0%E3%82%88))
 
 では`getServerSideProps`についてはどうでしょうか？擬似遷移の際、サーバー側から`getServerSideProps`の結果を取得するためにページからは`/_next/data/[hash]/[page].json`のようなfetchリクエストが発生します。ブラウザバック/フォワード時には、このリクエストが毎回飛ぶので、同様に古い`getServerSideProps`の情報は破棄されます。
 
@@ -75,20 +84,36 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
 
 ページには現在の分数が表示されるようにしておき、`Link`経由で回遊後ブラウザバックすると、現在の分数が取得されました。
 
+## SPAでブラウザバック時に状態を復元するには
+
+SPAでブラウザバック時に状態を復元するには、単純なグローバルな状態管理ではなく履歴に紐づく状態管理が必要です。Next.jsで履歴を一位に特定する方法はあるのでしょうか？Next.jsのRouter内部には履歴を一位に判定する`_key`が存在します。
+
+https://github.com/vercel/next.js/blob/v12.3.2-canary.43/packages/next/shared/lib/router/router.ts#L870
+
+この`_key`は[window.history.state](https://developer.mozilla.org/ja/docs/Web/API/History/state)に`key`として格納されます。
+
+https://github.com/vercel/next.js/blob/v12.3.2-canary.43/packages/next/shared/lib/router/router.ts#L1810
+
+前の記事でも触れましたが、これは元々インクリメンタルなインデックスで、挙動的にもバグになってたのを、筆者が修正プルリク投げて`_key`に変更しました。
+
+https://github.com/vercel/next.js/pull/36861
+
+ドキュメント化された仕様ではないものの、これを利用することで履歴を一意に特定することができます。これも前回書いた通り、実はリロード対応できてないので修正したものの、Nested Layoutに忙しいのかなかなかレビューされません...
+
+https://github.com/vercel/next.js/pull/37127
+
+## recoil-sync-next
+
+さて、履歴が一意に特定できるならあとは状態を履歴ごとに保存すればいいだけです。ここで本校の主題の`recoil-sync-next`が出てくるわけですが、その前にrecoilとrecoil-syncについて軽く触れましょう。
+
+### recoil
+
+### recoil-sync
+
 
 
 ## 構成
 
-- 序文
-  - Next.jsでスクロール位置がどうやって復元されるか書いた
-  - スクロール位置同様に、UIの復元もMPAではなされる
-  - SPAでは軽視されがち
-- ブラウザバック時のDomの復元
-  - MPA
-  - SPA(Next.js)
-  - SPAで履歴を保持するには
-    - 履歴を一意に特定する必要がある
-    - フレームワークから↑が提供される必要があります
 - recoil-sync-next <- ここまで
   - 概要説明
     - URLやhistoryに紐づけてrecoil stateをURLやSession Storageへ保存する
