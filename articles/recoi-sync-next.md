@@ -3,7 +3,7 @@ title: "Next.jsで戻る厨を満たすrecoil-sync-next"
 emoji: "⏳"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["nextjs"]
-published: false
+published: true
 ---
 
 以前、Next.jsのスクロール位置復元について記事を書きました。
