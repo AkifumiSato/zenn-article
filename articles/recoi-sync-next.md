@@ -25,7 +25,7 @@ https://rentwi.hyuki.net/?1576010373357965312
 
 ブラウザバック/フォワード時のUI復元についてはSPAに限った話ではなく、JavaScriptで実現してるUIパーツ全般においてあまり対応されていないようにも感じます。代表的なのが上記ツイートの冒頭で言われている無限スクロールやアコーディオンの開閉状態などです。
 
-会社の先輩が自身を指して「戻る厨」と表現していたのを拝借し、本稿ではブラウザバック/フォワード時にUI復元を求める人を「戻る厨」と記載していますが、ブラウザバック/フォワード時のUI復元は多くのWebユーザーが求める一般的な要件だと筆者は考えています。本稿は特に、Next.jsにおけるこのUI復元問題について解決する[recoil-sync-next](https://www.npmjs.com/package/recoil-sync-next)の紹介記事です。
+会社の先輩が自身を指して「戻る厨」と表現していたのを拝借し、本稿ではブラウザバック/フォワード時にUI復元を求める人を「戻る厨」と記載していますが、ブラウザバック/フォワード時のUI復元は多くのWebユーザーが求める一般的な要件だと筆者は考えています。本稿は、特にNext.jsにおけるこのUI復元問題を解決する[recoil-sync-next](https://www.npmjs.com/package/recoil-sync-next)の紹介記事です。
 
 ## ブラウザバック時のUI状態の復元
 
@@ -49,7 +49,9 @@ https://html.spec.whatwg.org/multipage/browsing-the-web.html#restore-persisted-u
 
 UI状態で何を復元するかはユーザーエージェントによって決められることからも、Chromeではform value以外は復元しない一方、SafariではアコーディオンなどのUI状態も含め復元するようです。
 
-ちなみに、consoleが出力されなかったことからSafariではページload時のJavaScriptを実行をしていないようでしたが、アコーディオンの開閉はできることからイベントハンドラがDomに適切に貼られており、Safariではイベントハンドラなども含めてUI状態を復元しているように見えました(この辺はwhatwgに記載が見つけれらなかった上、推測が入ってるので正確ではないかもしれません。詳しい人教えてください)。
+ちなみに、consoleが出力されなかったことからSafariではページload時のJavaScriptを実行をしていないことがわかりますが、当然ながらアコーディオン押下でもちろん開閉はできることからイベントハンドラはDomに適切に貼られています。これは[bf cache](https://web.dev/i18n/ja/bfcache/#bfcache%E3%81%AE%E5%9F%BA%E6%9C%AC)(back forward cache)によるもので、bf cacheはJavaScriptヒープを含むページのスナップショットを作成し、ブラウザバック時のキャッシュとして利用します。このbf cacheがChromeはまだ実装中で、Safariでは古くから実装されているためこのような挙動の違いが生まれます。
+
+ちなみにbf cacheの参考リンク先ではChrome96で全ユーザーで有効になると書いていますが、現状なってなさそうです([mozaic.fm](https://mozaic.fm/)で一度リリースし、その後取り下げられたような話を聞いたような記憶があるんですが、見つからず...。詳しい人教えてください)。
 
 ### Next.js(SPA)におけるUI復元
 
@@ -113,7 +115,7 @@ https://github.com/vercel/next.js/pull/37127
 - コード分割可能なグローバル状態管理ライブラリである
 - `export`せずに状態を宣言することで、Component単位のグローバル状態を宣言できる
 - 最も基本的な使い方は`useState`同様setter/getterで状態を変更するものである
-- 非同期Stateを簡単に定義できる(Suspenseを使う・使わないも選択できます)
+- 非同期Stateを簡単に定義できる(Suspenseを使う・使わないも選択できる)
 
 ### recoil-sync
 
@@ -151,7 +153,11 @@ const read: ReadItem = useCallback((itemKey) => {
 
 ### recoil-sync-next
 
-ようやく本題です。[recoil-sync-next](https://github.com/recruit-tech/recoil-sync-nextは**Next.jsのhistory keyを用いて状態をsession storageやURLに保存するライブラリ**です。ここまでrecoil-syncやNext.jsのhistory keyについて解説したものの、これらを意識せずに利用し始めることができ、**履歴ごとの状態の復元を実現します**。例として、session storageに保存する場合の利用方法は以下のようになります。
+ようやく本題です。[recoil-sync-next](https://github.com/recruit-tech/recoil-sync-next)は**Next.jsのhistory keyを用いて状態をsession storageやURLに保存するライブラリ**です。[koichik](https://twitter.com/koichik)さんが作成されました。
+
+https://twitter.com/koichik/status/1547866613944201218
+
+ここまでrecoil-syncやNext.jsのhistory keyについて解説したものの、これらを意識せずに利用し始めることができ、**履歴ごとの状態の復元を実現します**。例として、session storageに保存する場合の利用方法は以下のようになります。
 
 ```tsx
 // _app.tsx
@@ -188,23 +194,32 @@ export const counter = initializableAtomFamily<number, string>({
 - 復元されて欲しい状態 -> recoil(syncEffect)
 - 復元されて欲しくない状態 -> useState、recoil(syncEffectなし)
 
-のような使い分けになっていくかと思ったのですが、実際に使ってみると「復元されてほしくない状態」というのが全く見当たりませんでした。もちろん画面仕様にもよるので、あるかもしれませんが大抵のUIパーツはやはり復元されて欲しいものなので、導入後は多用することとなりました。
+のような使い分けになっていくかと思ったのですが、実際に使ってみると「復元されてほしくない状態」というのがほとんど見当たりませんでした。もちろん画面仕様にもよりますが、大抵のUIパーツはやはり復元されて欲しいものなので、導入後は多用することとなりました。
 
+## 応用編
 
-## 構成
+### react-hook-formとの連携
 
+昨今だとNext.jsでFormを作るのに[react-hook-form](https://react-hook-form.com/)を利用している方も多いのではないでしょうか？以下にreact-hook-formとrecoil-sync-nextで復元可能なFormのサンプルを実装しています。
 
-- 応用編
-  - react-hook-formとの連携
-  - URL Persistenceの注意点
-    - Formの内容などをURLに保存すると危険
-  - リロード時
-    - Next.jsのバグが原因で対応できない
-    - PRは出してるがNested LayoutのRouter実装と衝突する部分があるのか、開きっぱなし
-- まとめ
-  - 最近ツイッターでも無限スクロールやブラウザバックによる消失問題について議論されてるのを見かけた
-  - 個人的にもレコメンドの消失とかは結構辛い
-  - これらの体験はrecoil-syncやrecoil-sync-nextによって改善する
-  - もっと使って欲しい
-  - 使わない人もこれらの体験については改めて考えてみて欲しい
-  - よりよい戻る体験が提供されると嬉しい
+https://github.com/recruit-tech/recoil-sync-next/blob/main/examples/react-hook-form
+
+長くなってしまうので詳細な説明は省きますが、`useFormSync`というカスタムhooksを定義して、以下のように利用することでreact-hook-formとrecoil-sync-nextの連携を実現しています。
+
+https://github.com/recruit-tech/recoil-sync-next/blob/main/examples/react-hook-form/pages/form/%5Bindex%5D.tsx#L33-L35
+
+### URL Persistenceの注意点
+
+わかってる方も多いかと思いますが、Formの内容をURL Persistenceで**GETパラメータに保存するのは危険です**。ユーザー環境で履歴やリクエストがロギングされている場合、**個人情報が流出する可能性**があります。
+
+### Next.jsのリロード時
+
+[先述の通り](#:~:text=実はリロード対応できてない)、Next.jsの履歴のkeyはリロード時に破棄されます。
+
+### Next.jsのapp directory
+
+こちらも[先述の通り](#:~:text=app%20directory)、2022/10段階ではまだbetaのapp directoryには未対応です。
+
+## まとめ
+
+冒頭でも述べた通り、この手の「戻る」の体験はユーザーのストレスに繋がり、快適なWebブラウジングを阻害します。しかし、recoil-syncやrecoil-sync-nextを利用することで簡単にこれらの体験は改善します。もっと多くの人につt買って欲しいし、一方でNext.jsを使っていない人もこの「戻る」の体験を重視してより良い体験のサイトが増えるといいなと思います。本稿を通じてこの議論が少しでも増えたら嬉しいです。
