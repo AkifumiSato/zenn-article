@@ -10,7 +10,7 @@ published: false
 
 https://zenn.dev/akfm/articles/next-js-scroll-restore
 
-(この記事でrecoil-sync-nextついても近々記事を書くと言ってたのに、3ヶ月も空いてしまいました)
+recoil-sync-nextついても近々記事を書くと言ってたのに、3ヶ月も空いてしまいました。
 
 この記事でSPAとMPA(Multi Page Application)における、ブラウザバック/フォワード時のスクロール位置復元について言及しました。
 
@@ -49,15 +49,15 @@ https://html.spec.whatwg.org/multipage/browsing-the-web.html#restore-persisted-u
 
 UI状態で何を復元するかはユーザーエージェントによって決められることからも、Chromeではform value以外は復元しない一方、SafariではアコーディオンなどのUI状態も含め復元するようです。
 
-ちなみに、consoleが出力されなかったことからSafariではページload時のJavaScriptを実行をしていないことがわかりますが、当然ながらアコーディオン押下でもちろん開閉はできることからイベントハンドラはDomに適切に貼られています。これは[bf cache](https://web.dev/i18n/ja/bfcache/#bfcache%E3%81%AE%E5%9F%BA%E6%9C%AC)(back forward cache)によるもので、bf cacheはJavaScriptヒープを含むページのスナップショットを作成し、ブラウザバック時のキャッシュとして利用します。このbf cacheがChromeはまだ実装中で、Safariでは古くから実装されているためこのような挙動の違いが生まれます。
+ちなみに、consoleが出力されなかったことからSafariではページload時のJavaScriptを実行をしていないことがわかりますが、当然ながらアコーディオン押下でもちろん開閉はできることからイベントハンドラはDomに適切に貼られています。これは[bf cache(back forward cache)](https://web.dev/i18n/ja/bfcache/#bfcache%E3%81%AE%E5%9F%BA%E6%9C%AC)によるもので、bf cacheはJavaScriptヒープを含むページのスナップショットを作成し、ブラウザバック時のキャッシュとして利用します。このbf cacheがChromeはまだ実装中で、Safariでは古くから実装されているためこのような挙動の違いが生まれます。
 
-ちなみにbf cacheの参考リンク先ではChrome96で全ユーザーで有効になると書いていますが、現状なってなさそうです([mozaic.fm](https://mozaic.fm/)で一度リリースし、その後取り下げられたような話を聞いたような記憶があるんですが、見つからず...。詳しい人教えてください)。
+ちなみにbf cacheの参考リンク先ではChrome96で全ユーザーで有効になると書いていますが、現状なってなさそうです([mozaic.fm](https://mozaic.fm/)で、一度リリースしその後取り下げられたような話を聞いたような記憶があるんですが、見つからず...。詳しい人教えてください)。
 
 ### Next.js(SPA)におけるUI復元
 
-一方でSPAにおいてはどうでしょうか？フレームワークにもよるかもしれませんが、本稿ではNext.jsで考えてみます。Next.jsでは初回のページリクエスト以降の遷移、特に`Link`コンポーネントによる内部遷移はNext.jsのRouterによってJavaScript制御の擬似遷移となります。遷移と同時にページに対応するコンポーネントが画面に描画されます。
+一方でSPAにおいてはどうでしょうか？フレームワークにもよるかもしれませんが、本稿ではNext.jsで考えてみます。Next.jsでは初回のページリクエスト以降の遷移、特に`Link`コンポーネントによる内部遷移はNext.jsのRouterによってJavaScript制御の擬似遷移となります。擬似遷移が発生するとページに対応するコンポーネントが画面に描画されます。
 
-formの値などについては`setState`や[react-hook-form](https://react-hook-form.com/)による制御が基本です。Next.jsなどの擬似遷移はページ遷移ごとに元々表示していたコンポーネントをアンマウントするので、多くの場合**これらで保持されている状態は破棄**されます。グローバルな状態管理や`_app.tsx`、新たにNext.jsに導入される[Layout](https://nextjs.org/blog/layouts-rfc)を利用することでページを跨いだ状態管理も可能ですが、これらは履歴に紐づく状態ではなくグローバルな状態のため、以下のような挙動の違いがあります。
+formの値などについては`setState`や[react-hook-form](https://react-hook-form.com/)で制御することも多いかと思われます。Next.jsの擬似遷移はページ遷移ごとに元々表示していたコンポーネントをアンマウントするので、多くの場合**これらで保持されている状態は破棄**されます。グローバルな状態管理や`_app.tsx`、新たにNext.jsに導入される[Layout](https://nextjs.org/blog/layouts-rfc)を利用することでページを跨いだ状態管理も可能ですが、これらは履歴に紐づく状態ではなくグローバルな状態のため、以下のような挙動の違いがあります。
 
 | No | アクション      | ブラウザバック時に望ましい復元 | グローバルな状態管理による復元 |
 |---|------------|----|---|
@@ -66,9 +66,9 @@ formの値などについては`setState`や[react-hook-form](https://react-hook
 | 3 | page Bへ遷移  | -  | - |
 | 4 | page Aへ遷移  | アコーディオンは**閉じている** | アコーディオンは**開いてる** |
 
-グローバルな状態管理はURLや履歴を超えて持ち運べるものなので、当然こうなります。(キーに履歴idを入れれば、と思った方は[こちらへ](https://dic.pixiv.net/a/%E5%90%9B%E3%81%AE%E3%82%88%E3%81%86%E3%81%AA%E5%8B%98%E3%81%AE%E3%81%84%E3%81%84%E3%82%AC%E3%82%AD%E3%81%AF%E5%AB%8C%E3%81%84%E3%81%A0%E3%82%88))
+グローバルな状態管理はURLや履歴を超えて持ち運べるものなので、当然こうなります。
 
-では`getServerSideProps`についてはどうでしょうか？擬似遷移の際、サーバー側から`getServerSideProps`の結果を取得するためにページからは`/_next/data/[hash]/[page].json`のようなfetchリクエストが発生します。ブラウザバック/フォワード時には、このリクエストが毎回飛ぶので、同様に古い`getServerSideProps`の情報は破棄されます。
+では`getServerSideProps`はブラウザバック時はどうなるのでしょうか？擬似遷移の際、サーバー側から`getServerSideProps`の結果を取得するためにページからは`/_next/data/[hash]/[page].json`のようなfetchリクエストが発生します。ブラウザバック/フォワード時には、このリクエストが毎回飛ぶので、同様に古い`getServerSideProps`の情報は破棄されます。
 
 実験に以下のような`getServerSideProps`を用意しました。
 
@@ -84,11 +84,11 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
 }
 ```
 
-ページには現在の分数が表示されるようにしておき、`Link`経由で回遊後ブラウザバックすると、現在の分数が取得されました。
+ページには現在の分数が表示されるようにしておき、`Link`経由で回遊後ブラウザバックすると、現在の分数が取得されます。
 
 ## SPAでブラウザバック時に状態を復元するには
 
-SPAでブラウザバック時に状態を復元するには、単純なグローバルな状態管理ではなく履歴に紐づく状態管理が必要です。Next.jsで履歴を一位に特定する方法はあるのでしょうか？Next.jsのRouter内部には履歴を一位に判定する`_key`が存在します。
+SPAでブラウザバック時に状態を復元するには、履歴をkeyに含んだグローバルな状態管理が必要です。Next.jsで履歴を一位に特定する方法はあるのでしょうか？Next.jsのRouter内部には履歴を一位に判定する`_key`が存在します。
 
 https://github.com/vercel/next.js/blob/v12.3.2-canary.43/packages/next/shared/lib/router/router.ts#L870
 
@@ -100,13 +100,13 @@ https://github.com/vercel/next.js/blob/v12.3.2-canary.43/packages/next/shared/li
 
 https://github.com/vercel/next.js/pull/36861
 
-ドキュメント化された仕様ではないものの、これを利用することで履歴を一意に特定することができます。これも前回書いた通り、実はリロード対応できてないので修正したものの、Nested Layoutに忙しいのかなかなかレビューされません...
+ドキュメント化された仕様ではないものの、これを利用することで履歴を一意に特定することができます。これも前回書いた通り、実はリロード対応できてないので修正したものの、Nested Layoutに忙しいのかなかなかレビューされないため、現在もリロード時にはスクロール位置やこのkeyは初期化されてしまいます。
 
 https://github.com/vercel/next.js/pull/37127
 
 ## recoil-sync-next
 
-さて、履歴が一意に特定できるならあとは状態を履歴ごとに保存すればいいだけです。ここで本校の主題の`recoil-sync-next`が出てくるわけですが、その前にrecoilとrecoil-syncについて軽く触れましょう。
+`window.history.state.key`を参照することでNext.jsで履歴を一意に特定するできそうです。となると、あとは状態を履歴ごとに保存すればいいだけです。ここで本校の主題の`recoil-sync-next`が出てくるわけですが、その前にrecoilとrecoil-syncについて軽く触れましょう。
 
 ### recoil
 
@@ -119,7 +119,7 @@ https://github.com/vercel/next.js/pull/37127
 
 ### recoil-sync
 
-[recoil-sync](https://recoiljs.org/docs/recoil-sync/introduction/)はrecoilの状態を外部Storeに保存することを容易にするライブラリです。`useEffect`やrecoilの`selector`ロジックを変更することなく状態を保存できるのが特徴です。具体的にはrecoilの状態宣言時に、`effects`に`syncEffect`のインスタンスを指定します。
+[recoil-sync](https://recoiljs.org/docs/recoil-sync/introduction/)はrecoilの状態を外部Storeに保存することを容易にするライブラリです。`useEffect`やrecoilの`selector`を利用することなく状態を保存できるのが特徴です。具体的にはatom宣言時にオプションで、`effects`に`syncEffect`のインスタンスを指定します。
 
 ```ts
 import { number } from '@recoiljs/refine'
@@ -131,6 +131,7 @@ import { syncEffect } from 'recoil-sync'
 const countState = atom<number>({
   key: 'Count',
   default: 0,
+  // ↓違いはここのみ
   effects: [
     syncEffect({
       storeKey: 'storeA',
@@ -140,11 +141,11 @@ const countState = atom<number>({
 });
 ```
 
-利用者側はこれだけです。`syncEffect`にはいくつかのオプションがあり、`storeKey`は保存するStoreを示すキーです。実際の保存ロジックを実装する`RecoilSync`コンポーネントとキーを一致させる必要があります。`refine`は同じくrecoilから提供されているバリデーションライブラリです。これを用いることで予期せぬデータ型の予防やマイグレーションを容易にします。
+利用者側はこれだけです。`syncEffect`にはいくつかのオプションがあり、`storeKey`は保存するStoreを示すキーです。実際の保存ロジックを実装する`RecoilSync`コンポーネントとキーを一致させる必要があります。`refine`は同じくrecoilから提供されているバリデーションライブラリです。これを用いることで予期せぬデータ型の混入を防げます。
 
 また、実際の保存は[RecoilSync](https://recoiljs.org/docs/recoil-sync/api/RecoilSync/)のpropsでそれぞれ実装します。例えば`read`は以下のようキーを受け取り、キーをもとにlocal storageなどの外部Storeから値抽出し返ます。
 
-```ts
+```tsx
 const read: ReadItem = useCallback((itemKey) => {
   const storage = JSON.parse(localStorage.getItem('hoge'))
   return storage?.[itemKey] ?? new DefaultValue()
@@ -222,4 +223,4 @@ https://github.com/recruit-tech/recoil-sync-next/blob/main/examples/react-hook-f
 
 ## まとめ
 
-冒頭でも述べた通り、この手の「戻る」の体験はユーザーのストレスに繋がり、快適なWebブラウジングを阻害します。しかし、recoil-syncやrecoil-sync-nextを利用することで簡単にこれらの体験は改善します。もっと多くの人につt買って欲しいし、一方でNext.jsを使っていない人もこの「戻る」の体験を重視してより良い体験のサイトが増えるといいなと思います。本稿を通じてこの議論が少しでも増えたら嬉しいです。
+冒頭でも述べた通り、この手の「戻る」の体験はユーザーのストレスに繋がり、快適なWebブラウジングを阻害します。しかし、recoil-syncやrecoil-sync-nextを利用することで簡単にこれらの体験は改善します。もっと多くの人に使って欲しいし、一方でNext.jsを使っていない人もこの「戻る」の体験を重視して、より良い体験のサイトが増えるといいなと思います。本稿を通じてこの議論が少しでも増えたら嬉しいです。
