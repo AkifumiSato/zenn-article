@@ -108,19 +108,92 @@ https://github.com/vercel/next.js/pull/37127
 
 ### recoil
 
+[recoil](https://recoiljs.org)はMeta Experimental(旧Facebook Experimental)が開発したReactの状態管理ライブラリです。こちらについては既にご存知の方も多いと思うので、ここでは特徴紹介に留めます。詳細な紹介は他の記事や公式を参照ください。
+
+- コード分割可能なグローバル状態管理ライブラリである
+- `export`せずに状態を宣言することで、Component単位のグローバル状態を宣言できる
+- 最も基本的な使い方は`useState`同様setter/getterで状態を変更するものである
+- 非同期Stateを簡単に定義できる(Suspenseを使う・使わないも選択できます)
+
 ### recoil-sync
 
+[recoil-sync](https://recoiljs.org/docs/recoil-sync/introduction/)はrecoilの状態を外部Storeに保存することを容易にするライブラリです。`useEffect`やrecoilの`selector`ロジックを変更することなく状態を保存できるのが特徴です。具体的にはrecoilの状態宣言時に、`effects`に`syncEffect`のインスタンスを指定します。
+
+```ts
+import { number } from '@recoiljs/refine'
+import { atom } from 'recoil'
+import { syncEffect } from 'recoil-sync'
+
+// ...snip...
+
+const countState = atom<number>({
+  key: 'Count',
+  default: 0,
+  effects: [
+    syncEffect({
+      storeKey: 'storeA',
+      refine: number(),
+    }),
+  ],
+});
+```
+
+利用者側はこれだけです。`syncEffect`にはいくつかのオプションがあり、`storeKey`は保存するStoreを示すキーです。実際の保存ロジックを実装する`RecoilSync`コンポーネントとキーを一致させる必要があります。`refine`は同じくrecoilから提供されているバリデーションライブラリです。これを用いることで予期せぬデータ型の予防やマイグレーションを容易にします。
+
+また、実際の保存は[RecoilSync](https://recoiljs.org/docs/recoil-sync/api/RecoilSync/)のpropsでそれぞれ実装します。例えば`read`は以下のようキーを受け取り、キーをもとにlocal storageなどの外部Storeから値抽出し返ます。
+
+```ts
+const read: ReadItem = useCallback((itemKey) => {
+  const storage = JSON.parse(localStorage.getItem('hoge'))
+  return storage?.[itemKey] ?? new DefaultValue()
+}, [])
+```
+
+### recoil-sync-next
+
+ようやく本題です。[recoil-sync-next](https://github.com/recruit-tech/recoil-sync-nextは**Next.jsのhistory keyを用いて状態をsession storageやURLに保存するライブラリ**です。ここまでrecoil-syncやNext.jsのhistory keyについて解説したものの、これらを意識せずに利用し始めることができ、**履歴ごとの状態の復元を実現します**。例として、session storageに保存する場合の利用方法は以下のようになります。
+
+```tsx
+// _app.tsx
+import { RecoilHistorySyncJSONNext } from 'recoil-sync-next'
+
+function MyApp({ Component, pageProps }: AppProps) {
+  return (
+    <RecoilRoot>
+      <RecoilHistorySyncJSONNext storeKey="ui-state">
+        <Component {...pageProps} />
+      </RecoilHistorySyncJSONNext>
+    </RecoilRoot>
+  )
+}
+
+// Recoil State
+export const counter = initializableAtomFamily<number, string>({
+  key: 'counterState',
+  effects: [
+    syncEffect({
+      storeKey: 'ui-state',
+      refine: number(),
+    }
+  )],
+})
+```
+
+:::message
+2022/10に行われたNext Confでbetaリリースが発表された[app directory](https://nextjs.org/blog/next-13#app-directory-beta)は先述の[Layout](https://nextjs.org/blog/layouts-rfc)対応の新たなRouterを利用しているので現在非対応です。
+:::
+
+これだけでNext.jsの世界で履歴ごとの状態復元が可能なります。recoil-sync-nextを使う場合、
+
+- 復元されて欲しい状態 -> recoil(syncEffect)
+- 復元されて欲しくない状態 -> useState、recoil(syncEffectなし)
+
+のような使い分けになっていくかと思ったのですが、実際に使ってみると「復元されてほしくない状態」というのが全く見当たりませんでした。もちろん画面仕様にもよるので、あるかもしれませんが大抵のUIパーツはやはり復元されて欲しいものなので、導入後は多用することとなりました。
 
 
 ## 構成
 
-- recoil-sync-next <- ここまで
-  - 概要説明
-    - URLやhistoryに紐づけてrecoil stateをURLやSession Storageへ保存する
-    - これにはNext.jsの実装とrecoil-syncを理解する必要がある
-  - recoil-sync
-  - Next.js
-  - recoil-sync-nextの実装
+
 - 応用編
   - react-hook-formとの連携
   - URL Persistenceの注意点
