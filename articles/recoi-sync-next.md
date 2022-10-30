@@ -111,7 +111,7 @@ https://github.com/vercel/next.js/pull/37127
 
 ## recoil-sync-next
 
-`window.history.state.key`を参照することでNext.jsで履歴を一意に特定するできそうです。となると、あとは状態を履歴ごとに保存すればいいだけです。ここで本稿の主題の`recoil-sync-next`が出てくるわけですが、その前にrecoilとrecoil-syncについて軽く触れましょう。
+`window.history.state.key`を参照することでNext.jsで履歴を一意に特定するできそうです。となると、あとは状態を履歴ごとに保存すればいいだけです。これを容易にするのが、**recoil-sync-next**です。recoilやrecoil-syncについて軽く触れつつ、recoil-sync-nextの利用方法を見ていきましょう。
 
 ### recoil
 
@@ -163,9 +163,7 @@ const read: ReadItem = useCallback((itemKey) => {
 
 ### recoil-sync-next
 
-ようやく本題です。[recoil-sync-next](https://github.com/recruit-tech/recoil-sync-next)は**Next.jsのhistory keyを用いて状態をsession storageやURLに保存するライブラリ**です。
-
-https://twitter.com/koichik/status/1547866613944201218
+[recoil-sync-next](https://github.com/recruit-tech/recoil-sync-next)は**Next.jsのhistory keyを用いて状態をsession storageやURLに保存するライブラリ**です。
 
 ここまでrecoil-syncやNext.jsのhistory keyについて解説したものの、これらを意識せずに利用し始めることができ、**履歴ごとの状態の復元を実現します**。例として、session storageに保存する場合の利用方法は以下のようになります。
 
