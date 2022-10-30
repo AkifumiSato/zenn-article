@@ -93,7 +93,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
 
 ## SPAでブラウザバック時に状態を復元するには
 
-SPAでブラウザバック時に状態を復元するには、履歴をkeyに含んだグローバルな状態管理が必要です。Next.jsで履歴を一位に特定する方法はあるのでしょうか？Next.jsのRouter内部には履歴を一位に判定する`_key`が存在します。
+SPAでブラウザバック時に状態を復元するには、履歴をkeyとするグローバルな状態管理が必要です。Next.jsで履歴を一位に特定する方法はあるのでしょうか？Next.jsのRouter内部には履歴を一意に判定する`_key`が存在します。
 
 https://github.com/vercel/next.js/blob/v12.3.2-canary.43/packages/next/shared/lib/router/router.ts#L870
 
@@ -111,11 +111,11 @@ https://github.com/vercel/next.js/pull/37127
 
 ## recoil-sync-next
 
-`window.history.state.key`を参照することでNext.jsで履歴を一意に特定するできそうです。となると、あとは状態を履歴ごとに保存すればいいだけです。ここで本校の主題の`recoil-sync-next`が出てくるわけですが、その前にrecoilとrecoil-syncについて軽く触れましょう。
+`window.history.state.key`を参照することでNext.jsで履歴を一意に特定するできそうです。となると、あとは状態を履歴ごとに保存すればいいだけです。ここで本稿の主題の`recoil-sync-next`が出てくるわけですが、その前にrecoilとrecoil-syncについて軽く触れましょう。
 
 ### recoil
 
-[recoil](https://recoiljs.org)はMeta Experimental(旧Facebook Experimental)が開発したReactの状態管理ライブラリです。こちらについては既にご存知の方も多いと思うので、ここでは特徴紹介に留めます。詳細な紹介は他の記事や公式を参照ください。
+[recoil](https://recoiljs.org)はMetaが開発したReactの状態管理ライブラリです。こちらについては既にご存知の方も多いと思うので、ここでは特徴紹介に留めます。詳細な紹介は他の記事や公式を参照ください。
 
 - コード分割可能なグローバル状態管理ライブラリである
 - `export`せずに状態を宣言することで、Component単位のグローバル状態を宣言できる
