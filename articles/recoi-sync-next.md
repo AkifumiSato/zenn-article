@@ -148,18 +148,22 @@ const countState = atom<number>({
 
 利用者側はこれだけです。`syncEffect`にはいくつかのオプションがあり、`storeKey`は保存するStoreを示すキーです。実際の保存ロジックを実装する`RecoilSync`コンポーネントとキーを一致させる必要があります。`refine`は同じくrecoilから提供されているバリデーションライブラリです。これを用いることで予期せぬデータ型の混入を防げます。
 
-また、実際の保存は[RecoilSync](https://recoiljs.org/docs/recoil-sync/api/RecoilSync/)のpropsでそれぞれ実装します。例えば`read`は以下のようキーを受け取り、キーをもとにlocal storageなどの外部Storeから値抽出し返ます。
+また、実際の保存は`_app.tsx`で呼び出す[RecoilSync](https://recoiljs.org/docs/recoil-sync/api/RecoilSync/)コンポーネントのpropsでそれぞれ実装します。例えば`read`は以下のようキーを受け取り、キーをもとにlocal storageなどの外部Storeから値抽出し返ます。
 
 ```tsx
 const read: ReadItem = useCallback((itemKey) => {
   const storage = JSON.parse(localStorage.getItem('hoge'))
   return storage?.[itemKey] ?? new DefaultValue()
 }, [])
+// <RecoilSync
+//   read={read}
+// ...
+// >
 ```
 
 ### recoil-sync-next
 
-ようやく本題です。[recoil-sync-next](https://github.com/recruit-tech/recoil-sync-next)は**Next.jsのhistory keyを用いて状態をsession storageやURLに保存するライブラリ**です。[koichik](https://twitter.com/koichik)さんが作成されました。
+ようやく本題です。[recoil-sync-next](https://github.com/recruit-tech/recoil-sync-next)は**Next.jsのhistory keyを用いて状態をsession storageやURLに保存するライブラリ**です。
 
 https://twitter.com/koichik/status/1547866613944201218
 
