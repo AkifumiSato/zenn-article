@@ -10,8 +10,6 @@ published: true
 
 https://zenn.dev/akfm/articles/next-js-scroll-restore
 
-recoil-sync-nextついても近々記事を書くと言ってたのに、3ヶ月も空いてしまいました。
-
 この記事でSPAとMPA(Multi Page Application)における、ブラウザバック/フォワード時のスクロール位置復元について言及しました。
 
 - MPAではスクロール位置がブラウザによって復元されることがある(ブラウザの実装に依存)
@@ -39,19 +37,16 @@ https://html.spec.whatwg.org/multipage/browsing-the-web.html#restore-persisted-u
 
 履歴の実態であるhistory entry内に保存される、`persisted user state`にユーザーエージェント(ここではブラウザ)が復元したいstateを格納することができるようです。ここでは例として、form valueが挙げられています。つまり、UI復元についても以前の記事で挙げた`scroll position data`同様に、ユーザーエージェントによって復元**できる**≒ユーザーエージェント側が何をどこまで復元するか決めることができるようです。
 
-実際にChromeとSafariで雑にhtml作って試してみました。以下はテスト内容を実施後、遷移＋ブラウザバックした時の結果です。
+実際にChromeとSafariで試してみました。以下はローカルサーバーから`Cache-Control: no-store`ヘッダー付きで静的ファイルを返却し、テスト内容を実施後遷移＋ブラウザバックした時の結果です。
 
 | テスト内容 | Chrome | Safari |
 |-----|------|------|
 | formに値を入力 | 値が復元される | 値が復元される |
 | アコーディオンを開閉 | 復元されない | 復元される |
-| scriptタグでconsole出力 | 出力される | 出力されない |
 
 UI状態で何を復元するかはユーザーエージェントによって決められることからも、Chromeではform value以外は復元しない一方、SafariではアコーディオンなどのUI状態も含め復元するようです。
 
-ちなみに、consoleが出力されなかったことからSafariではページload時のJavaScriptを実行をしていないことがわかりますが、当然ながらアコーディオン押下でもちろん開閉はできることからイベントハンドラはDomに適切に貼られています。これは[bf cache(back forward cache)](https://web.dev/i18n/ja/bfcache/#bfcache%E3%81%AE%E5%9F%BA%E6%9C%AC)によるもので、bf cacheはJavaScriptヒープを含むページのスナップショットを作成し、ブラウザバック時のキャッシュとして利用します。このbf cacheがChromeはまだ実装中で、Safariでは古くから実装されているためこのような挙動の違いが生まれます。
-
-ちなみにbf cacheの参考リンク先ではChrome96で全ユーザーで有効になると書いていますが、現状なってなさそうです([mozaic.fm](https://mozaic.fm/)で、一度リリースしその後取り下げられたような話を聞いたような記憶があるんですが、見つからず...。詳しい人教えてください)。
+一方、`Cache-Control: no-store`を外すとChromeでもアコーディオン含め再現されました。ChromeやSafariでは一部条件下において、JavaScriptヒープまで含めてDomを再現する[bf cache(back forward cache)](https://web.dev/i18n/ja/bfcache/#bfcache%E3%81%AE%E5%9F%BA%E6%9C%AC)が利用されることがあります。ChromeとSafariではbf cacheが利用される条件が違うため、このような違いが生じます。
 
 ### Next.js(SPA)におけるUI復元
 
