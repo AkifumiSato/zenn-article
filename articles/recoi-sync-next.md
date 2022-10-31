@@ -10,11 +10,11 @@ published: true
 
 https://zenn.dev/akfm/articles/next-js-scroll-restore
 
-この記事でSPAとMPA(Multi Page Application)における、ブラウザバック/フォワード時のスクロール位置復元について言及しました。
+上記記事でSPAとMPA(Multi Page Application)における、ブラウザバック/フォワード時のスクロール位置復元について言及しました。
 
 - MPAではスクロール位置がブラウザによって復元されることがある(ブラウザの実装に依存)
 - SPAではこれらが軽視されがち
-- Next.jsでもデフォルトでは復元されない(ChromeでSSGページなど一部条件下では復元される)
+- Next.jsにおいても、デフォルトでは復元されない(ChromeでSSGページなど一部条件下では復元される)
 - Next.jsでは`experimental.scrollRestoration`を有効にするとスクロール位置をsession storageに保存し復元する
 
 これらと同様に、ブラウザバック/フォワード時のUI復元についても軽視されがちなものの1つです。最近もこの手のUI体験の悪さについて、問題提起がされ話題になりました。
@@ -23,7 +23,7 @@ https://rentwi.hyuki.net/?1576010373357965312
 
 ブラウザバック/フォワード時のUI復元についてはSPAに限った話ではなく、JavaScriptで実現してるUIパーツ全般においてあまり対応されていないようにも感じます。代表的なのが上記ツイートの冒頭で言われている無限スクロールやアコーディオンの開閉状態などです。
 
-会社の先輩が自身を指して「戻る厨」と表現していたのを拝借し、本稿ではブラウザバック/フォワード時にUI復元を求める人を「戻る厨」と記載していますが、ブラウザバック/フォワード時のUI復元は多くのWebユーザーが求める一般的な要件だと筆者は考えています。本稿は、特にNext.jsにおけるこのUI復元問題を解決する[recoil-sync-next](https://www.npmjs.com/package/recoil-sync-next)の紹介記事です。
+会社の先輩が自身を指して「戻る厨」と表現していたのを拝借し、本稿のタイトルではブラウザバック/フォワード時にUI復元を求める人を「戻る厨」と記載していますが、ブラウザバック/フォワード時のUI復元は多くのWebユーザーが求める一般的な要件だと筆者は考えています。本稿はSPAとMPAにおけるこの問題の解説と、Next.jsにおけるUI復元問題を解決する[recoil-sync-next](https://www.npmjs.com/package/recoil-sync-next)を紹介記事です。
 
 ## ブラウザバック時のUI状態の復元
 
@@ -46,7 +46,7 @@ https://html.spec.whatwg.org/multipage/browsing-the-web.html#restore-persisted-u
 
 UI状態で何を復元するかはユーザーエージェントによって決められることからも、Chromeではform value以外は復元しない一方、SafariではアコーディオンなどのUI状態も含め復元するようです。
 
-一方、`Cache-Control: no-store`を外すとChromeでもアコーディオン含め再現されました。ChromeやSafariでは一部条件下において、JavaScriptヒープまで含めてDomを再現する[bf cache(back forward cache)](https://web.dev/i18n/ja/bfcache/#bfcache%E3%81%AE%E5%9F%BA%E6%9C%AC)が利用されることがあります。ChromeとSafariではbf cacheが利用される条件が違うため、このような違いが生じます。
+一方、`Cache-Control: no-store`を外すとChromeでもアコーディオン含め再現されました。ChromeやSafariでは一部条件下において、JavaScriptヒープまで含めてDomを再現する[bf cache(back forward cache)](https://web.dev/i18n/ja/bfcache/#bfcache%E3%81%AE%E5%9F%BA%E6%9C%AC)が利用されることがあります。ChromeとSafariではbf cacheが利用される条件が違うため、`Cache-Control`ヘッダーによって挙動に違いが生じたものと考えられます。
 
 ### Next.js(SPA)におけるUI復元
 
@@ -67,33 +67,17 @@ formの値などについては`setState`や[react-hook-form](https://react-hook
 
 グローバルな状態管理では、アコーディオンの状態が他履歴entryへ影響している様子がみてとれます。
 
-では`getServerSideProps`はブラウザバック時はどうなるのでしょうか？擬似遷移の際、サーバー側から`getServerSideProps`の結果を取得するためにページからは`/_next/data/[hash]/[page].json`のようなfetchリクエストが発生します。ブラウザバック/フォワード時には、このリクエストが毎回飛ぶので、同様に古い`getServerSideProps`の情報は破棄されます。
-
-実験に以下のような`getServerSideProps`を用意しました。
-
-```ts
-export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) => {
-  const date = new Date()
-
-  return {
-    props: {
-      miniutes: `${date.getMinutes()}`,
-    },
-  }
-}
-```
-
-ページには現在の分数が表示されるようにしておき、`Link`経由で回遊後ブラウザバックすると、現在の分数が取得されます。
-
 ### MPAとSPAの違いまとめ
 
-一旦ここまでのまとめです。ブラウザはスクロール位置の復元同様に、UI状態の復元についてもある程度よしなに行ってくれます。ブラウザごとにある程度条件などあれど、MPAは基本的にその恩恵を受けやすい傾向にあります。一方でSPAの場合、擬似遷移をJavaScriptで実装しているため同様の体験を得るためには開発者が自前で実装する必要がありますが、実際に開発者が自前でこの問題を解決するような実装をしてるケースは少ないようにも感じられます。
+一旦ここまでのまとめです。ブラウザはスクロール位置の復元同様に、UI状態の復元についてもある程度よしなに行ってくれます。ブラウザごとにある程度条件はあれど、**MPAは基本的にその恩恵を受けやすい傾向**にあります。一方でSPAの場合、擬似遷移をJavaScriptで実装しているため同様の体験を得るためには開発者が自前で実装する必要がありますが、実際に開発者が自前でこの問題を解決するような実装をしてるケースは少ないようにも感じられます。
 
-そのため、相対的にSPAは体験が悪いと受け止められる可能性がありますし、残念ながらある程度これは事実かと思います。
+そのため、**相対的にSPAは体験が悪いと受け止められる**可能性がありますし、残念ながらある程度これは事実かと思います。
 
 ## SPAでブラウザバック時に状態を復元するには
 
-SPAでブラウザバック時に状態を復元するには、履歴をkeyとするグローバルな状態管理が必要です。Next.jsで履歴を一位に特定する方法はあるのでしょうか？Next.jsのRouter内部には履歴を一意に判定する`_key`が存在します。
+SPAでブラウザバック時に状態を復元するには、履歴をkeyとするグローバルな状態管理が必要です。
+
+Next.jsで履歴を一位に特定する方法はあるのでしょうか？Next.jsのRouter内部には履歴を一意に判定する`_key`が存在します。
 
 https://github.com/vercel/next.js/blob/v12.3.2-canary.43/packages/next/shared/lib/router/router.ts#L870
 
