@@ -181,12 +181,24 @@ export const counter = initializableAtomFamily<number, string>({
 2022/10に行われたNext Confでbetaリリースが発表された[app directory](https://nextjs.org/blog/next-13#app-directory-beta)は先述の[Layout](https://nextjs.org/blog/layouts-rfc)対応の新たなRouterを利用しているので現在非対応です。
 :::
 
-これだけでNext.jsの世界で履歴ごとの状態復元が可能なります。recoil-sync-nextを使う場合、
+これだけでNext.jsの世界で履歴ごとの状態復元が可能なります。
+
+以下は実際にrecoil-sync-nextを利用する前後の挙動の違いです。どちらも同じようにrecoilのatomで状態管理しているため、利用前は状態をページ間で共有していますが、recoil-sync-next利用時は**ページごとに状態が分けられている**ことがわかります。
+
+:::details default
+![](/images/recoil-sync-next/default.gif)
+:::
+
+:::details recoil-sync-next demo
+![](/images/recoil-sync-next/demo.gif)
+:::
+
+recoil-sync-nextを使う場合、
 
 - 復元されて欲しい状態 -> recoil(syncEffect)
 - 復元されて欲しくない状態 -> useState、recoil(syncEffectなし)
 
-のような使い分けになっていくかと思ったのですが、実際に使ってみると「復元されてほしくない状態」というのがほとんど見当たりませんでした。もちろん画面仕様にもよりますが、大抵のUIパーツはやはり復元されて欲しいものなので、導入後は多用することとなりました。
+のような使い分けになっていくかと思ったのですが、実際に使ってみると「復元されてほしくない状態」というのがほとんど見当たりませんでした。もちろん画面仕様にもよりますが、大抵のUIパーツはやはり復元されて欲しいものなので、現在導入しているプロジェクトでは多用することとなりました。
 
 ## 応用編
 
