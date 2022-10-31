@@ -85,7 +85,7 @@ https://github.com/vercel/next.js/blob/v12.3.2-canary.43/packages/next/shared/li
 
 https://github.com/vercel/next.js/blob/v12.3.2-canary.43/packages/next/shared/lib/router/router.ts#L1810
 
-前の記事でも触れましたが、これは元々インクリメンタルなインデックスで、挙動的にもバグになってたのを、筆者が修正プルリク投げて`_key`に変更しました。
+前の記事でも触れましたが、これは元々インクリメンタルなインデックスで、挙動的にもバグになってたのを筆者が修正プルリクを投げて`_key`に変更しました。
 
 https://github.com/vercel/next.js/pull/36861
 
@@ -181,7 +181,7 @@ export const counter = initializableAtomFamily<number, string>({
 2022/10に行われたNext Confでbetaリリースが発表された[app directory](https://nextjs.org/blog/next-13#app-directory-beta)は先述の[Layout](https://nextjs.org/blog/layouts-rfc)対応の新たなRouterを利用しているので現在非対応です。
 :::
 
-これだけでNext.jsの世界で履歴ごとの状態復元が可能なります。
+これだけでNext.jsの世界で履歴ごとの状態復元が可能になります。
 
 以下は実際にrecoil-sync-nextを利用する前後の挙動の違いです。どちらも同じようにrecoilのatomで状態管理しているため、利用前は状態をページ間で共有していますが、recoil-sync-next利用時は**ページごとに状態が分けられている**ことがわかります。
 
