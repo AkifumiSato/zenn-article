@@ -214,7 +214,9 @@ https://github.com/recruit-tech/recoil-sync-next/blob/main/examples/react-hook-f
 
 ### URL Persistenceの注意点
 
-わかってる方も多いかと思いますが、Formの内容をURL Persistenceで**GETパラメータに保存するのは危険です**。ユーザー環境で履歴やリクエストがロギングされている場合、**個人情報が流出する可能性**があります。
+URL Persistenceの利用目的は基本的に共有可能・ブックマーク可能なURLを生成することにあります。利用例としては、検索条件をURLに含む場合など挙げられます。
+
+注意点として、Formの内容をURL Persistenceで**GETパラメータに保存するのは危険です**。ユーザー環境で履歴やリクエストがロギングされている場合、**個人情報が流出する可能性**があります。
 
 ### Next.jsのリロード時
 
