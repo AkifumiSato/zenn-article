@@ -52,9 +52,9 @@ UI状態で何を復元するかはユーザーエージェントによって決
 
 一方でSPAにおいてはどうでしょうか？フレームワークにもよるかもしれませんが、本稿ではNext.jsで考えてみます。Next.jsでは初回のページリクエスト以降の遷移、特に`Link`コンポーネントによる内部遷移はNext.jsのRouterによってJavaScript制御の擬似遷移となります。擬似遷移が発生するとページに対応するコンポーネントが画面に描画されます。
 
-formの値などについては`setState`や[react-hook-form](https://react-hook-form.com/)で制御することも多いかと思われます。Next.jsの擬似遷移はページ遷移ごとに元々表示していたコンポーネントをアンマウントするので、多くの場合**これらで保持されている状態は破棄**されます。グローバルな状態管理や`_app.tsx`に配置した`Context`による状態、新たにNext.jsに導入される[Layout](https://nextjs.org/blog/layouts-rfc)を利用することでページを跨いだ状態管理も可能ですが、これらは履歴に紐づく状態ではなくグローバルな状態のため、他履歴entryの状態にも影響してしまいます。
+Formの値などについては`setState`や[react-hook-form](https://react-hook-form.com/)で制御することも多いかと思われます。Next.jsの擬似遷移はページ遷移ごとに元々表示していたコンポーネントをアンマウントするので、多くの場合**これらで保持されている状態は破棄**されます。グローバルな状態管理や`_app.tsx`に配置した`Context`による状態、新たにNext.jsに導入される[Layout](https://nextjs.org/blog/layouts-rfc)を利用することでページを跨いだ状態管理も可能ですが、これらは履歴に紐づく状態ではなくグローバルな状態のため、他履歴entryの状態にも影響してしまいます。
 
-以下はアコーディオンComponentを持つpage Aとpage Bを回遊した際の、アコーディオンの挙動です。「グローバルな状態管理」では、アコーディオンComponentは開閉状態を`isOpen: boolean`という形で状態管理しているものとします。
+以下はアコーディオンComponentを持つpage Aとpage Bを回遊した際の、アコーディオンの挙動です。「グローバルな状態管理」では、Recoilや[Zustand](https://github.com/pmndrs/zustand)などを用いてアコーディオンの開閉状態を`isOpen: boolean`という形で状態管理しているものとします。
 
 | No | アクション | 望ましい状態 | useState | グローバルな状態管理 |
 |--|--------------------|----------------|------------------|-----|
@@ -215,7 +215,7 @@ recoil-sync-nextを使う場合、
 
 ### react-hook-formとの連携
 
-昨今だとNext.jsでFormを作るのに[react-hook-form](https://react-hook-form.com/)を利用している方も多いのではないでしょうか？以下にreact-hook-formとrecoil-sync-nextで復元可能なFormのサンプルを実装しています。
+昨今だとNext.jsでFormを作るのに[react-hook-form](https://react-hook-form.com/)を利用している方も多いのではないでしょうか。以下にreact-hook-formとrecoil-sync-nextで復元可能なFormのサンプルを実装しています。
 
 https://github.com/recruit-tech/recoil-sync-next/blob/main/examples/react-hook-form
 
@@ -243,9 +243,11 @@ const formState = initializableAtom<FormState>({
 const { /* ... */ } = useFormSync<FormState>(formState({ name: 'sato' }), config)
 ```
 
+より詳細な実装についてはぜひexamplesを参照ください。
+
 ### URL Persistenceの注意点
 
-URL Persistenceの利用目的は基本的に共有可能・ブックマーク可能なURLを生成することにあります。利用例としては、検索条件をURLに含む場合など挙げられます。
+URL Persistenceの利用目的は基本的に共有可能・ブックマーク可能なURLを生成することにあります。利用例としては、検索条件をURLに含む場合などが挙げられます。
 
 注意点として、Formの内容をURL Persistenceで**GETパラメータに保存するのは危険です**。ユーザー環境で履歴やリクエストがロギングされている場合、**個人情報が流出する可能性**があります。
 
