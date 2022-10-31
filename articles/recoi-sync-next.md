@@ -210,7 +210,27 @@ https://github.com/recruit-tech/recoil-sync-next/blob/main/examples/react-hook-f
 
 長くなってしまうので詳細な説明は省きますが、`useFormSync`というカスタムhooksを定義して、以下のように利用することでreact-hook-formとrecoil-sync-nextの連携を実現しています。
 
-https://github.com/recruit-tech/recoil-sync-next/blob/main/examples/react-hook-form/pages/form/%5Bindex%5D.tsx#L33-L35
+```ts
+type FormState = {
+  name: string
+}
+
+// import { initializableAtom } from 'recoil-sync-next'
+// defaultなしでatomを作成するutility
+const formState = initializableAtom<FormState>({
+  key: 'formState',
+  effects: [
+    syncEffect({
+      refine: object({
+        name: string(),
+      }),
+    }),
+  ],
+})
+
+// config: useForm(react-hook-form)のdefaultValues以外の引数
+const { /* ... */ } = useFormSync<FormState>(formState({ name: 'sato' }), config)
+```
 
 ### URL Persistenceの注意点
 
