@@ -23,13 +23,13 @@ https://rentwi.hyuki.net/?1576010373357965312
 
 ブラウザバック/フォワード時のUI復元についてはSPAに限った話ではなく、JavaScriptで実現してるUIパーツ全般においてあまり対応されていないようにも感じます。代表的なのが上記ツイートの冒頭で言われている無限スクロールやアコーディオンの開閉状態などです。
 
-会社の先輩が自身を指して「戻る厨」と表現していたのを拝借し、本稿のタイトルではブラウザバック/フォワード時にUI復元を求める人を「戻る厨」と記載していますが、ブラウザバック/フォワード時のUI復元は多くのWebユーザーが求める一般的な要件だと筆者は考えています。本稿はSPAとMPAにおけるこの問題の解説と、Next.jsにおけるUI復元問題を解決する[recoil-sync-next](https://www.npmjs.com/package/recoil-sync-next)を紹介記事です。
+会社の先輩が自身を指して「戻る厨」と表現していたのを拝借し、本稿のタイトルではブラウザバック/フォワード時にUI復元を求める人を「戻る厨」と記載していますが、ブラウザバック/フォワード時のUI復元は多くのWebユーザーが求める一般的な要件だと筆者は考えています。本稿はSPAとMPAにおけるこの問題の解説と、Next.jsにおけるUI復元問題を解決する[recoil-sync-next](https://www.npmjs.com/package/recoil-sync-next)を紹介する記事です。
 
 ## ブラウザバック時のUI状態の復元
 
 ### MPAにおけるUI状態の復元
 
-まずはブラウザバック/フォワード時のUI復元のあり方について考えてみましょう。whatwgではブラウザバック/フォワード時のUI復元についてはどのような仕様が定義されているのでしょう？
+まずはブラウザバック/フォワード時のUI復元のあり方について考えてみましょう。whatwgではブラウザバック/フォワード時のUI復元についてどのような仕様が定義されているのでしょう？
 
 https://html.spec.whatwg.org/multipage/browsing-the-web.html#restore-persisted-user-state
 
@@ -37,7 +37,7 @@ https://html.spec.whatwg.org/multipage/browsing-the-web.html#restore-persisted-u
 
 履歴の実態であるhistory entry内に保存される、`persisted user state`にユーザーエージェント(ここではブラウザ)が復元したいstateを格納することができるようです。ここでは例として、form valueが挙げられています。つまり、UI復元についても以前の記事で挙げた`scroll position data`同様に、ユーザーエージェントによって復元**できる**≒ユーザーエージェント側が何をどこまで復元するか決めることができるようです。
 
-実際にChromeとSafariで試してみました。以下はローカルサーバーから`Cache-Control: no-store`ヘッダー付きで静的ファイルを返却し、テスト内容を実施後遷移＋ブラウザバックした時の結果です。
+実際にChromeとSafariで試してみました。以下はローカルサーバーから`Cache-Control: no-store`ヘッダー付きで静的ファイルを返却し、テスト内容を実施後にブラウザバックで遷移した時の結果です。
 
 | テスト内容 | Chrome | Safari |
 |-----|------|------|
@@ -46,13 +46,13 @@ https://html.spec.whatwg.org/multipage/browsing-the-web.html#restore-persisted-u
 
 UI状態で何を復元するかはユーザーエージェントによって決められることからも、Chromeではform value以外は復元しない一方、SafariではアコーディオンなどのUI状態も含め復元するようです。
 
-一方、`Cache-Control: no-store`を外すとChromeでもアコーディオン含め再現されました。ChromeやSafariでは一部条件下において、JavaScriptヒープまで含めてDomを再現する[bf cache(back forward cache)](https://web.dev/i18n/ja/bfcache/#bfcache%E3%81%AE%E5%9F%BA%E6%9C%AC)が利用されることがあります。ChromeとSafariではbf cacheが利用される条件が違うため、`Cache-Control`ヘッダーによって挙動に違いが生じたものと考えられます。
+一方、`Cache-Control: no-store`を外すとChromeでもアコーディオン含め復元されました。ChromeやSafariでは一部条件下において、JavaScriptヒープまで含めてDOMを再現する[bf cache(back forward cache)](https://web.dev/i18n/ja/bfcache/#bfcache%E3%81%AE%E5%9F%BA%E6%9C%AC)が利用されることがあります。ChromeとSafariではbf cacheが利用される条件が違うため、`Cache-Control`ヘッダーによって挙動に違いが生じたものと考えられます。
 
 ### Next.js(SPA)におけるUI復元
 
-一方でSPAにおいてはどうでしょうか？フレームワークにもよるかもしれませんが、本稿ではNext.jsで考えてみます。Next.jsでは初回のページリクエスト以降の遷移、特に`Link`コンポーネントによる内部遷移はNext.jsのRouterによってJavaScript制御の擬似遷移となります。擬似遷移が発生するとページに対応するコンポーネントが画面に描画されます。
+一方でSPAにおいてはどうでしょうか？フレームワークにもよるかもしれませんが、本稿ではNext.jsで考えてみます。Next.jsでは初回のページリクエスト以降の遷移、特に`Link`コンポーネントによる内部遷移はNext.jsのRouterによってJavaScriptによって制御される擬似遷移となります。擬似遷移が発生するとページに対応するコンポーネントが画面に描画されます。
 
-Formの値などについては`setState`や[react-hook-form](https://react-hook-form.com/)で制御することも多いかと思われます。Next.jsの擬似遷移はページ遷移ごとに元々表示していたコンポーネントをアンマウントするので、多くの場合**これらで保持されている状態は破棄**されます。グローバルな状態管理や`_app.tsx`に配置した`Context`による状態、新たにNext.jsに導入される[Layout](https://nextjs.org/blog/layouts-rfc)を利用することでページを跨いだ状態管理も可能ですが、これらは履歴に紐づく状態ではなくグローバルな状態のため、他履歴entryの状態にも影響してしまいます。
+Formの値などについては`useState`や[react-hook-form](https://react-hook-form.com/)で制御することも多いかと思われます。Next.jsの擬似遷移はページ遷移ごとに元々表示していたコンポーネントをアンマウントするので、多くの場合**これらで保持されている状態は破棄**されます。グローバルな状態管理や`_app.tsx`に配置した`Context`による状態、新たにNext.jsに導入される[Layout](https://nextjs.org/blog/layouts-rfc)を利用することでページを跨いだ状態管理も可能ですが、これらは履歴に紐づく状態ではなくグローバルな状態のため、他履歴entryの状態にも影響してしまいます。
 
 以下はアコーディオンComponentを持つpage Aとpage Bを回遊した際の、アコーディオンの挙動です。「ローカルな状態管理」は`useState`を用いて状態管理しているものとします。また、「グローバルな状態管理」ではRecoilや[Zustand](https://github.com/pmndrs/zustand)などを用いてアコーディオンの開閉状態を`isOpen: boolean`という形で状態管理しているものとします。
 
@@ -77,7 +77,7 @@ Formの値などについては`setState`や[react-hook-form](https://react-hook
 
 SPAでブラウザバック時に状態を復元するには、履歴をkeyとするグローバルな状態管理が必要です。
 
-Next.jsで履歴を一位に特定する方法はあるのでしょうか？Next.jsのRouter内部には履歴を一意に判定する`_key`が存在します。
+Next.jsで履歴を一意に特定する方法はあるのでしょうか？Next.jsのRouter内部には履歴を一意に判定する`_key`が存在します。
 
 https://github.com/vercel/next.js/blob/v12.3.2-canary.43/packages/next/shared/lib/router/router.ts#L870
 
@@ -89,7 +89,7 @@ https://github.com/vercel/next.js/blob/v12.3.2-canary.43/packages/next/shared/li
 
 https://github.com/vercel/next.js/pull/36861
 
-ドキュメント化された仕様ではないものの、これを利用することで履歴を一意に特定することができます。これも前回書いた通り、実はリロード対応できてないので修正したものの、Nested Layoutに忙しいのかなかなかレビューされないため、現在もリロード時にはスクロール位置やこのkeyは初期化されてしまいます。
+ドキュメント化された仕様ではないものの、これを利用することで履歴を一意に特定することができます。これも前回書いた通り、実はリロード対応できてないので修正をプルリクしたものの、Nested Layoutに忙しいのかなかなかレビューされないため、現在もリロード時にはこのkeyが初期化されてスクロール位置も失われてしまいます。
 
 https://github.com/vercel/next.js/pull/37127
 
@@ -130,9 +130,9 @@ const countState = atom<number>({
 });
 ```
 
-利用者側はこれだけです。`syncEffect`にはいくつかのオプションがあり、`storeKey`は保存するStoreを示すキーです。実際の保存ロジックを実装する`RecoilSync`コンポーネントとキーを一致させる必要があります。`refine`は同じくrecoilから提供されているバリデーションライブラリです。これを用いることで予期せぬデータ型の混入を防げます。
+状態の利用者側はこれだけです。`syncEffect`にはいくつかのオプションがあり、`storeKey`は保存するStoreを示すキーです。状態の保存ロジックを実装する`RecoilSync`コンポーネントとキーを一致させる必要があります。`refine`は同じくrecoilから提供されているバリデーションライブラリです。これを用いることで予期せぬデータ型の混入を防げます。
 
-また、実際の保存は`_app.tsx`で呼び出す[RecoilSync](https://recoiljs.org/docs/recoil-sync/api/RecoilSync/)コンポーネントのpropsでそれぞれ実装します。例えば`read`は以下のようキーを受け取り、キーをもとにlocal storageなどの外部Storeから値抽出し返ます。
+また、状態の保存は`_app.tsx`で呼び出す[RecoilSync](https://recoiljs.org/docs/recoil-sync/api/RecoilSync/)コンポーネントのpropsでそれぞれ実装します。例えば`read`は以下のようにキーを受け取り、キーをもとにlocal storageなどの外部Storeから値を抽出して返ます。
 
 ```tsx
 const read: ReadItem = useCallback((itemKey) => {
@@ -175,6 +175,20 @@ export const counter = initializableAtomFamily<number, string>({
     }
   )],
 })
+
+export const Counter: React.FC<{ name: string, initialValue: number }> = ({
+  name,
+  initialValue,
+}) => {
+  const [count, setCount] = useRecoilState(counter(name, initialValue))
+
+  return (
+    <>
+      <div>count is {count}</div>
+      <button onClick={() => setCount((prev) => prev + 1)}>+</button>
+    </>
+  )
+}
 ```
 
 :::message
@@ -183,7 +197,7 @@ export const counter = initializableAtomFamily<number, string>({
 
 これだけでNext.jsの世界で履歴ごとの状態復元が可能になります。
 
-以下は実際にrecoil-sync-nextを利用する前後の挙動の違いです。どちらも同じようにrecoilのatomで状態管理しているため、利用前は状態をページ間で共有していますが、recoil-sync-next利用時は**ページごとに状態が分けられている**ことがわかります。
+以下は実際にrecoil-sync-nextを利用する前後の挙動の違いです。どちらも同じようにrecoilのatomで状態管理していますが、recoil-sync-nextを使っていない場合は状態をページ間で共有してしまいます。一方recoil-sync-nextの利用時は**履歴ごとに状態が分けられている**ことがわかります。
 
 :::details default
 ![](/images/recoil-sync-next/default.gif)
@@ -247,7 +261,7 @@ const { /* ... */ } = useFormSync<FormState>(formState({ name: 'sato' }), config
 
 ### URL Persistenceの注意点
 
-URL Persistenceの利用目的は基本的に共有可能・ブックマーク可能なURLを生成することにあります。利用例としては、検索条件をURLに含む場合などが挙げられます。
+recoil-sync-nextはHistoryに加えてURLに状態を保存するURL Persistenceもサポートしています。URL Persistenceの目的は基本的に共有可能・ブックマーク可能なURLを生成することにあります。利用例としては、検索条件をURLに含む場合などが挙げられます。URL Persistenceを使うことでも「戻る」で状態を復元する事が可能です。
 
 注意点として、Formの内容をURL Persistenceで**GETパラメータに保存するのは危険です**。ユーザー環境で履歴やリクエストがロギングされている場合、**個人情報が流出する可能性**があります。
 
