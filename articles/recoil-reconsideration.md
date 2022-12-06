@@ -1,5 +1,5 @@
 ---
-title: "Recoilはグローバル状態管理ライブラリなのか？"
+title: "Recoilはグローバル状態管理ライブラリなのか"
 emoji: "⚙️"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["react", "recoil", "redux"]
