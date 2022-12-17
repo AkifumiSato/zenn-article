@@ -3,8 +3,12 @@ title: "Recoilはグローバル状態管理ライブラリなのか"
 emoji: "⚙️"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["react", "recoil", "redux"]
-published: false
+published: true
 ---
+
+:::message
+本記事は[Recruit Engineers Advent Calendar 2022](https://adventar.org/calendars/7972)の19日目です。
+:::
 
 RecoilをReduxと同じ「グローバル状態管理ライブラリ」とまとめてしまうことに若干違和感があったので、自分なりに考えをまとめてみました。これらは何に対してグローバルなのか考えると、異なる特徴を持ったライブラリに思えるのです。
 
@@ -20,7 +24,7 @@ RecoilをReduxと同じ「グローバル状態管理ライブラリ」とまと
 
 ### Recoil
 
-一方[Recoil](https://recoiljs.org/)は2020年に登場したReact専用の状態管理ライブラリです。Metaが作成し、現在でもexperimentalながら高い人気を得ています。Reduxと大きく異なる点として、code splittingが効くのでページ単位でのバンドルサイズを減らすことも大きく注目されました。
+一方[Recoil](https://recoiljs.org/)は2020年に登場したReact専用の状態管理ライブラリです。Meta（当時Facebook）が作成し、現在でもexperimentalながら高い人気を得ています。Reduxと大きく異なる点として、code splittingが効くのでページ単位でのバンドルサイズを減らすことも大きく注目されました。
 
 こちらも筆者の主観ですが、Recoilが登場した頃や昨今のエンジニアの関心ごとは、**hooksで扱いやすいかどうか**なのではないかと考えられます。Redux登場当時はHOC(higher-order component)でReduxとReactを繋げていましたが、hooks登場以降のReduxはhooksの外でやることが少々多い(actionやreducerの定義、middlewareの導入など)ライブラリとなってしまった印象があります。その点Recoilは、React組み込みの`useState`と同様のAPIを提供してたり、利用者にとっては簡略化されてるように感じます。
 
@@ -65,7 +69,7 @@ function TodoList() {
 }
 ```
 
-上記例のは`todoListState`は、複数のコンポーネントでの利用が想定されない状態のため、**`export`していません**。しかし`useState`とは異なり、**コンポーネントのアンマウント後も`todoListState`の値は保持**され、再マウントすると元の値が返ってきます。
+上記は[Recoilのサンプル](https://recoiljs.org/docs/basic-tutorial/atoms)を少し修正した例です。上記の`todoListState`は、複数のコンポーネントでの利用が想定されない状態のため、**`export`していません**。しかし`useState`とは異なり、**コンポーネントのアンマウント後も`todoListState`の値は保持**され、再マウントすると元の値が返ってきます。
 
 これはライフタイムスコープ的にはグローバルな状態であることを示しますが、参照スコープにおいては`export`してないので他ファイルで利用されることがありません。
 
@@ -82,6 +86,6 @@ function TodoList() {
 
 ## まとめ
 
-本稿ではReduxをグローバル状態管理ライブラリ、Recoilを共有状態管理ライブラリと位置付けました。これらのライブラリ選定で悩んでいるなら、これらの特性の違いを考慮した上で選定することをお勧めします。 
+本稿ではReduxをグローバル状態管理ライブラリ、Recoilを共有状態管理ライブラリと位置付けました。これらのライブラリ選定で悩んでいるなら、これらの特性の違いを考慮した上で選定することをお勧めします。
 
 この記事がReduxやRecoilの選定に役立てば幸いです。
