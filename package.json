@@ -10,7 +10,7 @@
     "prepare": "simple-git-hooks"
   },
   "simple-git-hooks": {
-    "pre-commit": "pretty-quick"
+    "pre-commit": "npm exec pretty-quick"
   },
   "repository": {
     "type": "git",
