@@ -241,16 +241,18 @@ test("revalidateボタン押下で再度APIが呼び出されること", async (
 テストケースの命名は厳格な命名ルールに沿ったものや実装の詳細を表すのではなく、担当エンジニア以外が見てもわかりやすい命名がベストです。サンプルでは`TodoApp`の振る舞いを中心にグルーピングし、以下のようにすることなどが考えられます。
 
 ```tsx
-describe("TodoApp", () => {
-  test("APIが呼び出され、取得結果が表示されること", async () => {
+describe("API呼び出し成功時", () => {
+  test("取得結果が表示されること", async () => {
     // ...
   });
 
   test("revalidateボタン押下で再度APIが呼び出されること", async () => {
     // ...
   });
+});
 
-  test("APIがエラーを返したら、エラーメッセージが表示されること", async () => {
+describe("API呼び出しエラー時", () => {
+  test("エラーメッセージが表示されること", async () => {
     // ...
   });
 });
@@ -280,8 +282,8 @@ const setupTodoApi = (callback: RestGetCallback) => {
 
 // ...
 
-describe("TodoApp", () => {
-  test("APIが呼び出され、取得結果が表示されること", async () => {
+describe("API呼び出し成功時", () => {
+  test("取得結果が表示されること", async () => {
     // Arrange
     const { apiRequestCall } = setupTodoApi((_req, res, ctx) =>
       res(
@@ -310,23 +312,25 @@ describe("TodoApp", () => {
 ちなみに、`setupTodoApi`を定義したことで、前述の「APIがエラーを返したら、エラーメッセージが表示されること」というテストケースは以下のように実装することができます。
 
 ```tsx
-test("APIがエラーを返したら、エラーメッセージが表示されること", async () => {
-  // Arrange
-  const { apiRequestCall } = setupTodoApi((_req, res, ctx) =>
-    res(
-      ctx.status(500),
-      ctx.json({
-        message: "unreach error",
-      })
-    )
-  );
-  // Act
-  renderWithNoCache(<ApiSuccess />);
-  // Assert
-  expect(await screen.findByRole("alert")).toHaveTextContent(
-    /Request failed/
-  );
-  expect(apiRequestCall).toHaveBeenCalledTimes(1);
+describe("API呼び出しエラー時", () => {
+  test("エラーメッセージが表示されること", async () => {
+    // Arrange
+    const { apiRequestCall } = setupTodoApi((_req, res, ctx) =>
+      res(
+        ctx.status(500),
+        ctx.json({
+          message: "unreach error",
+        })
+      )
+    );
+    // Act
+    renderWithNoCache(<ApiSuccess />);
+    // Assert
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /Request failed/
+    );
+    expect(apiRequestCall).toHaveBeenCalledTimes(1);
+  });
 });
 ```
 
