@@ -312,6 +312,10 @@ describe("API呼び出し成功時", () => {
 ちなみに、`setupTodoApi`を定義したことで、前述の「APIがエラーを返したら、エラーメッセージが表示されること」というテストケースは以下のように実装することができます。
 
 ```tsx
+const { ApiSuccess, ApiError } = composeStories(stories);
+
+// ...
+
 describe("API呼び出しエラー時", () => {
   test("エラーメッセージが表示されること", async () => {
     // Arrange
@@ -324,7 +328,7 @@ describe("API呼び出しエラー時", () => {
       )
     );
     // Act
-    renderWithNoCache(<ApiSuccess />);
+    renderWithNoCache(<ApiError />);
     // Assert
     expect(await screen.findByRole("alert")).toHaveTextContent(
       /Request failed/
