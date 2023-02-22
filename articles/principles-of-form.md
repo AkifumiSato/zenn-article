@@ -1,29 +1,29 @@
 ---
-title: "react-hook-formとformの設計原則"
+title: "react-hook-formとモーダルとformの設計原則"
 emoji: "📝"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["react", "reacthookform"]
-published: false
+published: true
 ---
 
 reactでformを作る時、[react-hook-form](https://react-hook-form.com/)を使う方も多いと思います。react-hook-fomで実装すると、非制御コンポーネントベースなためレンダリングコストを減らすことが期待でき（実装にもよります）、また、[zod](https://zod.dev/)との連携によるバリデーション実装の容易さなど、実装や設計面においても多くのメリットが得られます。
 
 一方で、チームでreact-hook-fomを使って実装を進めていくには設計的難しさを伴うことがあります。筆者は実際にform内におけるモーダルの実装で設計の見直しを迫られました。
 
-本稿は実際に課題に直面し、設計を見直すことで筆者が感じたreact-hook-fomを使った実装における設計原則のまとめになります。
+本稿は実際に設計を見直すことで筆者が感じた、react-hook-fomの実装における設計の勘所の紹介記事になります。
 
 :::message
 本稿ではreact-hook-fomの初歩的な実装や基本的なAPIについては解説しないので、まだ触ったことがない・自信がないという方は[公式チュートリアル](https://react-hook-form.com/get-started)など参照することをお勧めします。
 :::
 
-## form実装の3原則
+## 2つのformの実装原則
 
 先に結論です。react-hook-fomを使ったform実装においては以下の2つの原則を守ることが設計上重要になってきます。
 
-1. form実装はreact-hook-fomで統一する
-2. 選択モーダルは1つのformとして扱う
+1. **form実装はreact-hook-fomで統一する**
+2. **選択モーダルは1つのformとして扱う**
 
-これらの原則について、1つづつ詳解していきます。
+これらの原則について詳解していきます。
 
 ## 1. form実装はreact-hook-fomで統一する
 
@@ -45,11 +45,11 @@ formにおける選択モーダルにはいくつかの仕様パターンが想�
 ![](/images/principles-of-form/form-modal-demo.gif)
 :::
 
-2,3番目の仕様ならreact-hook-formで実装するのにそこまで困らないことでしょう。ただし、1番目の仕様を実装しようとすると一筋縄ではいきません。保存ボタンを押下するまで反映しないようにする以上、ページComponentで宣言・取得した`register`は選択モーダルの入力要素には利用できません。保存を押す前から値がformに反映されてしまうからです。
+2,3番目の仕様ならreact-hook-formで実装するのにそこまで困らないことでしょう。ただし、1番目の仕様を実装しようとすると一筋縄ではいきません。保存ボタンを押下するまで反映しないようにする以上、モーダルの外で取得した`register`はモーダル内の入力要素には利用できません。保存を押す前から値がformに反映されてしまうからです。
 
 モーダル内の値の保持だけ`useState`や`Recoil`などで実装すれば良いのでは、と思った方もいらっしゃるかと思います。しかし、これは1つ目の原則に違反しており、react-hook-fomのバリデーションを利用できず、react-hook-formが提供してる機能を一部自前で実装する必要が出てきてしまうなどのデメリットが伴います。
 
-このような場合、筆者は**選択モーダルは1つのformとして扱う**ことで、react-hook-fomに実装を集約します。以下は簡略化してますが、実装例です。
+このような場合、筆者は**選択モーダルは1つのformとして扱う**ことで、react-hook-fomに実装を集約します。以下は簡略化してますが、クレジットカード情報を含む入力フォームの実装例です。
 
 ```tsx
 // Home.tsx
@@ -161,7 +161,7 @@ export default function CreditModal({ closeHandler, onSubmit }: Props) {
 }
 ```
 
-`Home`と`CreditModal`でそれぞれ`useForm`しており、`CreditModal`のsubmit時に`Home`のformに`setValue`しています。
+`Home`と`CreditModal`でそれぞれ`useForm`しており、`CreditModal`のsubmit時に`Home`のformに[`setValue`](https://react-hook-form.com/api/useform/setvalue)しています。
 
 ```tsx
 onSubmit={({ credit }) => {
@@ -170,9 +170,9 @@ onSubmit={({ credit }) => {
 }}
 ```
 
-### formとはなんなのか
+## 画面内に複数のformを持つことの是非
 
-ここで画面内に複数のformを持つことの是非について考えてみましょう。これは「formとはなんなのか」と言う問いについて考えることと同義です。筆者はこれについて、「**formとは1つのトランザクションである**」と考えています。ここで言うトランザクションはSQLのトランザクションと同様に、入力を保持しcommitかrollbackされるまで反映されない一連の処理を指します。
+ここで、画面内に複数のformを持つことの是非について考えてみましょう。これは「formとはなんなのか」と言う問いについて考えることと同義です。筆者はこれについて、「**formとは1つのトランザクションである**」と考えています。ここで言うトランザクションはSQLのトランザクションと同様に、入力を保持しcommitかrollbackされるまで反映されない一連の処理を指します。
 
 モーダルの仕様は「保存ボタンなどを押下しないとformに反映されない」でした。これは1つのトランザクションであり、1つのformと見なすことができます。画面埋め込みの場合も、一連の処理がcommitされたらサーバーへデータを送信するトランザクションと見なすことができます。
 
@@ -230,7 +230,7 @@ favDialog.addEventListener('close', function onClose() {
 ```
 :::
 
-筆者は実際、モーダルを1つのformとして扱うことであとでモーダルをページにしたり、逆にページをモーダルにするのに苦労せずに済むようになったと感じました。formとformの繋ぎ込みはreact-hook-formnの場合、すでに挙げたようにsubmit時に`setValue`するだけです。
+このようにformを1つのトランザクションと見做し、モーダルに1つのformが含まれているように実装することで、モーダルをページにしたり、逆にページをモーダルにするのに苦労せずに済むようになったと筆者は感じています。
 
 ## まとめ
 
