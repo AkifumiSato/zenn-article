@@ -56,13 +56,13 @@ RSCはデータ取得のしやすさだけでなく、パフォーマンス課�
 https://github.com/reactjs/rfcs/blob/main/text/0188-server-components.md#basic-example
 
 > The name “Client Component” doesn’t mean anything new, it only serves to distinguish these components from Server Components.
-「Clientコンポーネント」という名称に新しい意味はなく、Serverコンポーネントと区別するためのものでしかありません。
+Deepl訳: 「Clientコンポーネント」という名称に新しい意味はなく、Serverコンポーネントと区別するためのものでしかありません。
 
 :::message
 ClientコンポーネントはServerコンポーネントを直接importすることはできません。これは、クライアント側のchunkにサーバー固有のロジックが含まれるわけにはいかないことからも明らかです。
 :::
 
-これは、**従来のクライアント中心のReactの哲学を変えるものであり、データ取得をescape hatch依存ではなく、Reactの外の世界に出ずにデータ取得を行うことができるようにする**ものであると言えます。
+これは、**従来のクライアント中心のReactの哲学を変えるものであり、データ取得をescape hatchに依存せずに行うことができるようにする**ものであると言えます。
 
 現在RSCは開発中の試験的機能ではありますが、Next.jsの[appディレクトリ](https://nextjs.org/docs/advanced-features/custom-app)で採用されています。appディレクトリ自体も当然ながら試験的機能なので、今後Next.jsやReactのリリースでこれらが安定化されていくことが待たれます。
 
