@@ -1,7 +1,7 @@
 ---
 title: "Reactと現実世界をつなぐescape hatches、そしてReact Server Components"
 emoji: "⚛️"
-type: "idea" # tech: 技術記事 / idea: アイデア
+type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["react"]
 published: true
 ---
