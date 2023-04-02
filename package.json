@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/AkifumiSato/zenn-article#readme",
   "dependencies": {
-    "zenn-cli": "^0.1.125"
+    "zenn-cli": "^0.1.141"
   },
   "devDependencies": {
     "prettier": "^2.7.1",
