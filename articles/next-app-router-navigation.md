@@ -1,0 +1,71 @@
+---
+title: "Next.js App Routerの遷移実装を追う"
+emoji: "🚀"
+type: "tech" # tech: 技術記事 / idea: アイデア
+topics: ["nextjs", "react"]
+published: false
+---
+
+- 序文
+  - v13.4でNext.jsのApp RouterがStableになった
+  - App Routerは発表以来、猛烈なスピードで実装が進んでいる
+  - Server ActionやParalell Routingなど、今までのNext.jsにはなかった機能が次々と追加されている
+  - App Routerの話題は実装者目線の話が多いが、実際App Routerがどういう仕組みになってるのか気になってきた
+  - ということで、App Routerの仕組みを追ってみる
+  - とは言っても機能が多すぎるので、今回は最もコアである遷移周りの仕様や実装を深ぼってみる
+- Next.jsの遷移とprefetch挙動
+  - TODO: demoのgifか画像があるといいかも
+  - まずはNext.jsの遷移・prefetch時の挙動を確認してみる
+  - 今回はSSRに重きを置いて確認していく
+  - pagesの挙動
+    - pages配下の場合、静的資材（JSファイルなど）は積極的にprefetchする
+    - gSSPの結果のみ、押下時にJSONで取得する
+    - そのため、押下後JSON取得までの間は前の画面が表示される
+  - app routerの挙動
+    - 一方でapp routerにはgSSPはなく、Server Componentsのレンダリング時にデータ取得が行われる
+      - Server Componentのレンダリング結果は、Flight Protocolというデータ形式で返却される
+    - app routerは積極的にこのServer Componentsをprefetchする
+    - そのため、app routerの体験的には前の画面が表示されて待たされることが少なくなる
+      - ちなみにprefetch失敗時はMPA遷移となる
+  - これらの境界を越える際の挙動
+    - pagesとapp routerは現在、併用が可能
+    - しかし、これらは仕様も実装も大きく異なる
+    - これは、これらの境界を越えることを判定し、MPA遷移（JS制御による擬似遷移ではなく、ブラウザのデフォルトの遷移挙動）になる
+- app routerの遷移哲学
+  - app routerでは、積極的なprefetchによりCore Web Vitalsに新たに追加された指標であるINP（Interaction To Next Paint）が改善された遷移を提供
+  - これにより、ユーザーは画面がフリーズして見えることが少なく
+    - パターンが多く仕様を全部把握するのは困難だが、筆者が動作確認した限りにおいてはなかった
+  - 積極的なprefetchをおこなっているので、サーバー負荷的にはfriendlyではない
+- app routerの遷移実装
+  - この遷移挙動をapp routerはどうやって実現しているのか、実装を追ってみる
+  - 実はwindowの`nd.router`にもapp routerのインスタンスがいるので、debugしたい人はそこから辿ってみるのもいいかもしれません
+  - 内部的にはReduxを使って状態管理を行なっている
+    - RTKなどは使わず、ほぼ素のRedux。副作用はコンポーネント側責務としているっぽい
+  - prefetch,navigateアクションなどがある
+  - Linkコンポーネントはvisible,hover,touchStartでprefetchアクションが発火する
+    - prefetch処理自体は、Redux Stateで`Mpa<Url, Promise<Data>>`の形で保持される
+      - PromiseをState自体に含めてしまうやり方は初めて見たのでちょっと驚いた
+      - middlewareとかでやればいいのに、なぜこんなやり方をしてるのかは謎
+        - reducerの純粋性を失ってまでReduxを使う意味があったのだろうか...？
+      - prefetch自体は普通のGETリクエストで、`RSC: 1`によってServer Componentを判断してる（なければhtml）
+  - Link押下時には、prefetchした結果を元に遷移を決定する
+    - prefetchから結果を読み取り、FlightProtocolがあればapp router遷移
+    - prefetchデータがstring=pagesへの遷移だったり、遷移先が外部URLならMPA遷移
+      - MPA遷移はRedux Stateの`pushRef.mpaNavigatio`がtrueに変更され、HistoryUpdaterコンポーネント内で読み取られ`location.assign`が呼ばれる
+    - 前述の通り、prefetch失敗時はMPA遷移となる
+  - App Routerのnavigation発生後
+    - コンポーネントごとReduxにcacheを持っておき、それをレンダリングしてる
+      - https://github.com/vercel/next.js/blob/285e77541f/packages/next/src/client/components/app-router.tsx#L372
+    - `walkTreeWithFlightRouterState`によって再起的にLayoutを解決してる
+    - 解決されたLayoutを元に、Client側ではキーを元に描画するコンポーネントをCacheから引いて決定してる
+      - todo: 説明が不足しそうなので文章構成よく考える
+- Intercept routing
+  - Interception時はprefetchの結果が異なる
+    - `rewrites`の1つとしてルーティングが作成される
+      - haederの`Next-Url`が正規表現と一致した時のみ、intercept routingにマッチする
+      - https://github.com/vercel/next.js/blob/285e77541f/packages/next/src/lib/generate-interception-routes-rewrites.ts#L66-L76
+    - `rewrites`のルールなどは`routes-manifest.json`に吐き出される
+      - このjsonの内容を元にルーティングが決定されるっぽい
+        - https://github.com/vercel/next.js/blob/285e77541f/packages/next/src/server/next-server.ts#L1198
+      - TODO: このJSONの中身のサンプルを作成する
+
