@@ -149,15 +149,71 @@ https://github.com/vercel/next.js/blob/9028a169ac/packages/next/src/client/compo
 
 https://github.com/vercel/next.js/blob/9028a169ac/packages/next/src/client/components/layout-router.tsx#L429-L443
 
-## 構成
+## Intercepting Routes
 
-- Intercept routing
-  - Interception時はprefetchの結果が異なる
-    - `rewrites`の1つとしてルーティングが作成される
-      - haederの`Next-Url`が正規表現と一致した時のみ、intercept routingにマッチする
-      - https://github.com/vercel/next.js/blob/285e77541f/packages/next/src/lib/generate-interception-routes-rewrites.ts#L66-L76
-    - `rewrites`のルールなどは`routes-manifest.json`に吐き出される
-      - このjsonの内容を元にルーティングが決定されるっぽい
-        - https://github.com/vercel/next.js/blob/285e77541f/packages/next/src/server/next-server.ts#L1198
-      - TODO: このJSONの中身のサンプルを作成する
+上記`InnerLayoutRouter`は`tree`や`childNodes`の情報がLayout順に解決されていくわけですが、この際、[Parallel Routes](https://nextjs.org/docs/app/building-your-application/routing/parallel-routes)や[Intercepting Routes](https://nextjs.org/docs/app/building-your-application/routing/intercepting-routes)が解決された状態で`tree`などは更新されます。
 
+特にIntercepting Routesは、同じURLでも遷移元次第でUIが異なるので「どこから遷移しようとしているか」を判定しているわけですが、これは具体的にどのように実装されているのでしょう？
+
+実はIntercepting Routesは内部的には[rewrite](https://nextjs.org/docs/app/api-reference/next-config-js/rewrites)の一種として実装されています。prefetch時にヘッダーに付与される`Next-Url`が正規表現と一致した時のみ、intercept routingにマッチするようなrewriteです。`Next-Url`は遷移元のURLパターンが含まれるので、これにより特定のURLから特定のURLへの遷移をInterceptingしているというわけです。
+
+https://github.com/vercel/next.js/blob/285e77541f/packages/next/src/lib/generate-interception-routes-rewrites.ts#L66-L76
+
+序盤で作成したデモにIntercept Routesを定義してみます。ここでは`posts`に対して、`feed`からInterceptを行うようにしています。
+
+![](/images/next-app-router-navigation/intercept-demo.png =300x)
+
+これを`next build`すると、`.next`直下に`routes-manifest.json`というJSONファイルで出力され、rewriteの情報はこのファイルに記載されます。少々長いのでだいぶ省略しますが、中を見てみると以下のような記述が見つかります。
+
+```json
+{
+  "version": 3,
+  ...
+  "rewrites": {
+    "beforeFiles": [
+      {
+        "source": "/app/posts/:id",
+        "destination": "/app/feed/(..)posts/:id",
+        "has": [
+          {
+            "type": "header",
+            "key": "Next-Url",
+            "value": "\\/app\\/feed(?:\\/(.*))?[\\/#\\?]?"
+          }
+        ],
+        "regex": "^/app/posts(?:/([^/]+?))(?:/)?$"
+      }
+    ],
+    "afterFiles": [],
+    "fallback": []
+  }
+}
+```
+
+`next start`で立ち上がるNext.jsのサーバーは、この`routes-manifest.json`を元に幾つかのルーティングを決定しています。
+
+今回筆者が調査したのはここまでです。Intercept周りまでなんとなく実装のイメージは掴めてきたので、満足しました。
+
+## 感想
+
+今回はNext.jsのApp Routerの遷移周りの実装を調査してみました。筆者はまだApp Routerをプロダクションで使ったことはなく、ちょっと試してみたりドキュメント読んだりしてたくらいだったので、仕組みをちゃんと追おうと思うと多くの学びや発見がありました。
+
+特にServer Component周りについてはまだまだ理解が薄いことに気づきました。精進しようと思います。
+
+あとStateに直接`Promise`や`ReactElement`を持っているのは結構驚きました。直接画面にprefetch結果が反映されるわけではないので、多くのユースケースとは異なるからこういうやり方がまかり通るのかもしれません。
+
+## 余談: ブラウザバック体験と履歴keyについて
+
+あとたまたま目に入って気づいたのですが、`pages`と変わらずApp Routerでも`history.state`を直接管理しているので、開発者が`history.state`を利用するとおそらく上書きされてしまいます。
+
+https://github.com/vercel/next.js/blob/9028a169ac/packages/next/src/client/components/app-router.tsx#L102-L117
+
+つまり、開発者が自前で履歴を管理する手段はないわけです。詳しくは以下の記事を参照いただきたいのですが、筆者はブラウザバック体験を損ねないため、履歴に紐づく状態管理が必要なケースは多いと考えています。
+
+https://zenn.dev/akfm/articles/recoi-sync-next
+
+辛うじて`pages`では履歴のkeyが`history.state`に含まれていましたが、今回はなさそうです。そもそも、`pages`でもこれを参照してしまうのは内部実装に依存するので、本当は避けたいところです。結局[Navigation API](https://github.com/WICG/navigation-api#the-current-entry)同様、Next.jsが履歴のkeyを提供するのが最もシンプルだと思って提案しているのですが、音沙汰ないのが現状です。
+
+https://github.com/vercel/next.js/discussions/47242
+
+実はこれを直訴するためにVercel meetupにも参加して発表したりもしたのですが、変わらず。迷惑にならない程度に、でも諦めず提案し続けてみようかと思います。
