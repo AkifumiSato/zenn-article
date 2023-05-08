@@ -137,9 +137,13 @@ https://github.com/facebook/react/tree/main/packages/react-server-dom-webpack
 
 ~~VercelにはReactコアチームのメンバーが多数いるので、この辺の仕様書はコアチーム内部に閉じてるのかもしれません。筆者が知らないだけで公開されてたらすいません、ご教示ください。~~
 
-追記: 以下に仕様がありました。[koichik](https://twitter.com/koichik)さんありがとうございます！
+追記1: 以下に仕様がありました。[koichik](https://twitter.com/koichik)さんありがとうございます！
 
 https://github.com/facebook/react/blob/aef7ce5547c9489dc48e31f69b002cd17206e0cb/packages/react-server/src/ReactFlightServerConfigStream.js
+
+追記2: React Server ComponentsやFlightの仕組みについては以下の記事が詳しく解説してくれています。`use client`ディレクティブが登場するより前なので少し情報は古い部分もありますが、興味のある方はご一読ください。
+
+https://postd.cc/how-react-server-components-work/
 
 ### `navigage`アクションと遷移判定
 
