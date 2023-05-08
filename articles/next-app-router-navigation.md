@@ -34,9 +34,9 @@ Next.jsの遷移を理解するには、まずprefetch挙動について知る�
 
 ![](/images/next-app-router-navigation/pages-prefetch.png)
 
-ここで言う静的ファイルとは、JSファイルや画像を指すわけですが、SSGされたページはJSファイルに含まれるので、概念的にはSSGページもprefetchに含まれると考えて良いでしょう。
+SSGは当然ながら静的ファイルを作成するので、prefetchの対象となります。具体的にはJSファイルや画像、`getStaticProps`などの実行結果をシリアライズしたJSONなどです。
 
-一方でSSRページの場合、`getServerSideProps`の結果だけはリンクが実際に押下された時に、JSONで取得されます。具体的には`http://localhost:3000/_next/data/Czj63Y47_EGJEXlNGwfI6/pages/example_dynamic.json`のようなURLでfetchしてJSONを取得します。そのため、**押下直後のリクエスト発火からレスポンスを受け取るまでの間は、直前の画面が表示されることになります**。
+一方でSSRページの場合、`getServerSideProps`の結果だけはリンクが実際に押下された時に取得されます。具体的には`http://localhost:3000/_next/data/Czj63Y47_EGJEXlNGwfI6/pages/example_dynamic.json`のようなURLでfetchしてJSONを取得します。そのため、**押下直後のリクエスト発火からレスポンスを受け取るまでの間は、直前の画面が表示されることになります**。
 
 以下で言うと、1~4まではずっと直前の画面が表示されていることになります。
 
@@ -135,7 +135,11 @@ FlightはStreamingを意識した仕様のため、1行ずつ読むようなフ�
 
 https://github.com/facebook/react/tree/main/packages/react-server-dom-webpack
 
-VercelにはReactコアチームのメンバーが多数いるので、この辺の仕様書はコアチーム内部に閉じてるのかもしれません。筆者が知らないだけで公開されてたらすいません、ご教示ください。
+~~VercelにはReactコアチームのメンバーが多数いるので、この辺の仕様書はコアチーム内部に閉じてるのかもしれません。筆者が知らないだけで公開されてたらすいません、ご教示ください。~~
+
+追記: 以下に仕様がありました。[koichik](https://twitter.com/koichik)さんありがとうございます！
+
+https://github.com/facebook/react/blob/aef7ce5547c9489dc48e31f69b002cd17206e0cb/packages/react-server/src/ReactFlightServerConfigStream.js
 
 ### `navigage`アクションと遷移判定
 
