@@ -61,7 +61,7 @@ export default async function Products() {
 }
 ```
 
-App Routerはこのような**動的処理を含むページでも積極的にprefetch**します。
+App Routerはこのような、従来の`getServerSideProps`でやっていたような**APIへのfetch処理を含むページなどの場合も積極的にprefetch**します。
 
 ![](/images/next-app-router-navigation/app-prefetch.png)
 
@@ -93,7 +93,7 @@ App Routerの遷移やprefetchの仕様について見てきましたが、こ�
 
 App Routerは内部的に状態管理を`useReducer`を使って作成した、Reduxもどきで管理しています。ここであえて「Reduxもどき」と表現したのは、Redux Devtoolsと連携しているためです。Redux Devtoolsを入れていると、App Routerの状態管理がRedux Devtoolsによって可視化されます。
 
-ただし、`Promise`や`ReactElement`をStateに含んでいるためreducerを介さず非同期に更新されたり見づらかったりするので、Redux DevtoolsでStateを見るときは参考程度にすることをお勧めします。
+ただし、`Promise`や`ReactElement`をStateに含んでいるため、reducerを介さず非同期に更新されたり見づらかったりするので、Redux DevtoolsでApp RouterのStateを見るときは参考程度にすることをお勧めします。
 
 ### `prefetch`アクション
 
@@ -105,7 +105,11 @@ https://github.com/vercel/next.js/blob/9028a169ac/packages/next/src/client/link.
 
 https://github.com/vercel/next.js/blob/9028a169ac/packages/next/src/client/components/app-router.tsx#L269-L273
 
-`prefetch`アクションのreducerでは、fetchを発行しますが**意図的にawaitしておらず**、StateにそのままPromiseで保持します。具体的には、Stateの`prefetchCache`（`Map`）で保持されるCacheオブジェクトにある、`data`が`ReturnType<typeof fetchServerResponse> | null`となっています。
+`prefetch`アクションのreducerでは、fetchを発行しますが**意図的にawaitしておらず**、Stateにそのまま`Promise`を保持します。具体的には、Stateの`prefetchCache: Map<string, PrefetchCacheEntry>`でurlとCacheを管理しており、この`PrefetchCacheEntry`内の`data`が`ReturnType<typeof fetchServerResponse> | null`となっています。
+
+https://github.com/vercel/next.js/blob/9028a169acb04c208844582866c7317dfc336580/packages/next/src/client/components/router-reducer/router-reducer-types.ts#L208-L214
+
+実際にStateにPromiseを詰めているのは以下です。
 
 https://github.com/vercel/next.js/blob/9028a169ac/packages/next/src/client/components/router-reducer/reducers/prefetch-reducer.ts#L53-L72
 
@@ -113,7 +117,7 @@ https://github.com/vercel/next.js/blob/9028a169ac/packages/next/src/client/compo
 
 ### React Flight
 
-`prefetch`アクションによって作成されるこのPromiseの実態は、`ReturnType<typeof fetchServerResponse>`の通りサーバーへのfetchであり、前述の通りページURLに`RSC: 1`などいくつかのヘッダーを含むGETリクエストです。このServer ComponentsのGETリクエストのレスポンスボディは、**Flight**や**React Flight**と呼ばれる独自のデータフォーマットで表現されます。
+`prefetch`アクションによって作成されるこのPromiseの実態は、`ReturnType<typeof fetchServerResponse>`の通りサーバーへのfetchであり、前述の通りページURLに`RSC: 1`などいくつかのヘッダーを含めたGETリクエストです。このServer ComponentsのGETリクエストのレスポンスボディは、**Flight**や**React Flight**と呼ばれる独自のデータフォーマットで表現されます。
 
 ```
 1:HL["/_next/static/css/5cc6c563bf8ab1da.css",{"as":"style"}]
@@ -137,7 +141,7 @@ VercelにはReactコアチームのメンバーが多数いるので、この辺
 
 さて、Link押下時には、`navigate`アクションが発火します。`navigate`はいくつかのStateを更新して、遷移を指示するフラグや次のページの`tree`を算出します。
 
-具体的にはまず、prefetchした結果を元に遷移方法を決定します。prefetch結果がFlightでない場合、`pages`配下のページと判定し、MPA遷移となります。他にも外部URLの場合やprefetch失敗時にMPA遷移となります。これはStateの`pushRef.mpaNavigatio`がtrueに変更され、`Router`コンポーネント内で読み取られて`true`なら`location.assign`が呼ばれることで実現しています。
+具体的にはまず、prefetchした結果を元に遷移方法を決定します。prefetch結果がFlightでない場合、`pages`配下のページへの遷移と判定し、MPA遷移となります。他にも外部URLの場合やprefetch失敗時にMPA遷移となります。これはStateの`pushRef.mpaNavigatio`が`true`に変更され、`Router`コンポーネント内で読み取られて`location.assign`が呼ばれることで実現しています。
 
 https://github.com/vercel/next.js/blob/9028a169ac/packages/next/src/client/components/app-router.tsx#L354-L357
 
@@ -155,7 +159,7 @@ https://github.com/vercel/next.js/blob/9028a169ac/packages/next/src/client/compo
 
 `InnerLayoutRouter`はLayout順に解決されていくわけですが、この際、[Parallel Routes](https://nextjs.org/docs/app/building-your-application/routing/parallel-routes)や[Intercepting Routes](https://nextjs.org/docs/app/building-your-application/routing/intercepting-routes)が解決された状態で`tree`などは更新されます。特にIntercepting Routesは、同じURLでも遷移元次第でUIが異なるので「どこから遷移しようとしているか」をどこかで判定しているわけです。
 
-序盤で作成したデモにIntercept Routesを定義してみます。ここでは`posts`に対して、`feed`からInterceptを行うようにしています。
+序盤で作成したデモにParallel RoutesとIntercepting Routesとを定義してみます。ここでは`/app/feed`から`/app/posts`への遷移に対して、Interceptするようにしています。
 
 ![](/images/next-app-router-navigation/intercept-demo.png =300x)
 
@@ -164,20 +168,20 @@ https://github.com/vercel/next.js/blob/9028a169ac/packages/next/src/client/compo
 ```
 0:[["children","app",["app",{"children":["posts",{"children":[["id","999","d"],{"children":["__PAGE__",{}]}]}]}],null,null]]
 ```
-*`/`からのprefetch*
+*非intercept時のprefetch*
 
 ```
 0:[["children","app","children","feed","preview","(..)posts",["(..)posts",{"children":[["id","999","d"],{"children":["__PAGE__",{}]}]}],null,null]]
 ```
-*`/app/feed`からのprefetch*
+*`/app/feed`からintercept時のprefetch*
 
-Intercepting Routesは内部的には[rewrite](https://nextjs.org/docs/app/api-reference/next-config-js/rewrites)の一種として実装されています。prefetch時にヘッダーに付与される`Next-Url`が正規表現と一致した時のみ、intercept routingにマッチするようなrewriteです。`Next-Url`は遷移元のURLパターンが含まれるので、これにより特定のURLから特定のURLへの遷移をInterceptingしているというわけです。
+Intercepting Routesは内部的には[rewrite](https://nextjs.org/docs/app/api-reference/next-config-js/rewrites)の一種として実装されています。prefetch時にヘッダーに付与される`Next-Url`が正規表現と一致するか検証するようなrewriteです。`Next-Url`は遷移元のURLパターンが含まれるので、これにより特定のURLから特定のURLへの遷移をInterceptingしているというわけです。
 
 ![](/images/next-app-router-navigation/intercept-demo-prefetch.png)
 
 https://github.com/vercel/next.js/blob/285e77541f/packages/next/src/lib/generate-interception-routes-rewrites.ts#L66-L76
 
-ちなみにこの状態で`next build`すると、`.next`直下に`routes-manifest.json`というJSONファイルで出力され、rewriteの情報はこのファイルに記載されます。少々長いのでだいぶ省略しますが、中を見てみると以下のような記述が見つかります。
+`next build`すると`.next`直下に`routes-manifest.json`というJSONファイルで出力され、Intercepting Routesを含むrewriteの情報はこのJSONに記載されます。少々長いのでだいぶ省略しますが、中を見てみると以下のような記述が見つかります。
 
 ```json
 {
@@ -214,15 +218,17 @@ https://github.com/vercel/next.js/blob/285e77541f/packages/next/src/lib/generate
 
 特にServer Component周りについてはまだまだ理解が薄いことに気づきました。精進しようと思います。
 
-あとStateに直接`Promise`や`ReactElement`を持っているのは結構驚きました。直接画面にprefetch結果が反映されるわけではないので、多くのユースケースとは異なるからこういうやり方がまかり通るのかもしれません。
+あとStateに直接`Promise`や`ReactElement`を持っているのは結構驚きました。直接画面にprefetch結果が反映されるわけではないので、多くのユースケースとは異なるからこういうやり方なのかもしれません。
 
 ## 余談: ブラウザバック体験と履歴keyについて
 
-あとたまたま目に入って気づいたのですが、`pages`と変わらずApp Routerでも`history.state`を直接管理しているので、開発者が`history.state`を利用するとおそらく上書きされてしまいます。
+あとたまたま目に入って気づいたのですが、`pages`と変わらずApp Routerでも`history.state`を管理しているので、開発者が`history.state`を利用するとおそらく上書きされてしまいます。
 
 https://github.com/vercel/next.js/blob/9028a169ac/packages/next/src/client/components/app-router.tsx#L102-L117
 
-つまり、開発者が自前で履歴を管理する手段はないわけです。詳しくは以下の記事を参照いただきたいのですが、筆者はブラウザバック体験を損ねないため、履歴に紐づく状態管理が必要なケースは多いと考えています。
+つまり、開発者が自前で履歴を管理する手段はないわけです。
+
+詳しくは以下の記事を参照いただきたいのですが、筆者はブラウザバック体験を損ねないため、履歴に紐づく状態管理が必要なケースは多いと考えています。
 
 https://zenn.dev/akfm/articles/recoi-sync-next
 
@@ -230,4 +236,6 @@ https://zenn.dev/akfm/articles/recoi-sync-next
 
 https://github.com/vercel/next.js/discussions/47242
 
-実はこれを直訴するために[Vercel meetup](https://vercel.connpass.com/event/274772/)にも参加して発表したりもしたのですが、変わらず。迷惑にならない程度に、でもめげずに提案し続けてみようかと思います。
+実はこれを直訴するために[Vercel meetup](https://vercel.connpass.com/event/274772/)にも参加して発表したりもしたのですが、変わらず。。。
+
+明確に拒否されてるわけでもないですしブラウザバック体験はやはり重要な体験なはずなので、今後も迷惑にならない程度に、めげずに提案し続けてみようかと思います。
