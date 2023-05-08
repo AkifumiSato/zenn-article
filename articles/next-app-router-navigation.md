@@ -1,5 +1,5 @@
 ---
-title: "Next.js App Routerの遷移はどう実現しているのか"
+title: "Next.js App Router 遷移の仕組みと実装"
 emoji: "🚀"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["nextjs", "react"]
