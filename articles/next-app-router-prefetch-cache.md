@@ -1,5 +1,5 @@
 ---
-title: "Next.js App Router 知られざるクライアントサイドcacheの仕様"
+title: "Next.js App Router 知られざるClient-side cachingの仕様と実装"
 emoji: "🔑"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["nextjs", "react"]
@@ -10,7 +10,7 @@ published: false
 
 https://zenn.dev/akfm/articles/next-app-router-navigation
 
-今回はこれの続編として、App Routerのクライアントサイドcacheについてまとめようと思います。
+今回はこれの続編として、App RouterのClient-side cachingについてまとめようと思います。
 
 :::message
 - 前回記事同様、細かい仕様や内部実装の話がほとんどで、機能の説明などは省略しているのでそちらは[公式ドキュメント](https://nextjs.org/docs)や他の記事をご参照ください。
@@ -60,51 +60,73 @@ App Routerでは`fetch`のキャッシュの話に目が行きがちですが、
 
 [Client-side caching](https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#client-side-caching-of-rendered-server-components)は、文字通りクライアントサイドのインメモリなキャッシュです。インメモリなのでリロードやMPA遷移を挟むと消えてしまいますが、App Router間の遷移においては有効です。
 
-本稿の主題はこのキャッシュについてです。このキャッシュについてはNext.jsのドキュメントではあまり詳細に語られておらず、仕様が実装を見ないとわからない箇所もあるので本稿を執筆するに至った次第です。
+本稿の主題はこのキャッシュについてです。このキャッシュについてはNext.jsのドキュメントではあまり詳細に語られておらず、実装を見ないとわからない箇所もあるので本稿を執筆するに至った次第です。
 
 ## Client-side cachingの仕様と実装
 
+Client-side cachingは内部的には`prefetchCache`と呼ばれているものです。文字通り**主に**prefetch時に格納されます。
 
+[前回の記事](https://zenn.dev/akfm/articles/next-app-router-navigation)でも説明したように、App Routerは内部的に`useReducer`ベースで作成したStateで多くの状態を管理しており、`prefetchCache`もそのStateの一部として管理されています。具体的には`prefetchCache: Map<string, PrefetchCacheEntry>`の`data`にprefetchのPromiseごと格納しています。
 
+https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/router-reducer-types.ts#L209-L215
 
+このキャッシュは遷移発生時に利用され、そのままレンダリングされます。
 
+https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/reducers/navigate-reducer.ts#L229
+
+ちなみにキャッシュの取り出しは、Promiseを拡張して行なっているようです。少々行儀が悪い気がしますが、、、
+
+https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/create-record-from-thenable.ts
+
+### Client-side cacheの種類
+
+Client-side cacheには内部的に`auto`/`full`/`temporary`の3種類が存在します。
+
+https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/router-reducer-types.ts#L165-L169
+
+遷移時、`prefetchCache`に該当データがない時には`temporary`なprefetchが作成されます。
+
+https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/reducers/navigate-reducer.ts#L204-L217
+
+つまり、prefetchを無効にしてても内部的には`prefetchCache`は必要になるので、利用されるような作りになっています。
+
+### Client-side cacheの有効期限
+
+筆者が確認した限り、[ドキュメント](https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#prefetching)には**有効期限の話やキャッシュをrevalidateする方法についての記載は見つけられませんでした**。ということで、実装から仕様を読み解いてみます。
+
+Client-side cacheの生存期間は利用有無や`prefetch`のcacheの種類によって異なります。生存期間ごとのステータスは以下のenumで定義されています。
+
+https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/get-prefetch-cache-entry-status.ts#L6-L11
+
+このステータスは直後に定義されている関数によって判定が可能です。
+
+https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/get-prefetch-cache-entry-status.ts#L18-L39
+
+上記を読み解くと、Cacheの有効期限はざっくり以下のように分類されることがわかります。
+
+- fresh: 新しいキャッシュ
+  - prefetchから30s以内
+- reusable: 再利用可能なキャッシュ
+  - lastUsedから30s以内
+- stale: ちょっと古いキャッシュ
+  - prefetchから5m以内
+- expired: 破棄されるべきキャッシュ
+  - prefetchから5m以上
+
+todo: 各cacheのDemo
+
+#### 余談: stale時の挙動
+
+flightにレンダリングされたコンポーネントを含まず、staleなときはprefetchを再度行うようなコメントや処理が見受けられましたが、どういう時にflightにレンダリングされたコンポーネントを含まないのか追いきれませんでした。
+
+[このへん](https://github.com/vercel/next.js/pull/44502)が起点ぽいのですが、いまいち内容を把握しきれませんでした。後日気が向いたらまた調査してみようかと思います。
+
+## Client-side cachingの問題点
+
+TBW
 
 ## 構成
 
-- 本稿はこれを詳解した記事になります
-  - App Routerはインメモリにprefetchをキャッシュに格納する
-    - 前回の記事でも説明したように、App Routerは内部的に`useReducer`ベースで作成したStateをRedux Devtoolsに繋げている
-    - `prefetchCache: Map<string, PrefetchCacheEntry>`の`data`にprefetchのキャッシュを格納している
-    - https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/router-reducer-types.ts#L209-L215
-  - 遷移時はこのキャッシュからRSCを取り出してレンダリングする
-    - https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/reducers/navigate-reducer.ts#L229
-    - ちなみに取り出すのはPromiseを拡張してやってる
-      - https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/create-record-from-thenable.ts
-      - https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/router-reducer-types.ts#L165-L169
-  - prefetchには'auto'/'full'/'temporary'の3種類がある
-    - https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/router-reducer-types.ts#L165-L169
-    - 遷移時にprefetchがない時には'temporary'なprefetchが作成される
-      - https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/reducers/navigate-reducer.ts#L204-L217
-  - つまり、内部的には`prefetchCache`はprefetchを無効にしてても遷移時に必要になるので利用されるような作りになってる
-  - このキャッシュは条件によるが、30s~5mほど有効になる
-    - 該当のリンクのprefetchを無効にした場合などは30s
-      - https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/get-prefetch-cache-entry-status.ts#L18-L23
-    - prefetchキャッシュは5分以内なら再利用される。prefetch cacheのstatusは以下
-      - fresh: 新しいキャッシュ
-        - prefetchから30s以内
-      - reusable: 再利用可能なキャッシュ
-        - lastUsedから30s以内
-      - stale: ちょっと古いキャッシュ
-        - prefetchから5m以内
-      - expired: 破棄されるべきキャッシュ
-        - prefetchから5m以上
-    - flightにレンダリングされたコンポーネントを含まず、staleなときはprefetchを再度行うっぽい
-      - https://github.com/vercel/next.js/blob/cad6d3aa2208e82c26eee7ff81a0a47aeec39968/packages/next/src/client/components/router-reducer/apply-flight-data.ts#L15
-      - よくわからん...色々試したけど、実際なさそうな気がする
-        - 一応これが起点っぽい
-        - https://github.com/vercel/next.js/pull/44502
-    - この辺の話は仕様としては記載なさそう
-      - https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#prefetching
 - とはいえこれでは`no-store`のように常に更新を促したい時にうまくいかない
 - ではどうするべきか
   - 現状特にやりようはない
