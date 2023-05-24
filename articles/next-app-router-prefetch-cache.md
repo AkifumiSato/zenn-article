@@ -10,10 +10,11 @@ published: false
 
 https://zenn.dev/akfm/articles/next-app-router-navigation
 
-今回はこれの続編として、App RouterのClient-side cacheの仕様や実装についてまたまとめようと思います。まだドキュメントに記載のない仕様についても言及しているので、参考になる部分があれば幸いです。
+今回はこれの続編として、App RouterのClient-side cacheの仕様や実装についてまとめようと思います。まだドキュメントに記載のない仕様についても言及しているので、参考になる部分があれば幸いです。
 
 :::message
 - 前回記事同様、細かい仕様や内部実装の話がほとんどで、機能の説明などは省略しているのでそちらは[公式ドキュメント](https://nextjs.org/docs)や他の記事をご参照ください。
+- 極力丁寧に説明するよう努めますが、前回の続きな部分も多いので[前回記事](https://zenn.dev/akfm/articles/next-app-router-navigation)から読むことをお勧めします。
 - prefetch周りの仕様や実装は膨大なので、筆者の興味の向くままに大枠を調査したものです。
 - 実装は当然ながらアップデートされるため、記事の内容が最新にそぐわない可能性があります。執筆時に見てたコミットは[afddb6e](https://github.com/vercel/next.js/tree/afddb6ebdade616cdd7780273be4cd28d4509890)です。
 :::
@@ -27,30 +28,29 @@ App Routerは積極的にcacheを取り入れており、cacheは用途や段階
 [Request Deduping](https://nextjs.org/docs/app/building-your-application/data-fetching#automatic-fetch-request-deduping)はレンダリングツリー内で同一データのGETリクエストを行う際に、自動でまとめてくれる機能です。
 
 ![](https://nextjs.org/_next/image?url=%2Fdocs%2Fdark%2Fdeduplicated-fetch-requests.png&w=3840&q=75)
-*nextjs.orgより*
+*nextjs.org/docsより*
 
 デフォルトでサポートしているのはfetchのみですが、Reactが提供する`cache`を利用することでDBアクセスやGraphQLでも同様のcacheを実現することができます。
 
 https://nextjs.org/docs/app/building-your-application/data-fetching/caching#react-cache
 
-[この辺](https://nextjs.org/docs/app/building-your-application/data-fetching#the-fetch-api)を読むに、これはNext.jsではなくReact側で**fetchを拡張**することで行なっているようです。
+[この辺](https://nextjs.org/docs/app/building-your-application/data-fetching#the-fetch-api)を読むに、これはNext.jsではなく**React側でfetchを拡張**することで行なっているようです。
 
 以下の記事がRequest Dedupingについてより詳解されているので、興味のある方はぜひご一読ください。
 
 https://zenn.dev/cybozu_frontend/articles/next-caching-dedupe
 
-### Data fetching cache
+### Caching Data
 
-Request Dedupingはレンダリングツリーを跨ぐcacheなのに対し、[Data fetching cache](https://nextjs.org/docs/app/building-your-application/data-fetching#caching-data)はCDN上などのlocation単位でcacheを保存します。
+Request Dedupingは同一レンダリングツリー内で有効になるcacheなのに対し、[Caching Data](https://nextjs.org/docs/app/building-your-application/data-fetching#caching-data)はCDN上などのlocation単位でcacheを保存します。
 
 ![](https://nextjs.org/_next/image?url=%2Fdocs%2Fdark%2Fstatic-site-generation.png&w=3840&q=75)
-*nextjs.orgより*
+*nextjs.org/docsより*
 
-これらはどちらも`fetch`に対するcacheですが、前者はリクエスト処理単位のcacheであるのに対し後者はlocation単位のcacheです。
+こちらも[同様の箇所](https://nextjs.org/docs/app/building-your-application/data-fetching#the-fetch-api)に記述があり、**Next.js側でfetchを拡張**しているようです。
 
-Data fetching cacheは[`revalidate`](https://nextjs.org/docs/app/building-your-application/data-fetching/revalidating)オプションや[`fetchCache`](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#fetchcache)を指定することで有効になります。
-
-Data fetching cacheについても先述の記事を書かれた[mugiさん](https://zenn.dev/mugi)がシリーズ的に解説されているので、こちらも興味のある方はぜひご一読ください。
+Caching Dataは[`revalidate`](https://nextjs.org/docs/app/building-your-application/data-fetching/revalidating)オプションや[`fetchCache`](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#fetchcache)を指定することで有効になります。
+こちらも先述の記事を書かれた[mugiさん](https://zenn.dev/mugi)がシリーズ的に解説されているので、こちらも興味のある方はぜひご一読ください。
 
 https://zenn.dev/cybozu_frontend/articles/next-caching-revalidate
 
@@ -58,9 +58,7 @@ https://zenn.dev/cybozu_frontend/articles/next-caching-revalidate
 
 App Routerでは`fetch`のcacheの話に目が行きがちですが、従来通り静的ファイルも[CDN cache](https://nextjs.org/docs/app/building-your-application/optimizing#static-assets)として扱えるよう設計されています。
 
-静的ファイル置き場である`public`フォルダはCDN cache可能なファイルとなることが想定され、VercelにデプロイするとデフォルトでCDN cacheされます。
-
-また、[Static Site Generation (SSG)](https://nextjs.org/docs/pages/building-your-application/rendering/static-site-generation#when-should-i-use-static-generation)した結果も同様に静的ファイルになるので、これらもCDNによってcacheすることが可能です。
+静的ファイル置き場である`public`フォルダはCDN cache可能なファイルとなることが想定され、VercelにデプロイするとデフォルトでCDN cacheされます。また、[Static Site Generation (SSG)](https://nextjs.org/docs/pages/building-your-application/rendering/static-site-generation#when-should-i-use-static-generation)した結果も同様に静的ファイルになるので、これらもCDNによってcacheすることが可能です。
 
 ### Client-side caching
 
@@ -96,9 +94,57 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 - `full` - ページデータを完全にプリフェッチする。 
 - `temporary` - これは next/link で prefetch={false} が使われているときや、プログラムでルートをプッシュするときに使用されます。
 
-TBW: それぞれのDemo作ってキャプチャ貼る
+ここで言う動的なページとは、レンダリングに利用する画面はリクエストが来るまでレンダリングできないページを指します。App Routerは動的なページかどうか、[dynamic functions](https://nextjs.org/docs/app/building-your-application/rendering/static-and-dynamic-rendering#using-dynamic-functions)（[cookies](https://nextjs.org/docs/app/api-reference/functions/cookies)や[headers](https://nextjs.org/docs/app/api-reference/functions/headers)など）が使われているかどうかで判断されます。
+
+また、`full`と`temporary`は明示的に`prefetch`を`Link`コンポーネントに渡すことで指定できます。`auto`は`prefetch`を指定しない場合のデフォルト値、`full`は`prefetch={true}`、`temporary`は`prefetch={false}`です。
+
+以下の簡単なデモページで挙動を確認してみましょう。`Links`にあるリンクはそれぞれ、キャッシュの種類ごとにページリンクになります。`auto`のみ動的ページかどうかで分岐があるので、2ページ用意しています。
+
+- `/cache_auto/static`: キャッシュ種別が`auto`な動的**でない**ページへのリンク
+- `/cache_auto/dynamic`: キャッシュ種別が`auto`な動的ページ（`next/headers`を利用）へのリンク
+- `/cache_full`: キャッシュ種別が`full`（`prefetch={true}`）なリンク
+- `/cache_temporary`: キャッシュ種別が`temporary`（`prefetch={false}`）なリンク
+
+![](/images/next-app-router-prefetch-cache/demo-prefetch-list.png)
+*画面内に要素があるとprefetchが発火する*
+
+viewport内に`Link`が入ってくると`prefetch`アクションが発火し、リンク先ページのレンダリング結果を取得しようと試みます。`prefetch={false}`な`/cache_temporary`は当然prefetchされないので他の3ページのprefetchが確認できます。
+
+![](/images/next-app-router-prefetch-cache/demo-prefetch-static.png)
+*ページが動的でない時はレンダリング結果がflightで送られてくる*
+
+`/cache_auto/static`のレスポンスBodyを確認すると**Flight**が確認できます。Flightについては[前回の記事](https://zenn.dev/akfm/articles/next-app-router-navigation#react-flight)でも言及していますが、React Server Components（RSC）をレンダリングした結果を表現する、独自のデータフォーマットです。
+
+![](/images/next-app-router-prefetch-cache/demo-prefetch-dynamic.png)
+*ページ全体が動的な時はレンダリングできないので空になる*
+
+一方で`/cache_auto/dynamic`の方は中身が空になってることが確認できます。このページの実装は以下のようになっています。
+
+```tsx
+// /src/app/cache_auto/dynamic/page.tsx
+export default async function Page() {
+  const res = await fetch("https://dummyjson.com/products");
+  await timer();
+  const data = await res.json();
+  // dynamic functions
+  const headersList = headers();
+  console.log("headersList", headersList);
+
+  return (
+    ...
+  );
+}
+```
+
+`page`自体がdynamic functionsに依存しています。`layout.tsx`もないので、レンダリングできるものがなく空が帰ったものと考えられます。
+
+![](/images/next-app-router-prefetch-cache/demo-prefetch-full.png)
+
+`/cache_full`は`/cache_auto/static`と特段変わった様子はないようです。`full`の大きな違いはClient-side cacheの有効時間にあるためです。
 
 ### Client-side cacheの有効期限
+
+TBW: キャッシュの種別ごとに有効期限がどの程度違うか
 
 遷移にはClient-side cacheが必要なこと、Client-side cacheにはいくつかの種類があることがわかりました。しかし、cacheというからには当然有効期限や失効させたい要件などが存在することが想像できます。
 
@@ -114,14 +160,10 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 
 上記を読み解くと、Cacheの有効期限はざっくり以下のように分類されることがわかります。
 
-- fresh: 新しいcache
-  - prefetchから30s以内
-- reusable: 再利用可能なcache
-  - lastUsedから30s以内
-- stale: ちょっと古いcache
-  - prefetchから5m以内
-- expired: 破棄されるべきcache
-  - prefetchから5m以上
+- `fresh`: 新しいcache。prefetchから30s以内。
+- `reusable`: 再利用可能なcache。lastUsedから30s以内。
+- `stale`: ちょっと古いcache。prefetchから5m以内。
+- `expired`: 破棄されるべきcache。prefetchから5m以上。
 
 これらについても、それぞれ挙動を確認してみましょう。
 
