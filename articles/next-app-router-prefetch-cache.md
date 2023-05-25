@@ -82,7 +82,7 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 
 https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/create-record-from-thenable.ts
 
-## Client-side cacheの種類
+## Client-side cacheの種別
 
 さて、Client-side cacheには内部的に`auto`/`full`/`temporary`の3種類が存在します。
 
@@ -144,46 +144,53 @@ export default async function Page() {
 
 ### Client-side cacheの有効期限
 
-TBW: キャッシュの種別ごとに有効期限がどの程度違うか
-
-遷移にはClient-side cacheが必要なこと、Client-side cacheにはいくつかの種類があることがわかりました。しかし、cacheというからには当然有効期限や失効させたい要件などが存在することが想像できます。
-
-筆者が確認した限り、[ドキュメント](https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#prefetching)には**有効期限の話やcacheをrevalidateする方法についての記載は見つけられませんでした**。ということで、実装から仕様を読み解いてみます。
-
-Client-side cacheの生存期間は利用有無や`prefetch`のcacheの種類によって異なります。生存期間ごとのステータスは以下のenumで定義されています。
+cacheというからには当然ながら有効期限があり、前述のcacheの種別によって有効期限の仕様が異なります。内部的にはこれはステータスとして管理されており、以下のenumで定義されています。
 
 https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/get-prefetch-cache-entry-status.ts#L6-L11
+
+上記よりcacheのステータスは、以下のように分類されることがわかります。
+
+- `fresh`: 新しいcache
+- `reusable`: 再利用可能なcache
+- `stale`: ちょっと古いcache
+- `expired`: 破棄されるべきcache
 
 このステータスは直後に定義されている関数によって判定が可能です。
 
 https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/get-prefetch-cache-entry-status.ts#L18-L39
 
-上記を読み解くと、Cacheの有効期限はざっくり以下のように分類されることがわかります。
+上記関数より、cacheは種別・経過時間・`lastUsed`（cacheの最後の利用時間）によって以下のようなステータス分類が行われていることがわかります。
 
-- `fresh`: 新しいcache。prefetchから30s以内。
-- `reusable`: 再利用可能なcache。lastUsedから30s以内。
-- `stale`: ちょっと古いcache。prefetchから5m以内。
-- `expired`: 破棄されるべきcache。prefetchから5m以上。
+| cache種別                | `auto` | `full` | `temporary` |
+| ----------------------- | ------- | ---- | ---- |
+| prefetchから**30秒以内**                  | `fresh`    | `fresh` | `fresh` |
+| lastUsedから**30秒以内**     | `reusable` | `reusable` | `reusable` |
+| prefetchから**30秒~5分**                  | `stale`    | `reusable` | `expired` |
+| prefetchから**5分~30分**        | `expired`    | `reusable` | `expired` |
+| prefetchから**30分以降**                  | `expired`    | `expired` | `expired` |
 
-これらについても、それぞれ挙動を確認してみましょう。
+これらについてもそれぞれ挙動や実装を確認してみると、prefetchに以下のような違いがあるようでした。
 
-TBW: 各cacheのDemo
+- `fresh`, `reusable`: prefetchを再発行せず、cacheを再利用する
+- `stale`: dynamic functionsを含むレンダリング部分だけprefetchを再度行う
+- `expired`: prefetchを再発行する
 
-#### 余談: stale時の挙動
+厳密には`fresh`と`reusable`にも条件付きで挙動差異があるかもしれませんが、実装が膨大なため追いきれませんでした。ただ基本的な挙動は上記という認識で問題ないかと思います。
 
-flightにレンダリングされたコンポーネントを含まず、staleなときはprefetchを再度行うようなコメントや処理が見受けられましたが、どういう時にflightにレンダリングされたコンポーネントを含まないのか追いきれませんでした。
+### Client-side cacheのrevalidate
 
-[このへん](https://github.com/vercel/next.js/pull/44502)が起点ぽいのですが、いまいち内容を把握しきれませんでした。後日気が向いたらまた調査してみようかと思います。
+しかし、cacheというからには当然任意のタイミングでrevalidateしたいケースが存在するであろうことが想像できます。
 
-## Client-side cacheの問題点
+筆者が確認した限り、[ドキュメント](https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#prefetching)には**有効期限の話やcacheをrevalidateする方法についての記載は見つけられませんでした**。`fetch`に`cache: 'no-store'`がついてたり、`prefetch={false}`だったとしても、`fresh`や`reusable`なcacheは再利用されてしまいます。
 
-TBW
+つまりApp Routerは、現状**リクエストのたびにデータfetchするような画面をRSCで実装できない**ということになります。
+
+[On-Demand Revalidation](https://nextjs.org/docs/app/building-your-application/data-fetching/revalidating#using-on-demand-revalidation)の機能も試してみましたが、これがクリアできるcacheはやはり`Caching Data`などが対象のようで、Client-side cacheをクリアすることはできませんでした。
+
+todo: 
 
 - とはいえこれでは`no-store`のように常に更新を促したい時にうまくいかない
 - ではどうするべきか
-  - 現状特にやりようはない
-    - TODO ↓でやれる？
-      - https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#invalidating-the-cache
   - 一方でこれでは普通に困ることもあるので、issueを立ててみました
     - TODO issue探してなければ作成
   - 以下はそこで提案してる内容です
