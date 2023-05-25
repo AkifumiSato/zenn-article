@@ -183,22 +183,14 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 
 筆者が確認した限り、[ドキュメント](https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#prefetching)には**有効期限の話やcacheをrevalidateする方法についての記載は見つけられませんでした**。`fetch`に`cache: 'no-store'`がついてたり、`prefetch={false}`だったとしても、`fresh`や`reusable`なcacheは再利用されてしまいます。
 
-つまりApp Routerは、現状**リクエストのたびにデータfetchするような画面をRSCで実装できない**ということになります。
+つまりApp Routerは、現状**リクエストのたびにデータfetchするような画面をRSCで実装できない**ということになります。少なくとも`lastUsed`から30秒間は更新されず、リロードなどをしないといけないことになります。
 
 [On-Demand Revalidation](https://nextjs.org/docs/app/building-your-application/data-fetching/revalidating#using-on-demand-revalidation)の機能も試してみましたが、これがクリアできるcacheはやはり`Caching Data`などが対象のようで、Client-side cacheをクリアすることはできませんでした。
 
-todo: 
-
-- とはいえこれでは`no-store`のように常に更新を促したい時にうまくいかない
-- ではどうするべきか
-  - 一方でこれでは普通に困ることもあるので、issueを立ててみました
-    - TODO issue探してなければ作成
-  - 以下はそこで提案してる内容です
-    - cache時間を短くすると負荷問題が顕在化する
-      - [ ] どのくらいprefetchするか試してみる
-    - 暫定的にはprefetchをやめる
-    - より根本的には、App Routerがクライアントサイドのcacheをコントロールできるように提供すべき？
+todo: issueをたてる
 
 ## 感想
 
-TBW
+今回はClient-side cacheに重きを置いて実装や仕様を調査してみました。App Routerの積極的なキャッシュは[INP](https://web.dev/inp/)（**Interaction To Next Paint**）などの改善が見込まれるし、歓迎してる部分も多いのです。一方で今回わかったClient-side cacheをrevalidateする方法がないという問題点は、プロダクションで利用するにはかなり大きな制約になると感じています。特にユーザー情報を扱うWebアプリ開発などでは、この手の問題で回避策がないというのは致命的になり得ます。
+
+App Routerは注目度も高く、すでにstableが宣言されたわけですが、利用する開発者側からすると挙動や機能もまだ「安定」していない部分があると筆者は考えています。App Routerはユーザーにとっても開発者にとっても多くのメリットがあるし、非常に魅力的な機能を兼ねているので、上記問題含めさらに多くの改善や発展に期待したいところです。
