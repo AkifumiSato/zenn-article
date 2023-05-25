@@ -183,11 +183,15 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 
 筆者が確認した限り、[ドキュメント](https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#prefetching)には**有効期限の話やcacheをrevalidateする方法についての記載は見つけられませんでした**。`fetch`に`cache: 'no-store'`がついてたり、`prefetch={false}`だったとしても、`fresh`や`reusable`なcacheは再利用されてしまいます。
 
-つまりApp Routerは、現状**リクエストのたびにデータfetchするような画面をRSCで実装できない**ということになります。少なくとも`lastUsed`から30秒間は更新されず、リロードなどをしないといけないことになります。
+[On-Demand Revalidation](https://nextjs.org/docs/app/building-your-application/data-fetching/revalidating#using-on-demand-revalidation)の機能なども試してみましたが、これがクリアできるcacheはやはり`Caching Data`などが対象のようで、Client-side cacheをクリアすることはできませんでした。
 
-[On-Demand Revalidation](https://nextjs.org/docs/app/building-your-application/data-fetching/revalidating#using-on-demand-revalidation)の機能も試してみましたが、これがクリアできるcacheはやはり`Caching Data`などが対象のようで、Client-side cacheをクリアすることはできませんでした。
+これについてはすでにいくつかissueが立っており、いかが最も盛んに議論されているようでした。
 
-todo: issueをたてる
+https://github.com/vercel/next.js/issues/42991
+
+上記issueでは`router.refresh()`を利用する手段などが提案されていますが、これはスマートな解決策とは言い難いところです。できることならClient-side cacheの時間を任意に指定できたり、ページ自体がデフォルトで`router.refresh()`を呼び出してくれたり、任意のタイミングでrevalidateする手段が提供されていることが望ましい気がします。
+
+今後何かしらの対応がされ、ドキュメントも更新されることを願います。
 
 ## 感想
 
