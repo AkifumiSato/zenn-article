@@ -189,7 +189,7 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 
 https://github.com/vercel/next.js/issues/42991
 
-上記issueでは`router.refresh()`を利用する手段などが提案されていますが、これはスマートな解決策とは言い難いところです。できることならClient-side cacheの時間を任意に指定できたり、ページ自体がデフォルトで`router.refresh()`を呼び出してくれたり、任意のタイミングでrevalidateする手段が提供されていることが望ましい気がします。
+上記issueでは`router.refresh()`を利用する手段などが提案されており、試したところ確かに毎回cacheを利用せず再度fetchしている様子が確認できました。ただ、これはスマートな解決策とは言い難いところです。できることならClient-side cacheの時間を任意に指定できたり、動的ページの場合はデフォルトで`router.refresh()`を呼び出してくれたり、任意のタイミングでrevalidateする手段が提供されていることが望ましい気がします。
 
 今後何かしらの対応がされ、ドキュメントも更新されることを願います。
 
