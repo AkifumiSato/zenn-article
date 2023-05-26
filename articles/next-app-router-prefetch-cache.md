@@ -94,7 +94,7 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 - `full` - ページデータを完全にプリフェッチする。 
 - `temporary` - これは next/link で prefetch={false} が使われているときや、プログラムでルートをプッシュするときに使用されます。
 
-ここで言う動的なページとは、レンダリングに利用する画面はリクエストが来るまでレンダリングできないページを指します。App Routerは動的なページかどうか、[dynamic functions](https://nextjs.org/docs/app/building-your-application/rendering/static-and-dynamic-rendering#using-dynamic-functions)（[cookies](https://nextjs.org/docs/app/api-reference/functions/cookies)や[headers](https://nextjs.org/docs/app/api-reference/functions/headers)など）が使われているかどうかで判断されます。
+ここで言う動的なページとは、リクエストが来るまでレンダリングできないページを指します。App Routerは動的なページかどうか、[dynamic functions](https://nextjs.org/docs/app/building-your-application/rendering/static-and-dynamic-rendering#using-dynamic-functions)（[cookies](https://nextjs.org/docs/app/api-reference/functions/cookies)や[headers](https://nextjs.org/docs/app/api-reference/functions/headers)など）が使われているかどうかで判断されます。`next build`時に一度各pageコンポーネントを実行してるので、その時に判断されるものと考えられます。
 
 また、`full`と`temporary`は明示的に`prefetch`を`Link`コンポーネントに渡すことで指定できます。`auto`は`prefetch`を指定しない場合のデフォルト値、`full`は`prefetch={true}`、`temporary`は`prefetch={false}`です。
 
@@ -155,7 +155,7 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 - `stale`: ちょっと古いcache
 - `expired`: 破棄されるべきcache
 
-このステータスは直後に定義されている関数によって判定が可能です。
+このステータスは直後に定義されている関数によって内部的に判定されます。
 
 https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/get-prefetch-cache-entry-status.ts#L18-L39
 
@@ -175,7 +175,9 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 - `stale`: dynamic functionsを含むレンダリング部分だけprefetchを再度行う
 - `expired`: prefetchを再発行する
 
-厳密には`fresh`と`reusable`にも条件付きで挙動差異があるかもしれませんが、実装が膨大なため追いきれませんでした。ただ基本的な挙動は上記という認識で問題ないかと思います。
+:::message
+厳密には各ステータスと状況ごとに多くの分岐が存在するので、上記はあくまで基本的な挙動とご理解ください。
+:::
 
 ### Client-side cacheのrevalidate
 
@@ -185,7 +187,7 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 
 [On-Demand Revalidation](https://nextjs.org/docs/app/building-your-application/data-fetching/revalidating#using-on-demand-revalidation)の機能なども試してみましたが、これがクリアできるcacheはやはり`Caching Data`などが対象のようで、Client-side cacheをクリアすることはできませんでした。
 
-これについてはすでにいくつかissueが立っており、いかが最も盛んに議論されているようでした。
+これについてはすでにいくつかissueが立っており、以下のissueが最も盛んに議論されているようでした。
 
 https://github.com/vercel/next.js/issues/42991
 
@@ -195,6 +197,6 @@ https://github.com/vercel/next.js/issues/42991
 
 ## 感想
 
-今回はClient-side cacheに重きを置いて実装や仕様を調査してみました。App Routerの積極的なキャッシュは[INP](https://web.dev/inp/)（**Interaction To Next Paint**）などの改善が見込まれるし、歓迎してる部分も多いのです。一方で今回わかったClient-side cacheをrevalidateする方法がないという問題点は、プロダクションで利用するにはかなり大きな制約になると感じています。特にユーザー情報を扱うWebアプリ開発などでは、この手の問題で回避策がないというのは致命的になり得ます。
+今回はClient-side cacheに重きを置いて実装や仕様を調査してみました。App Routerの積極的なキャッシュは[INP](https://web.dev/inp/)（**Interaction To Next Paint**）などの改善が見込まれるし、歓迎してる部分も多いのです。一方でClient-side cacheが一定時間保持され続けてしまうことについては、ドキュメントでの説明や対応方法の不足があり、プロダクションで利用するにはかなり大きな制約になると感じています。特にユーザー情報を扱うWebアプリ開発などでは、この手の問題は致命的になり得ます。
 
 App Routerは注目度も高く、すでにstableが宣言されたわけですが、利用する開発者側からすると挙動や機能もまだ「安定」していない部分があると筆者は考えています。App Routerはユーザーにとっても開発者にとっても多くのメリットがあるし、非常に魅力的な機能を兼ねているので、上記問題含めさらに多くの改善や発展に期待したいところです。
