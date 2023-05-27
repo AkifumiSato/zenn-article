@@ -96,9 +96,11 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 
 https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/reducers/navigate-reducer.ts#L229
 
-ちなみにPromiseから値を同期的に読み取る`readRecordValue`は、Promiseを拡張して行なっているようです。（これも少々行儀が悪い気がしますが、、、）
+ちなみにPromiseから値を同期的に読み取る`readRecordValue`は、Promiseを拡張して行なっているようです。（~~これも少々行儀が悪い気がしますが、、、~~）
 
 https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/create-record-from-thenable.ts
+
+追記: 指摘いただいたところによると、これはどうやらReactの[Promise 1st Class Support](https://github.com/acdlite/rfcs/blob/first-class-promises/text/0000-first-class-support-for-promises.md#reading-the-result-of-a-promise-that-was-read-previously)の仕様が由来した実装のようです。
 
 ## Client-side Cacheの種別
 
