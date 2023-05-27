@@ -3,7 +3,7 @@ title: "Next.js App Router 知られざるClient-side Cacheの仕様"
 emoji: "🚀"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["nextjs", "react"]
-published: false
+published: true
 ---
 
 前回、App Routerの遷移の仕組みと実装についてまとめました。
@@ -15,7 +15,7 @@ https://zenn.dev/akfm/articles/next-app-router-navigation
 :::message
 - 前回記事同様、細かい仕様や内部実装の話がほとんどで、機能の説明などは省略しているのでそちらは[公式ドキュメント](https://nextjs.org/docs)や他の記事をご参照ください。
 - 極力丁寧に説明するよう努めますが、前回の続きな部分も多いのでより深く理解したい方は[こちらの記事](https://zenn.dev/akfm/articles/next-app-router-navigation)から読むことをお勧めします。
-- prefetch周りの仕様や実装は膨大なので、筆者の興味の向くままに大枠を調査したものです。
+- Client-side Cacheh周りの仕様や実装は膨大なので、筆者の興味の向くままに大枠を調査したものです。
 - 実装は当然ながらアップデートされるため、記事の内容が最新にそぐわない可能性があります。調査・執筆時に見てたコミットは[afddb6e](https://github.com/vercel/next.js/tree/afddb6ebdade616cdd7780273be4cd28d4509890)です。
 :::
 
@@ -34,7 +34,9 @@ App Routerは積極的にcacheを取り入れており、cacheは用途や段階
 
 https://nextjs.org/docs/app/building-your-application/data-fetching/caching#react-cache
 
-[この辺](https://nextjs.org/docs/app/building-your-application/data-fetching#the-fetch-api)を読むに、これはNext.jsではなく**React側でfetchを拡張**することで行なっているようです。
+これはNext.jsではなく**React側でfetchを拡張**[^1]することで行なっているようです。
+
+[^1]: https://nextjs.org/docs/app/building-your-application/data-fetching#the-fetch-api
 
 以下の記事がRequest Dedupingについてより詳しく解説されているので、興味のある方はぜひご一読ください。
 
@@ -42,12 +44,14 @@ https://zenn.dev/cybozu_frontend/articles/next-caching-dedupe
 
 ### Caching Data
 
-[Caching Data](https://nextjs.org/docs/app/building-your-application/data-fetching#caching-data)はRequest Deduping同様、主にfetchによるGETリクエストが対象ですが、Request Dedupingは同一レンダリングツリー内で有効になるcacheなのに対し、Caching DataはCDN上などのlocation単位でcacheを保存します。Request Dedupingは1リクエストに対し、Caching Dataは複数リクエストに対し有効と考えるとわかりやすいかと思います。
+[Caching Data](https://nextjs.org/docs/app/building-your-application/data-fetching#caching-data)はRequest Deduping同様、主にfetchによるGETリクエストが対象ですが、Request Dedupingは同一レンダリングツリー内で有効になるcacheなのに対し、Caching DataはCDN上などのlocation単位で有効なcacheです。Request Dedupingは1リクエストに対し、Caching Dataは複数リクエスト・複数ユーザーに対し有効と考えるとわかりやすいかと思います。
 
 ![](https://nextjs.org/_next/image?url=%2Fdocs%2Fdark%2Fstatic-site-generation.png&w=3840&q=75)
 *nextjs.org/docsより*
 
-これはReact側ではなく、[Next.js側でfetchを拡張](https://nextjs.org/docs/app/building-your-application/data-fetching#the-fetch-api)することで実現しているようです。
+これはReact側ではなく、**Next.js側でfetchを拡張**[^2]することで実現しているようです。
+
+[^2]: https://nextjs.org/docs/app/building-your-application/data-fetching#the-fetch-api
 
 Caching Dataは[`revalidate`](https://nextjs.org/docs/app/building-your-application/data-fetching/revalidating)オプションや[`fetchCache`](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#fetchcache)を指定することで有効になります。
 こちらも先述の記事を書かれた[mugiさん](https://zenn.dev/mugi)がシリーズ的に解説されているので、興味のある方はぜひご一読ください。
@@ -62,7 +66,7 @@ App Routerでは`fetch`のcacheの話に目が行きがちですが、従来通�
 
 ### Client-side caching
 
-上記3つのcacheはユーザーからするとサーバー（主にCDNですが）側のcacheです。対して、[Client-side caching](https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#client-side-caching-of-rendered-server-components)は、文字通り**クライアントサイドのインメモリなcache**です。インメモリなのでリロードやMPA遷移を挟むと消えてしまいますが、App Router間の遷移においては有効です。
+上記3つのcacheはユーザーからするとサーバー（CDN）側のcacheです。対して、[Client-side caching](https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#client-side-caching-of-rendered-server-components)は、文字通り**クライアントサイドのインメモリなcache**です。Client-side cachingは、レンダリングしたReact Server Componentsをcacheします。インメモリなのでリロードやMPA遷移を挟むと消えてしまいますが、App Router間の遷移においては有効です。
 
 このcacheについてはNext.jsのドキュメントではあまり詳細に語られておらず、筆者が確認した限りだと以下くらいの情報しかありません。
 
@@ -78,7 +82,7 @@ App Routerでは`fetch`のcacheの話に目が行きがちですが、従来通�
 > 
 > これは、特定のケースにおいて、ルーターがサーバーに新たなリクエストを行う代わりにキャッシュを再利用できることを意味します。これにより、不必要なデータの再取得やコンポーネントの再レンダリングを回避し、パフォーマンスを向上させることができます。
 
-上記内容は「キャッシュの無効化」の説明や「特定のケース」の定義など、多くの点で説明が省略されてしまってて詳細がわかりません。以降はこのClient-side Cacheについて、実装を追いながら説明が省略されている仕様を確認していきたいと思います。
+上記内容は「キャッシュの無効化」の説明や「特定のケース」の定義など、いくつかの点で説明が省略されています。以降はこのClient-side Cacheについて、実装を追いながらより詳細な仕様について確認していきたいと思います。
 
 ## Client-side Cacheの保存と利用
 
@@ -104,11 +108,11 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 
 コメントに説明があるのでDeepl翻訳してみます。
 
-- `auto` - ページが動的な場合は、ページデータを部分的にプリフェッチし、静的な場合はページデータを完全にプリフェッチします。
-- `full` - ページデータを完全にプリフェッチする。 
-- `temporary` - これは`next/link`で`prefetch={false}`が使われているときや、プログラムでルートをプッシュするときに使用されます。
+> - `auto` - ページが動的な場合は、ページデータを部分的にプリフェッチし、静的な場合はページデータを完全にプリフェッチします。
+> - `full` - ページデータを完全にプリフェッチする。 
+> - `temporary` - これは`next/link`で`prefetch={false}`が使われているときや、プログラムでルートをプッシュするときに使用されます。
 
-ここで言う動的なページとは[Dynamic Rendering](https://nextjs.org/docs/app/building-your-application/rendering/static-and-dynamic-rendering#dynamic-rendering)と呼ばれる、リクエストが来るまでレンダリングできないページを指します。App RouterはDynamic Renderingなページかどうかを`no-store`なfetchがあるかどうかや、[Dynamic Functions](https://nextjs.org/docs/app/building-your-application/rendering/static-and-dynamic-rendering#using-dynamic-functions)（[cookies](https://nextjs.org/docs/app/api-reference/functions/cookies)・[headers](https://nextjs.org/docs/app/api-reference/functions/headers)など）が使われているかどうかで判断されます。`next build`時に一度各pageコンポーネントを実行してるので、その時に判断されるものと考えられます。
+ここで言う動的なページとは[Dynamic Rendering](https://nextjs.org/docs/app/building-your-application/rendering/static-and-dynamic-rendering#dynamic-rendering)と呼ばれる、リクエストが来るまでレンダリングできないページを指します。App RouterはDynamic Renderingなページかどうかを`no-store`なfetchがあるかどうかや、[Dynamic Functions](https://nextjs.org/docs/app/building-your-application/rendering/static-and-dynamic-rendering#using-dynamic-functions)（[cookies](https://nextjs.org/docs/app/api-reference/functions/cookies)・[headers](https://nextjs.org/docs/app/api-reference/functions/headers)など）が使われているかどうかで判断します。App Routerでは`next build`時に一度各pageコンポーネントを実行してるので、その時に判断されるものと考えられます。
 
 これらのcache種別は基本的に`Link`コンポーネントの`prefetch`と対応関係にあります。
 
@@ -116,14 +120,19 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 - `full`: `prefetch={true}`
 - `temporary`: `prefetch={false}`
 
-以下の簡単なデモページで挙動を確認してみましょう。`Links`にあるリンクはそれぞれ、cache種別ごとにページリンクになります。`auto`のみDynamic Renderingかどうかで分岐があるので、2ページ用意しています。
+以下の簡単なデモページで挙動を確認してみましょう。
+
+![](/images/next-app-router-prefetch-cache/demo-prefetch.png)
+*デモページ*
+
+`Links`にあるリンクはそれぞれ、cache種別ごとにページリンクになります。`auto`のみDynamic Renderingかどうかで分岐があるので、2ページ用意しています。
 
 | URL | prefetch | Dynamic Rendering | cache種別 |
 | ---- | ---- | ---- | ---- |
-| `/cache_auto/static` | `undefined` | false | `auto` |
-| `/cache_auto/dynamic` | `undefined` | true（`next/headers`を利用） | `auto` |
-| `/cache_full` | `true` | false | `full` |
-| `/cache_temporary` | `false` | false | `temporary` |
+| `/cache_auto/static` | `undefined` | × | `auto` |
+| `/cache_auto/dynamic` | `undefined` | ○（`next/headers`を利用） | `auto` |
+| `/cache_full` | `true` | × | `full` |
+| `/cache_temporary` | `false` | × | `temporary` |
 
 ![](/images/next-app-router-prefetch-cache/demo-prefetch-list.png)
 *画面内に要素があるとprefetchが発火する*
@@ -214,7 +223,7 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 これらについてもそれぞれ挙動や実装を確認してみると、prefetchに以下のような違いがあるようでした。
 
 - `fresh`, `reusable`: prefetchを再発行せず、cacheを再利用する
-- `stale`: Dynamic Rendering部分（segment）だけ遷移時に再fetchを行う
+- `stale`: Dynamic Rendering部分だけ遷移時に再fetchを行う
 - `expired`: prefetchを再発行する
 
 :::message
@@ -233,13 +242,11 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 
 https://github.com/vercel/next.js/issues/42991
 
-上記issueでは`router.refresh()`を利用する手段などが提案されており、試したところ、確かに毎回cacheを利用せず再度fetchしている様子が確認できました。ただ、これはスマートな解決策とは言い難いところです。できることならClient-side Cacheの時間を任意に指定できたり、Dynamic Renderingの場合はデフォルトで`router.refresh()`を呼び出してくれたり、任意のタイミングでrevalidateする手段が提供されていることが望ましい気がします。また、おそらくですがページ全体をrefreshしてしまうので、ドキュメントにあった
+上記issueでは`router.refresh()`を利用する手段などが提案されており、試したところ、確かにcacheを利用せず再度fetchした内容が反映されている様子が確認できました。ただ、これはスマートな解決策とは言い難いところです。できることならClient-side Cacheの時間を任意に指定できたり、Dynamic Renderingの場合はデフォルトで`router.refresh()`を呼び出してくれたり、任意のタイミングでrevalidateする手段が提供されていることが望ましい気がします。また、おそらくですが`router.refresh()`ではページ全体をrefreshしてしまうので、ドキュメントにあった以下のような部分的なcacheの無効化ができるのはNext.js側だけで、開発者側ではできないのではないかと考えられます。
 
 > キャッシュはルートセグメントで分割されているため、どのレベルでも無効化でき
 
-というのはNext.js内部的な話だけで、開発者がセグメントレベルで無効化できるわけではないものと考えられます。
-
-せめて現状の仕様については記載が欲しいので、こちらはissueを立てました。
+せめて無効化できない時間については仕様の記載が欲しいので、issueを立てました。
 
 https://github.com/vercel/next.js/issues/49431
 
@@ -247,6 +254,6 @@ https://github.com/vercel/next.js/issues/49431
 
 ## 感想
 
-今回はClient-side Cacheに重きを置いて実装や仕様を調査してみました。App Routerの積極的なキャッシュは[INP](https://web.dev/inp/)（**Interaction To Next Paint**）などの改善が見込まれるし、歓迎してる部分も多いのです。一方でClient-side Cacheが一定時間保持され続けてしまうことについては、ドキュメントでの説明や対応方法の不足があり、プロダクションで利用するにはかなり大きな制約になると感じています。特にユーザー情報を扱うWebアプリ開発などでは、この手の問題は致命的になり得ます。
+今回はClient-side Cacheに重きを置いて実装や仕様を調査してみました。App Routerの積極的なキャッシュは[INP](https://web.dev/inp/)（**Interaction To Next Paint**）などの改善が見込まれるし、個人的には歓迎してる部分も多いです。一方でClient-side Cacheが一定時間保持され続けてしまうことについては、ドキュメントでの説明や対応方法の不足があり、プロダクションで利用するにはかなり大きな制約になると感じています。特にユーザー情報を扱うWebアプリ開発などでは、この手の問題は致命的になり得ます。
 
-App Routerは注目度も高く、すでにstableが宣言されたわけですが、利用する開発者側からすると挙動や機能もまだ「安定」していない部分があると筆者は考えています。App Routerはユーザーにとっても開発者にとっても多くのメリットがあるし、非常に魅力的な機能を兼ねているので、上記問題含めさらに多くの改善や発展に期待したいところです。
+App Routerは注目度も高く、すでにstable（安定化）が宣言されたわけですが、利用する開発者側からすると挙動や機能もまだ「安定」していない部分があると筆者は考えています。App Routerはユーザーにとっても開発者にとっても多くのメリットがあるし、非常に魅力的な機能を兼ねているので、上記問題含めさらに多くの改善や発展に期待したいところです。
