@@ -210,21 +210,21 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 
 https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/packages/next/src/client/components/router-reducer/get-prefetch-cache-entry-status.ts#L18-L39
 
-上記関数より、cacheは種別・経過時間・`lastUsed`（cacheの最後の利用時間）によって以下のようなステータス分類が行われていることがわかります。
+内部的には`prefetchTime`となっていますが、`prefetch={false}`（`temporary`）の時はprefetchは発行されないので、実際にはfetchからの経過時間となります。上記関数より、cacheは種別・取得からの経過時間・`lastUsed`（cacheの最後の利用時間）によって以下のようなステータス分類が行われていることがわかります。
 
 | 時間判定                | `auto` | `full` | `temporary` |
 | ----------------------- | ------- | ---- | ---- |
-| prefetchから**30秒以内**                  | `fresh`    | `fresh` | `fresh` |
+| prefetch/fetchから**30秒以内**                  | `fresh`    | `fresh` | `fresh` |
 | lastUsedから**30秒以内**     | `reusable` | `reusable` | `reusable` |
-| prefetchから**30秒~5分**                  | `stale`    | `reusable` | `expired` |
-| prefetchから**5分~30分**        | `expired`    | `reusable` | `expired` |
-| prefetchから**30分以降**                  | `expired`    | `expired` | `expired` |
+| prefetch/fetchから**30秒~5分**                  | `stale`    | `reusable` | `expired` |
+| prefetch/fetchから**5分~30分**        | `expired`    | `reusable` | `expired` |
+| prefetch/fetchから**30分以降**                  | `expired`    | `expired` | `expired` |
 
-これらについてもそれぞれ挙動や実装を確認してみると、prefetchに以下のような違いがあるようでした。
+cacheのステータスによってprefetch/fetchの再取得には差異があり、実際に確認してみると以下のような差異がありました。
 
-- `fresh`, `reusable`: prefetchを再発行せず、cacheを再利用する
+- `fresh`, `reusable`: prefetch/fetchを再発行せず、cacheを再利用する
 - `stale`: Dynamic Rendering部分だけ遷移時に再fetchを行う
-- `expired`: prefetchを再発行する
+- `expired`: prefetchh/fetchを再発行する
 
 :::message
 厳密には各ステータスと状況ごとに多くの分岐が存在するので、上記はあくまで基本的な挙動とご理解ください。
