@@ -140,12 +140,12 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 viewport内に`Link`が入ってくると`prefetch`アクションが発火し、リンク先ページのレンダリング結果を取得しようと試みます。`prefetch={false}`な`/cache_temporary`は当然prefetchされないので他の3ページのprefetchが確認できます。
 
 ![](/images/next-app-router-prefetch-cache/demo-prefetch-static.png)
-*ページが動的でない時はレンダリング結果がflightで送られてくる*
+*レンダリング結果がflightで送られてくる*
 
 `/cache_auto/static`のレスポンスBodyを確認すると**Flight**が確認できます。Flightについては[前回の記事](https://zenn.dev/akfm/articles/next-app-router-navigation#react-flight)でも言及していますが、React Server Components（RSC）をレンダリングした結果を表現する、独自のデータフォーマットです。
 
 ![](/images/next-app-router-prefetch-cache/demo-prefetch-dynamic.png)
-*ページ全体が動的な時はレンダリングできないので他ページよりレンダリング結果が減っている*
+*Dynamic Rendering部分がレンダリングされないので、他ページよりレンダリング結果が減っている*
 
 `/cache_auto/dynamic`ページの実装は以下のようになっています。
 
@@ -190,6 +190,7 @@ export default async function Page() {
 *`/cache_auto/dynamic`のFlight*
 
 ![](/images/next-app-router-prefetch-cache/demo-prefetch-full.png)
+*`/cache_full`のFlight*
 
 `/cache_full`は`/cache_auto/static`と特段変わった様子はないようです。`full`の大きな違いはClient-side Cacheの有効時間にあるためです。
 
