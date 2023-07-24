@@ -220,8 +220,7 @@ https://github.com/vercel/next.js/blob/afddb6ebdade616cdd7780273be4cd28d4509890/
 | prefetch/fetchから**30秒以内**                  | `fresh`    | `fresh` | `fresh` |
 | lastUsedから**30秒以内**     | `reusable` | `reusable` | `reusable` |
 | prefetch/fetchから**30秒~5分**                  | `stale`    | `reusable` | `expired` |
-| prefetch/fetchから**5分~30分**        | `expired`    | `reusable` | `expired` |
-| prefetch/fetchから**30分以降**                  | `expired`    | `expired` | `expired` |
+| prefetch/fetchから**5分以降**                  | `expired`    | `expired` | `expired` |
 
 cacheのステータスによってprefetch/fetchの再取得には差異があり、実際に確認してみると以下のような差異がありました。
 
