@@ -7,7 +7,6 @@ published: false
 ---
 
 
-
 - 序文
   - 最近`location-state`というパッケージ開発をしています
   - 履歴に基づいて状態を復元できるライブラリです。
@@ -39,3 +38,10 @@ published: false
 - renovate
   - パッケージのアップデートを自動でPRを作成してくれるbot
   - CI環境をちゃんと作っておけば安心してPRからマージまで任せられる
+- まとめ
+  - `pnpm`: パッケージ管理はこれでいいのでは
+  - `turborepo`: remote cacheなしでも十分高速化期待できるので使うべし
+  - `tsup`: 外部向けpackageがなくとも、内部packageのbuildに使うと思うのでおすすめ
+  - `changesets`: 外部向けpackageの開発ならおすすめ
+  - `renovate`: CI整えて自動マージまで組むと幸福度高い
+
