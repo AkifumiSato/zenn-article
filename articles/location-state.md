@@ -3,7 +3,7 @@ title: "ブラウザバックで壊れないstate管理を実現する`location-
 emoji: "⏳"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["react", "nextjs"]
-published: false
+published: true
 ---
 
 この記事は本日リリースした[location-state](https://github.com/recruit-tech/location-state)というライブラリの紹介記事です。
