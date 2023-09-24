@@ -23,7 +23,7 @@ Reactのstate管理は、様々な分類が可能です。筆者が過去に書�
 
 https://yosuke-furukawa.hatenablog.com/entry/2014/11/14/141415
 
-残念ながら現在でもこの問題について対応されているサイトは少ないのが実情で、時折ユーザー視点でも[問題提起](https://rentwi.hyuki.net/?1576010373357965312)がされています。MPAの場合、ブラウザによって[Domやデータの復元が行われる](https://zenn.dev/akfm/articles/recoi-sync-next#%E3%83%96%E3%83%A9%E3%82%A6%E3%82%B6%E3%83%90%E3%83%83%E3%82%AF%E6%99%82%E3%81%AEui%E7%8A%B6%E6%85%8B%E3%81%AE%E5%BE%A9%E5%85%83)ことがあるため、この問題は特にSPAにおいて顕著です。
+残念ながら現在でもこの問題について対応されているサイトは少ないのが実情で、時折ユーザー視点でも[問題提起](https://rentwi.hyuki.net/?1576010373357965312)がされています。MPAの場合、BFCacheの普及等によりブラウザによって[Domやデータの復元が行われる](https://zenn.dev/akfm/articles/recoi-sync-next#%E3%83%96%E3%83%A9%E3%82%A6%E3%82%B6%E3%83%90%E3%83%83%E3%82%AF%E6%99%82%E3%81%AEui%E7%8A%B6%E6%85%8B%E3%81%AE%E5%BE%A9%E5%85%83)ことがあるため、この問題は特にSPAにおいて顕著です。
 
 この問題を解決すべく作られたのが[location-state](https://github.com/recruit-tech/location-state)です。
 
@@ -128,9 +128,9 @@ export function Counter() {
 現時点で`useLocationState`の引数で渡せるオプションは以下の4つです。
 
 - `name`: stateを一意に判別する名前
-- `defaultValue`: stateの初期値
+- `defaultValue`: stateのデフォルト値
 - `storeName`: stateの保存先。`session`と`url`の2つが利用可能（カスタマイズ可能）
-- `refine?`: state復元時のバリデーション関数。`undefined`を返すと初期値となる
+- `refine?`: state復元時に検証・変換する関数。`undefined`を返すとデフォルト値となる
 
 ### @location-state/coreの注意点
 
@@ -158,11 +158,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
 }
 ```
 
-これはNavigation APIの挙動を部分的にサポートしたpolyfill的なものですが、ライブラリとして積極的なテスト・サポートをしているわけではありません。一応自身のSafariやFirefoxで動作することは確認していますが、利用する方は各々でサポートしたいブラウザ環境でのテストを実施することをお勧めします。
+これはNavigation APIの挙動を部分的にサポートしたpolyfill的なものですが、実装範囲は必要最小限でライブラリとして積極的なテスト・サポートをしているわけではありません。一応自身のSafariやFirefoxで動作することは確認していますが、利用する方は各々でサポートしたいブラウザ環境でのテストを実施することをお勧めします。
 
 ## Next.js Pages Routerでの使い方
 
-一方でPages Routerの場合、`@location-state/core/unsafe-navigation`の代わりに`@location-state/next`を利用すれば、Navigation APIに依存せずに`useLocationState`を利用できます。
+一方でPages Routerの場合、`@location-state/core`に加えて`@location-state/next`を利用すれば、Navigation APIに依存せずに`useLocationState`を利用できます。
 
 ```
 npm install @location-state/core @location-state/next
