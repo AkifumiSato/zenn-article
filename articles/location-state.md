@@ -6,7 +6,7 @@ topics: ["react", "nextjs"]
 published: true
 ---
 
-この記事は本日リリースした[location-state](https://github.com/recruit-tech/location-state)というライブラリの紹介記事です。
+この記事は最近リリースした[location-state](https://github.com/recruit-tech/location-state)というライブラリの紹介記事です。
 
 ## モチベーション
 
