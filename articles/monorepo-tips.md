@@ -41,22 +41,27 @@ https://github.com/recruit-tech/location-state/blob/cf96ed297a056bf1de3e68bd2e9c
 1. `@location-state/core`のbuild
 1. `@location-state/next`のbuild
 
-turborepoを使うことで、これらが適切に並列実行・キャッシュされるので、非常に高速に感じられます。
+turborepoを使うことで、これらが適切に並列実行・キャッシュされるので、非常に高速に感じられます。逆に使わない場合、これらの依存関係を考慮して手動で実行する必要があり、「えーっと、このパッケージの依存先はxxxだからそっちのテストとbuildも実行しないと...」のように考えることが増えたり、コマンドの実行が漏れてしまったり、逆に必要ないのにbuildしてしまったり、など多くの考慮と手間が発生しやすいです。
 
-ここでは詳細な仕組みや利用方法については割愛しますが、詳しく知りたい方は以下の記事が参考になるかと思います。
+ここではturborepoの詳細な仕組みや利用方法については割愛しますが、詳しく知りたい方は以下の記事が参考になるかと思います。
 
 https://zenn.dev/hayato94087/articles/d2956e662202a7
 
 また早く導入して試したいという方は、公式ドキュメントの[Creating a new monorepo](https://turbo.build/repo/docs/getting-started/create-new)や[Add Turborepo to your existing project
 ](https://turbo.build/repo/docs/getting-started/add-to-project)も参考になると思います。
 
-- turborepo
-  - monorepoのbuildを並列化・キャッシュしてくれるツール
-  - 目玉機能だと思ってたremote cacheは今回使ってないが、それでも非常に高速に感じられる
-- tsup
-  - package開発ではrollupしか使ったことなかったけど、今はこれがよさげらしい、ということで採用
-  - 当然ながらtsとの相性もいいし、rollupより学習コストは明らかに低かった気がする
-  - dtsの生成もフラグでできるのは魅力だが、CI環境でdtsの生成を待たずに完了してしまうためこの機能は行かせなかったのが残念
+ちなみにturborepoにはremote cacheという機能もあるのですが、`location-state`では利用してません。（が、それでも非常に高速に感じられています。）
+
+## tsup
+
+package開発ではこれまで[rollup](https://rollupjs.org/)しか使ったことがなかったのですが、`location-state`では[tsup](https://tsup.egoist.dev/)を採用しました。Typescriptデフォルトサポートかつrollup後発ということで良さげということで採用しましたが、実際よかったです。当然ながらtsとの相性もいいし、rollupより学習コストは明らかに低かった気がします。
+
+dtsの生成もフラグでできるのは魅力だったのですが、以下のissueにあるようにCI環境でdtsの生成を待たずに完了してしまうためこの機能は行かせなかったのだけが残念でした。
+
+https://github.com/egoist/tsup/issues/921
+
+ですが結局自前で組むrollupと比較すると手間は変わらないので、パッケージ開発ならtsupはお勧めできるかと思います。
+
 - changesets
   - 変更履歴をマークダウンで管理できるツール
   - これだけ読むと正直あまりそそられなかったのだが、公式が用意してくれてるgithub actionsやbotが非常に便利
