@@ -6,24 +6,50 @@ topics: ["pnpm", "turborepo", "changesets"]
 published: false
 ---
 
-最近、`location-state`というパッケージを開発しています。履歴に基づいて状態を復元できる、主にNext.jsをサポート対象としたReact系のライブラリです。このライブラリの構成はcoreとNext.js依存な部分を切り離すなど、いわゆるmonorepo構成で開発を行なっています。この記事では実際にmonorepoでパッケージ開発を快適にするために採用したツール・ライブラリを紹介していきます。
+先日、`location-state`というパッケージ開発についての記事を公開しました。
+
+https://zenn.dev/akfm/articles/location-state
+
+履歴に基づいて状態を復元できるReact系のライブラリで、現在はNext.jsを重点的にサポートしています。このライブラリの構成はcoreとなる部分とNext.js依存な部分を切り離しscoped packageとする、いわゆるmonorepo構成で開発を行なっています。
+
+- `@location-state/core`: coreとなる部分
+- `@location-state/next`: Next.js依存な部分
+
+この記事では実際にmonorepoでパッケージ開発を快適にするために採用したツール・ライブラリを紹介していきます。
 
 ## pnpm
 
-まずパッケージ管理ツールですが、個人的には最近はpnpm一択です。monorepoという面で言うとworkspaceはどれもサポートしているのですが、pnpmはともかく高速でかつ、Next.js内部でも採用されているなど一定の実績もあります。昨今はyarnはv3が個人的には先行きに不安を感じる部分があり、npmはやはり他と比べると遅く感じるという面で、これらのデメリットを補えるpnpmが個人的には好みです。
+まずパッケージ管理ツールですが、個人的には最近は[pnpm](https://pnpm.io/ja/)一択です。monorepoという面で言うとworkspaceはどれもサポートしているのですが、pnpmはともかく高速でかつ、Next.js内部でも採用されているなど一定の実績もあります。昨今のyarnはv3移行が滞ってる印象があり、npmはやはり他と比べると遅く感じるという面で、これらのデメリットを補えるpnpmが個人的には好みです。
 
-また、pnpm workspaceでは`workspace`プロトコルに対応しており、これが非常に便利です。
+また、pnpm workspaceはワークスペースプロトコル`workspace:`に対応しています。これはyarn v2で実装された機能で、パッケージ間の参照を容易にするものです。
 
-TBW
+例えば`@location-state/next`では、`@location-state/core`や内部パッケージの`configs`や`eslint-config-custom`の参照を`workspace:*`で行なっています。
 
-- pnpm
-  - パッケージ管理ツールとしては個人的には一択
-    - workspaceはどれもサポートしてるが
-    - yarnはv3が先行き不安
-    - npmは遅い
-    - pnpmは速い、採用事例も多い
-  - pnpm workspaceでは`workspace`プロトコルに対応しており、これが非常に便利
-    - 開発中にパッケージ間でのバージョン管理をあまり気にしなくて良くなる（と思う、他わからんけど）
+https://github.com/recruit-tech/location-state/blob/cf96ed297a056bf1de3e68bd2e9c9559690086d1/packages/location-state-next/package.json#L32-L34
+
+この機能があることも、monorepo開発時にpnpmを採用するメリットの1つと言えます。
+
+## turborepo
+
+[turborepo](https://turbo.build/repo)はmonorepoのbuildをはじめとしたコマンド実行の並列化・キャッシュで高速化を図るツールです。monorepo間の依存関係を自動解決しつつ、設定に基づいてコマンド実行の依存関係も考慮してくれるので、修正時にコマンド実行漏れなどが防げるのにキャッシュヒットで高速に感じられるツールです。
+
+例をあげると、`@location-state/next`のbuildをturborepoなしに行おうとすると、以下の順番で行う必要があります。
+
+1. `@location-state/core`の`d.ts`生成
+1. `@location-state/next`の`d.ts`生成
+1. 内部パッケージ`test-utils`のbuild
+1. `@location-state/core`のbuild
+1. `@location-state/next`のbuild
+
+turborepoを使うことで、これらが適切に並列実行・キャッシュされるので、非常に高速に感じられます。
+
+ここでは詳細な仕組みや利用方法については割愛しますが、詳しく知りたい方は以下の記事が参考になるかと思います。
+
+https://zenn.dev/hayato94087/articles/d2956e662202a7
+
+また早く導入して試したいという方は、公式ドキュメントの[Creating a new monorepo](https://turbo.build/repo/docs/getting-started/create-new)や[Add Turborepo to your existing project
+](https://turbo.build/repo/docs/getting-started/add-to-project)も参考になると思います。
+
 - turborepo
   - monorepoのbuildを並列化・キャッシュしてくれるツール
   - 目玉機能だと思ってたremote cacheは今回使ってないが、それでも非常に高速に感じられる
