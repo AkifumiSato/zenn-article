@@ -6,20 +6,34 @@ topics: ["pnpm", "turborepo", "changesets"]
 published: false
 ---
 
-先日、`location-state`というパッケージ開発についての記事を公開しました。
+先日、[`location-state`](https://github.com/recruit-tech/location-state)というパッケージについての記事を公開しました。
 
 https://zenn.dev/akfm/articles/location-state
 
-履歴に基づいて状態を復元できるReact系のライブラリで、現在はNext.jsを重点的にサポートしています。このライブラリの構成はcoreとなる部分とNext.js依存な部分を切り離しscoped packageとする、いわゆるmonorepo構成で開発を行なっています。
+履歴に基づいて状態を復元できるReact系のライブラリで、現在は[Next.js](https://nextjs.org/)を重点的にサポートしています。このライブラリの構成はcoreとなる部分とNext.js依存な部分を切り離し**scoped package**とし、内部構成もこれに合わせていわゆる**monorepo**構成で開発を行なっています。
 
 - `@location-state/core`: coreとなる部分
 - `@location-state/next`: Next.js依存な部分
 
 この記事では実際にmonorepoでパッケージ開発を快適にするために採用したツール・ライブラリを紹介していきます。
 
+:::message
+この記事では各ツールの特色や`location-state`で利用している機能を中心に紹介するので、導入方法や詳しい説明はリンク先の公式ドキュメントを参照してみてください。
+:::
+
+## 本稿で紹介するツール
+
+本稿で紹介するツールは以下になります。
+
+- `pnpm`: パッケージマネージャーはpnpmがおすすめ、monorepoなら特に
+- `turborepo`: remote cacheなしでも十分高速化期待できるので使うべし
+- `tsup`: rollup後発的存在、Typescriptをデフォルトサポートが嬉しい
+- `changesets`: CHANGELOG生成やnpm publishを自動化できる
+- `renovate`: パッケージの自動更新、必須
+
 ## pnpm
 
-まずパッケージ管理ツールですが、個人的には最近は[pnpm](https://pnpm.io/ja/)一択です。monorepoという面で言うとworkspaceはどれもサポートしているのですが、pnpmはともかく高速でかつ、Next.js内部でも採用されているなど一定の実績もあります。昨今のyarnはv3移行が滞ってる印象があり、npmはやはり他と比べると遅く感じるという面で、これらのデメリットを補えるpnpmが個人的には好みです。
+まずパッケージマネージャーですが、個人的には最近は[pnpm](https://pnpm.io/ja/)一択です。monorepoという面で言うとnpm/yarn/pnpmはどれもworkspaceをサポートしているのですが、pnpmはともかく高速でかつ、Next.js内部でも採用されているなど一定の実績もあります。昨今のyarnはv3移行が滞ってる印象があり、npmはやはり他と比べると遅く感じるという面で、これらのデメリットを補えるpnpmが個人的には好みです。
 
 また、pnpm workspaceはワークスペースプロトコル`workspace:`に対応しています。これはyarn v2で実装された機能で、パッケージ間の参照を容易にするものです。
 
@@ -112,10 +126,6 @@ https://zenn.dev/hisamitsu/articles/d41c80ec0ccfb1
 
 `location-state`では1日2回のスケジュールでRenovateがパッケージ更新をチェックし、lint・build・型チェック・単体テスト・結合テストなどを実施し、これらが全て通れば[renovate-approve](https://github.com/apps/renovate-approve)が承認し自動でマージされる運用になっています。
 
-- まとめ
-  - `pnpm`: パッケージ管理はこれでいいのでは
-  - `turborepo`: remote cacheなしでも十分高速化期待できるので使うべし
-  - `tsup`: 外部向けpackageがなくとも、内部packageのbuildに使うと思うのでおすすめ
-  - `changesets`: 外部向けpackageの開発ならおすすめ
-  - `renovate`: CI整えて自動マージまで組むと幸福度高い
+## まとめ
 
+自分の肌感ですが、昨今ではmonorepoでの開発はめずらしくもありません。これはパッケージ開発に限らず、プロダクト開発でも同様です。monorepoでの開発を行う場合、上記のツール・ライブラリはぜひ参考にしてみてください。
