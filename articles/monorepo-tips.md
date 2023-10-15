@@ -102,13 +102,16 @@ https://github.com/recruit-tech/location-state/blob/main/packages/location-state
 
 このプルリクエストをマージすると、npmに自動でpublishされリリースノートが作成されます。
 
-## renovate
+## Renovate
 
-TBW
+[Renovate](https://docs.renovatebot.com/)はパッケージの更新を検知してプルリクエスト〜マージまで自動化することを可能にするbotです。Renovateの運用には信頼度の高いCI実行が前提になりますが、運用できるとパッケージ更新周りの作業をほぼ全自動化できるので非常に楽です。
 
-- renovate
-  - パッケージのアップデートを自動でPRを作成してくれるbot
-  - CI環境をちゃんと作っておけば安心してPRからマージまで任せられる
+詳しい導入方法については以下の記事などを参考にすると良いかと思います。
+
+https://zenn.dev/hisamitsu/articles/d41c80ec0ccfb1
+
+`location-state`では1日2回のスケジュールでRenovateがパッケージ更新をチェックし、lint・build・型チェック・単体テスト・結合テストなどを実施し、これらが全て通れば[renovate-approve](https://github.com/apps/renovate-approve)が承認し自動でマージされる運用になっています。
+
 - まとめ
   - `pnpm`: パッケージ管理はこれでいいのでは
   - `turborepo`: remote cacheなしでも十分高速化期待できるので使うべし
