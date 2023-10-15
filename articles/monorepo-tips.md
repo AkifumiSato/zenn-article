@@ -1,8 +1,8 @@
 ---
-title: "monorepo開発を快適にするツールとtips"
+title: "monorepo開発を快適にするツール選定"
 emoji: "💪"
 type: "tech" # tech: 技術記事 / idea: アイデア
-topics: ["pnpm", "turborepo", "changesets"]
+topics: ["pnpm", "turborepo", "changesets", "tsup", "renovate"]
 published: false
 ---
 
@@ -10,32 +10,28 @@ published: false
 
 https://zenn.dev/akfm/articles/location-state
 
-履歴に基づいて状態を復元できるReact系のライブラリで、現在は[Next.js](https://nextjs.org/)を重点的にサポートしています。このライブラリの構成はcoreとなる部分とNext.js依存な部分を切り離し**scoped package**とし、内部構成もこれに合わせていわゆる**monorepo**構成で開発を行なっています。
+履歴に基づいて状態を復元できるReact系ライブラリで、現在は[Next.js](https://nextjs.org/)を重点的にサポートしています。このライブラリの構成はcoreとなる部分とNext.js依存な部分を切り離し**scoped package**とし、内部構成もこれに合わせていわゆる**monorepo**構成で開発を行なっています。
 
 - `@location-state/core`: coreとなる部分
 - `@location-state/next`: Next.js依存な部分
 
-この記事では実際にmonorepoでパッケージ開発を快適にするために採用したツール・ライブラリを紹介していきます。
+この記事では実際にmonorepoでパッケージ開発を快適にするために採用したツールを紹介していきます。本稿で紹介するツールは以下になります。
+
+- [pnpm](#pnpm)
+- [turborepo](#turborepo)
+- [tsup](#tsup)
+- [changesets](#changesets)
+- [Renovate](#Renovate)
 
 :::message
-この記事では各ツールの特色や`location-state`で利用している機能を中心に紹介するので、導入方法や詳しい説明はリンク先の公式ドキュメントを参照してみてください。
+この記事では各ツールの特色や`location-state`で利用している機能を中心に紹介するので、導入方法や詳しい導入方法や説明は各公式ドキュメントを参照してください。
 :::
-
-## 本稿で紹介するツール
-
-本稿で紹介するツールは以下になります。
-
-- `pnpm`: パッケージマネージャーはpnpmがおすすめ、monorepoなら特に
-- `turborepo`: remote cacheなしでも十分高速化期待できるので使うべし
-- `tsup`: rollup後発的存在、Typescriptをデフォルトサポートが嬉しい
-- `changesets`: CHANGELOG生成やnpm publishを自動化できる
-- `renovate`: パッケージの自動更新、必須
 
 ## pnpm
 
 まずパッケージマネージャーですが、個人的には最近は[pnpm](https://pnpm.io/ja/)一択です。monorepoという面で言うとnpm/yarn/pnpmはどれもworkspaceをサポートしているのですが、pnpmはともかく高速でかつ、Next.js内部でも採用されているなど一定の実績もあります。昨今のyarnはv3移行が滞ってる印象があり、npmはやはり他と比べると遅く感じるという面で、これらのデメリットを補えるpnpmが個人的には好みです。
 
-また、pnpm workspaceはワークスペースプロトコル`workspace:`に対応しています。これはyarn v2で実装された機能で、パッケージ間の参照を容易にするものです。
+また、pnpm workspaceはワークスペースプロトコル`workspace:`に対応しています。これはyarn v2以降で実装されている機能で、パッケージ間の参照を容易にするものです。
 
 例えば`@location-state/next`では、`@location-state/core`や内部パッケージの`configs`や`eslint-config-custom`の参照を`workspace:*`で行なっています。
 
@@ -45,7 +41,7 @@ https://github.com/recruit-tech/location-state/blob/cf96ed297a056bf1de3e68bd2e9c
 
 ## turborepo
 
-[turborepo](https://turbo.build/repo)はmonorepoのbuildをはじめとしたコマンド実行の並列化・キャッシュで高速化を図るツールです。monorepo間の依存関係を自動解決しつつ、設定に基づいてコマンド実行の依存関係も考慮してくれるので、修正時にコマンド実行漏れなどが防げるのにキャッシュヒットで高速に感じられるツールです。
+[turborepo](https://turbo.build/repo)はmonorepoのbuildをはじめとしたコマンド実行の並列化・キャッシュで高速化を図るツールです。monorepoの解析・設定に基づいて、依存関係を考慮した並列実行を行なってくれます。
 
 例をあげると、`@location-state/next`のbuildをturborepoなしに行おうとすると、以下の順番で行う必要があります。
 
@@ -55,32 +51,32 @@ https://github.com/recruit-tech/location-state/blob/cf96ed297a056bf1de3e68bd2e9c
 1. `@location-state/core`のbuild
 1. `@location-state/next`のbuild
 
-turborepoを使うことで、これらが適切に並列実行・キャッシュされるので、非常に高速に感じられます。逆に使わない場合、これらの依存関係を考慮して手動で実行する必要があり、「えーっと、このパッケージの依存先はxxxだからそっちのテストとbuildも実行しないと...」のように考えることが増えたり、コマンドの実行が漏れてしまったり、逆に必要ないのにbuildしてしまったり、など多くの考慮と手間が発生しやすいです。
+turborepoを使わない場合はこれらの依存関係を考慮して手動で実行する必要があり、「えーっと、このパッケージの依存先はxxxだからそっちのテストとbuildも実行しないと...」のように考えることが増えたり、コマンドの実行が漏れてしまったり、逆に必要ないのにbuildしてしまったり、など多くの考慮と手間が発生しやすいです。turborepoを使うことで、これらが適切に並列実行・キャッシュされるので、非常に高速に感じられます。
 
-ここではturborepoの詳細な仕組みや利用方法については割愛しますが、詳しく知りたい方は以下の記事が参考になるかと思います。
+turborepoの仕組みや利用方法について詳しく知りたい方は、以下の記事が参考になるかと思います。
 
 https://zenn.dev/hayato94087/articles/d2956e662202a7
 
 また早く導入して試したいという方は、公式ドキュメントの[Creating a new monorepo](https://turbo.build/repo/docs/getting-started/create-new)や[Add Turborepo to your existing project
 ](https://turbo.build/repo/docs/getting-started/add-to-project)も参考になると思います。
 
-ちなみにturborepoにはremote cacheという機能もあるのですが、`location-state`では利用してません。（が、それでも非常に高速に感じられています。）
+ちなみにturborepoにはremote cacheという機能もあるのですが、`location-state`では利用してませんが、それでも非常に高速に感じられています。
 
 ## tsup
 
-package開発ではこれまで[rollup](https://rollupjs.org/)しか使ったことがなかったのですが、`location-state`では[tsup](https://tsup.egoist.dev/)を採用しました。Typescriptデフォルトサポートかつrollup後発ということで良さげということで採用しましたが、実際よかったです。当然ながらtsとの相性もいいし、rollupより学習コストは明らかに低かった気がします。
+package開発ではこれまで[rollup](https://rollupjs.org/)しか使ったことがなかったのですが、`location-state`では[tsup](https://tsup.egoist.dev/)を採用しました。Typescriptデフォルトサポートかつrollup後発ということで良さげということで採用しましたが、実際よかったです。当然ながらtsとの相性もいいし、rollupより学習コストは明らかに低いと感じました。
 
-dtsの生成もフラグでできるのは魅力だったのですが、以下のissueにあるようにCI環境でdtsの生成を待たずに完了してしまうためこの機能は行かせなかったのだけが残念でした。
+[dtsの生成もフラグでできる](https://tsup.egoist.dev/#generate-declaration-file)のは魅力だったのですが、以下のissueにあるようにCI環境でdtsの生成を待たずに完了してしまうためこの機能は生かせなかったのだけが残念でした。
 
 https://github.com/egoist/tsup/issues/921
 
-ですが結局自前で組むrollupと比較すると手間は変わらないので、パッケージ開発ならtsupはお勧めできるかと思います。
+ですが自前で組むrollupと比較すると結局手間は変わらないので、パッケージ開発ならtsupはお勧めできるかと思います。
 
 ## changesets
 
-パッケージ開発においてリリースノートは変更をユーザーに伝える、重要な要件です。特にmonorepoでは、どのパッケージにどの変更が入ったのかを適切に伝える必要があります。[changesets](https://github.com/changesets/changesets/tree/main)は変更内容を適切にドキュメント管理し、リリースやリリースノートの作成を自動化することができます。
+パッケージ開発においてリリースノートは変更をユーザーに伝える、重要な要件です。特にmonorepoでは、リリース時にどのパッケージにどんな変更が入ったのかを適切に伝える必要があります。[changesets](https://github.com/changesets/changesets/tree/main)は変更内容を適切にドキュメント管理し、リリースやCHANGELOG、リリースノートの作成を自動化することができます。
 
-以下に`location-state`での利用している機能について記載します。
+changesetsはツールとしての機能が多岐に渡るので、機能ごとに紹介します。
 
 ### パッケージ修正時の変更管理
 
@@ -110,11 +106,13 @@ changesetsのgithub actionsを利用するとで、リリースプルリクエ�
 
 https://github.com/changesets/action#changesets-release-action
 
-このプルリクエストでは、changesetsのマークダウンをまとめてCHANGELOG.mdに出力してくれます。
+このプルリクエストでは、changesetsのマークダウンをまとめてCHANGELOG.mdに出力してくれます。以下は`location-state`のCHANGELOG.mdです。
 
 https://github.com/recruit-tech/location-state/blob/main/packages/location-state-core/CHANGELOG.md
 
-このプルリクエストをマージすると、npmに自動でpublishされリリースノートが作成されます。
+プルリクエストをマージすると、npmに自動でpublishされリリースノートが作成されます。
+
+https://github.com/recruit-tech/location-state/releases/tag/%40location-state%2Fnext%401.0.1
 
 ## Renovate
 
