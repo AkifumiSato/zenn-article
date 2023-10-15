@@ -62,13 +62,50 @@ https://github.com/egoist/tsup/issues/921
 
 ですが結局自前で組むrollupと比較すると手間は変わらないので、パッケージ開発ならtsupはお勧めできるかと思います。
 
-- changesets
-  - 変更履歴をマークダウンで管理できるツール
-  - これだけ読むと正直あまりそそられなかったのだが、公式が用意してくれてるgithub actionsやbotが非常に便利
-  - github actionsでpublishをトリガーするPRを作成してくれるので、リリースが簡単にできる
-  - mainブランチにマージするごとに、`@next`を自動でpublishしてくれる機能も持つ
-  - botがマークダウンの書き忘れを促しつつ、影響するパッケージを教えてくれる
-  - リリースノートはchangesetがまとめてくれる
+## changesets
+
+パッケージ開発においてリリースノートは変更をユーザーに伝える、重要な要件です。特にmonorepoでは、どのパッケージにどの変更が入ったのかを適切に伝える必要があります。[changesets](https://github.com/changesets/changesets/tree/main)は変更内容を適切にドキュメント管理し、リリースやリリースノートの作成を自動化することができます。
+
+以下に`location-state`での利用している機能について記載します。
+
+### パッケージ修正時の変更管理
+
+パッケージの修正内容は、`changeset add`で変更内容を記載するマークダウンファイルを作成し、適宜修正します。CLIとの対話でおおよそ完成しますが、内容が複雑な場合などは必要に応じてマークダウンを適宜修正します。このマークダウンファイルは、`changeset status`で確認することができます。
+
+例えば`@hoge/fuga`というパッケージのバグ修正でパッチバージョンアップでリリースする場合、以下のようなマークダウンファイルになります。
+
+```md
+---
+"@hoge/fuga": patch
+---
+
+Fix bug xxx.
+```
+
+### 変更対象パッケージの判定とchangeset不在の検知
+
+上記修正のプルリクエスト作成時に`changeset add`し忘れたまま修正プルリクを出した場合、以下のようにchangesetsのbotを利用すると自動で以下のように指摘コメントしてくれます。
+
+![changesetsのコメント](https://user-images.githubusercontent.com/11481355/66183943-dc418680-e6bd-11e9-998d-e43f90a974bd.png)
+
+差分にchangesetsのマークダウンが見つかった場合、変更されるパッケージのバージョンなどをコメントしてくれます。
+
+### リリースプルリクエストの作成と自動publish
+
+changesetsのgithub actionsを利用するとで、リリースプルリクエストも自動作成されます。パッケージ修正のプルリクエストをマージすると「Version Packages」（名称は変更可能）というプルリクエストが作成されます。
+
+https://github.com/changesets/action#changesets-release-action
+
+このプルリクエストでは、changesetsのマークダウンをまとめてCHANGELOG.mdに出力してくれます。
+
+https://github.com/recruit-tech/location-state/blob/main/packages/location-state-core/CHANGELOG.md
+
+このプルリクエストをマージすると、npmに自動でpublishされリリースノートが作成されます。
+
+## renovate
+
+TBW
+
 - renovate
   - パッケージのアップデートを自動でPRを作成してくれるbot
   - CI環境をちゃんと作っておけば安心してPRからマージまで任せられる
