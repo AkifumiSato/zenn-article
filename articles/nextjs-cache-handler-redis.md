@@ -4,12 +4,12 @@ title: "Custom Next.js Cache Handler
 emoji: "💸"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["nextjs"]
-published: false
+published: true
 ---
 
-Next.jsアプリケーションのデプロイ先として[Vercel](https://vercel.com/)はとても利便性が高く、優れたプラットフォームです。一方で、インフラ的な都合やコスト的な都合で[Self-hosting](https://nextjs.org/docs/app/building-your-application/deploying#self-hosting)、つまりVercel以外を利用したいケースはそれなりに多いのではないでしょうか。実際、筆者の周りではSelf-hostingでNext.jsを利用しているケースは多く見受けられます。Next.jsはVercel非依存なOSSと銘打ってますが、実際にはNext.jsに必要なインフラ仕様をVercelが隠蔽しているため、Self-hostingはNext.jsの理解とインフラ理解が求められる高いハードルが存在します。昨今、[App Router](https://nextjs.org/docs/routing/introduction)の登場とその強力なキャッシュ戦略により、Vercel以外でNext.jsを扱うことはより難しくなってきました。
+Next.jsアプリケーションのデプロイ先として[Vercel](https://vercel.com/)はとても利便性が高く、優れたプラットフォームです。一方で、インフラ的な都合やコスト的な都合で[Self-hosting](https://nextjs.org/docs/app/building-your-application/deploying#self-hosting)、つまりVercel以外を利用したいケースはそれなりに多いのではないでしょうか。実際、筆者の周りではSelf-hostingでNext.jsを利用しているケースは多く見受けられます。Next.jsはVercel非依存なOSSと銘打ってますが、実際にはNext.jsに必要なインフラ仕様をVercelが隠蔽しているため、Self-hostingでNext.jsを利用するには制約があったり高い理解が求められがちです。昨今、[App Router](https://nextjs.org/docs/routing/introduction)の登場とその強力なキャッシュ戦略により、Vercel以外でNext.jsを扱うことはより難しくなってきました。
 
-一方で、Self-hosting向けのドキュメントや対応は少しづつであるが取り組みがなされています。今回はその一貫で出てきた、**Custom Next.js Cache Handler**を利用してNext.jsのキャッシュをRedisに保存する方法について紹介します。
+一方で、Self-hosting向けのドキュメントや対応は少しづつですが取り組みがなされています。今回はその一貫で出てきた、**Custom Next.js Cache Handler**を利用してNext.jsのキャッシュをRedisに保存する方法について紹介します。
 
 ## Next.jsのキャッシュ
 
@@ -25,13 +25,13 @@ Self-hostingのインフラ構成は通常複数サーバーやサーバーレ�
 
 ## Self-hostingサポート
 
-しかしApp Router登場以降、Self-hosting周りのフィードバックが多数あったようで、キャッシュ永続化先をカスタム実装できる**Custom Next.js Cache Handler**という機能が実装されました。
+しかしApp Router登場以降、Self-hosting周りのフィードバックが多数あったようで、キャッシュ永続化先をカスタム実装できる**Custom Next.js Cache Handler**という機能が追加されました。
 
 https://nextjs.org/docs/app/api-reference/next-config-js/incrementalCacheHandlerPath
 
-これにより、ファイルキャッシュではなくRedisでキャッシュ永続化ができるようになったため、Self-hostingでのApp RouterやISR利用についてより柔軟な対応が可能となりました。
+これにより、ファイルキャッシュではなくRedisでキャッシュ永続化ができるようになりました。
 
-また、これとほぼ同時にドキュメントの改善も行われ、従来より公式ドキュメントから情報を得られるようになりました。Self-hostingサポートは大きく進展したと言えると思います。
+また、これとほぼ同時にドキュメントの改善も行われ、公式ドキュメントからSelf-hosting時の注意点や実装方法などの情報を従来より容易に得られるようになりました。Self-hostingサポートは大きく進展したと言えると思います。
 
 https://github.com/vercel/next.js/pull/58027
 
@@ -63,7 +63,7 @@ https://nextjs.org/docs/app/api-reference/next-config-js/incrementalCacheHandler
 
 https://caching-tools.github.io/next-shared-cache
 
-Vercelとの直接的な関係は確認できてないので、おそらく有志による開発だと思われます。これを使うことで、Redisに対するキャッシュの読み書きがかなり簡単に実装できます。
+筆者にはVercelとの直接的な関係は確認できなかったので、おそらく有志による開発だと思われます。これを使うことで、Redisに対するキャッシュの読み書きがかなり簡単に実装できます。
 
 Next.jsの公式examplesである[Custom Cache Handlerの実装例](https://github.com/vercel/next.js/tree/10599a4e1eb442306def0de981cbc96b83e6f6f0/examples/cache-handler-redis)から、以下のような実装でRedisにキャッシュを永続化することが可能です。
 
@@ -121,7 +121,7 @@ IncrementalCache.onCreation(async () => {
 module.exports = IncrementalCache
 ```
 
-あとは実際のRedisインスタンスをDockerなどで立てて`REDIS_URL`を指定してあげれば、ローカル環境でもキャッシュをRedisに保存する様になります。筆者としては上記に加え、[キャッシュのkeyにgit hashをprefixにするなどの設定](https://caching-tools.github.io/next-shared-cache/configuration/build-id-as-prefix-key)を追加したいところです。
+あとは実際のRedisインスタンスをDockerなどで立てて`REDIS_URL`を指定してあげれば、ローカル環境でもキャッシュをRedisに保存するようになります。筆者としては上記に加え、[キャッシュのkeyにgit hashをprefixにする設定](https://caching-tools.github.io/next-shared-cache/configuration/build-id-as-prefix-key)を追加したいところです。
 
 ```js
 const redisCache = await createRedisCache({
@@ -132,6 +132,6 @@ const redisCache = await createRedisCache({
 
 ## まとめ
 
-`neshaca`やCustom Next.js Cache Handlerはまだ登場したばかりのため、プロダクションでの実運用においてどういう問題が起きるかなどについては未知数です。一方、これまでSelf-hosting向けのサポートは手薄く感じていたので、こういう機能が出てきたことは大きな進展とも考えています。
+`neshaca`やCustom Next.js Cache Handlerはまだ登場したばかりのため、プロダクションでの実運用においてどういう問題が起きるかなどについては筆者には未知数です。一方、これまでSelf-hosting向けのサポートは手薄く感じていたので、こういう機能が出てきたことは大きな進展とも考えています。
 
 実際、これはPaaSのVercelを売るには不利な機能なはずです。それでもこういう機能が出てきたのは、App Routerの普及にはSelf-hostingのサポート需要が無視できないものだったということなのかもしれません。今後Self-hosting向けのNext.jsの機能開発がより進展することを期待したいところです。
