@@ -10,7 +10,7 @@ $ git config commit.template .gitmessage
 
 ## CLI
 
-```
+```sh
 $ npx zenn new:article --slug "test"
 $ npx zenn preview
 ```
