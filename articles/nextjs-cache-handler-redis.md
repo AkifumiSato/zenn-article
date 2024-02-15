@@ -55,7 +55,7 @@ https://nextjs.org/docs/app/api-reference/next-config-js/incrementalCacheHandler
 メソッドに`revalidatePath`がないのは、内部的に`revalidateTag`を呼び出しており実質的にwrapperであるためです。
 :::
 
-しかし、これらを自前で実装するのはRedisやキャッシュ周りの操作知識も必要となり、また大抵の場合似通ってくることから少々面倒な作業です。そのため公式のexamplesでは、`neshca`というライブラリを利用した実装例が提供されています。
+しかし、これらを自前で実装するのはRedisやキャッシュ周りの知識も必要となり、また大抵の場合似通ってくることから少々面倒な作業です。そのため公式のexamplesでは、`neshca`というライブラリを利用した実装例が提供されています。
 
 ## `neshca`
 
@@ -63,7 +63,7 @@ https://nextjs.org/docs/app/api-reference/next-config-js/incrementalCacheHandler
 
 https://caching-tools.github.io/next-shared-cache
 
-筆者にはVercelとの直接的な関係は確認できなかったので、おそらく有志による開発だと思われます。これを使うことで、Redisに対するキャッシュの読み書きがかなり簡単に実装できます。
+筆者にはVercelとの直接的な関係は確認できなかったので、おそらく有志による開発だと思われます。これを使うことで、Redisに対するキャッシュの読み書きが簡単に実装できます。
 
 Next.jsの公式examplesである[Custom Cache Handlerの実装例](https://github.com/vercel/next.js/tree/10599a4e1eb442306def0de981cbc96b83e6f6f0/examples/cache-handler-redis)から、以下のような実装でRedisにキャッシュを永続化することが可能です。
 
