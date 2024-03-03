@@ -14,10 +14,10 @@ published: false
 
 ## 実装要件
 
-本稿で実装するアプリケーションの要件としては以下の通りです。
+本稿で実装するアプリケーション概要としては以下の通りです。
 
 - GitHub OAuth(認可コード付与)でアクセストークンの取得を行う
-  - stateパラメータを検証しCSRF攻撃対策を行う
+- `state`パラメータを検証しCSRF攻撃対策を行う
 - 取得したアクセストークンはサーバー側セッションに保存する
 - セッション管理はRedisで行う
 
@@ -46,8 +46,6 @@ https://github.com/AkifumiSato/next-oauth-pure-impl-example
    - Authorization callback URL: `http://localhost:3000/login/callback`
 5. 「Register application」をクリック
 6. Client IDとClient Secretを控えておく
-
-todo: 画像を更新（pathに誤り）
 
 ![GitHubにOAuthアプリケーションを設定](/images/next-oauth-pure-impl/github_register_app.png)
 
@@ -95,26 +93,6 @@ Redis接続のために[ioredis](https://www.npmjs.com/package/ioredis)もイン
 ```shell
 $ pnpm add ioredis
 ```
-
-### テスティングツール
-
-本稿の参考実装で登場するテストコードは[Vitest](https://vitest.dev/)で実装されているので、こちらの導入もおすすめします。
-
-```shell
-$ pnpm add -D vitest @vitejs/plugin-react ioredis-mock msw
-```
-
-各種設定は以下の参考実装をご参照ください。
-
-TBW: 各設定や導入について詳細記述するか検討
-
-- vitest
-  - [/vitest.config.mts](https://github.com/AkifumiSato/next-oauth-pure-impl-example/blob/main/vitest.config.mts)
-  - [/vitest.setup.ts](https://github.com/AkifumiSato/next-oauth-pure-impl-example/blob/main/vitest.setup.ts)
-- msw
-  - [/app/mocks.ts](https://github.com/AkifumiSato/next-oauth-pure-impl-example/blob/main/app/mocks.ts)
-- Biome
-  - [/biome.json](https://github.com/AkifumiSato/next-oauth-pure-impl-example/blob/main/biome.json)
 
 ## App Routerにおけるセッション管理
 
@@ -432,3 +410,19 @@ GitHub OAuthの認可コード付与の実装はこれで以上です。アク�
 ## より深く理解するために
 
 自分でプロバイダーのドキュメントを読みながらOAuthクライアントを実装してみると、悪意ある攻撃やそれらに対する保護方法など、多くの学びが得られます。OAuth2.0やOpen ID Connectの仕様を明記してるRFCを読むとさらにより深い理解を得られるので、業務でこれらを利用すると言う方はぜひ一度RFCも読んでみることをお勧めします。
+
+### 余談: 単体テストの実装
+
+Todo: 単体テストの導入〜実装まで解説
+
+本稿の参考実装で登場するテストコードは[Vitest](https://vitest.dev/)で実装されているので、こちらの導入もおすすめします。
+
+```shell
+$ pnpm add -D vitest @vitejs/plugin-react ioredis-mock msw
+```
+
+- vitest
+    - [/vitest.config.mts](https://github.com/AkifumiSato/next-oauth-pure-impl-example/blob/main/vitest.config.mts)
+    - [/vitest.setup.ts](https://github.com/AkifumiSato/next-oauth-pure-impl-example/blob/main/vitest.setup.ts)
+- msw
+    - [/app/mocks.ts](https://github.com/AkifumiSato/next-oauth-pure-impl-example/blob/main/app/mocks.ts)
