@@ -17,6 +17,7 @@ published: false
 本稿で実装するアプリケーションの要件としては以下の通りです。
 
 - GitHub OAuth(認可コード付与)でアクセストークンの取得を行う
+  - stateパラメータを検証しCSRF攻撃対策を行う
 - 取得したアクセストークンはサーバー側セッションに保存する
 - セッション管理はRedisで行う
 
@@ -42,9 +43,11 @@ https://github.com/AkifumiSato/next-oauth-pure-impl-example
 4. 必要な情報を入力
    - Application name: に任意の名前 
    - Homepage URL: `http://localhost:3000` 
-   - Authorization callback URL: `http://localhost:3000/api/auth/callback/github`
+   - Authorization callback URL: `http://localhost:3000/login/callback`
 5. 「Register application」をクリック
 6. Client IDとClient Secretを控えておく
+
+todo: 画像を更新（pathに誤り）
 
 ![GitHubにOAuthアプリケーションを設定](/images/next-oauth-pure-impl/github_register_app.png)
 
@@ -119,10 +122,9 @@ TBW: 各設定や導入について詳細記述するか検討
 
 ### セッションの設計
 
-セッションには認証状態とGitHubのアクセストークンを保存しておきたいので、Redisに保存する構造はタグ付きunionで定義すると以下のような型になります。
+セッションには認証状態とGitHubのアクセストークンを保存しておきたいので、Redisに保存する構造はタグ付きunionで定義すると以下のような型になります。ファイルは`app/lib/session.ts`とします。
 
 ```ts
-// app/session.ts
 type RedisSession = {
   currentUser:
     | {
@@ -179,7 +181,6 @@ const SESSION_COOKIE_NAME = "sessionId";
 
 class MutableSession {
   // ...
-
   private async save(): Promise<void> {
     const sessionIdFromCookie = cookies().get(SESSION_COOKIE_NAME)?.value;
     let sessionId: string;
@@ -195,7 +196,6 @@ class MutableSession {
     }
     await redisStore.set(sessionId, JSON.stringify(this.values));
   }
-
   // ...
 }
 ```
@@ -276,7 +276,116 @@ export async function login() {
 }
 ```
 
-TBW: scopeなど各種パラメータ説明
+`state`以外にもパラメータに`client_id`と`scope`を指定しています。`client_id`はGitHubのOAuthアプリケーションの設定で取得したものです。`scope`はGitHubの認可ページで要求する権限を指定します。ここでは`user:email`を指定していますが、他にも[様々なスコープ](https://docs.github.com/ja/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps#available-scopes)があります。
+
+`mutableSession.preLogin()`はCSRFトークンを発行し、セッションに保存するメソッドです。このメソッドを`MutableSession`に実装します。
+
+```tsx
+// app/lib/session.ts
+class MutableSession {
+  // ...
+  async preLogin() {
+    const state = uuid();
+    this.redisSession.currentUser = { isLogin: false, state };
+    await this.save();
+
+    return state;
+  }
+  // ...
+}
+```
+
+これでGitHubの認可ページにリダイレクトする準備が整いました。
+
+### 2. GitHub によってユーザーが元のサイトにリダイレクトされる
+
+GitHubの認可ページでユーザーが認可を行うと、指定したURLにリダイレクトされます。このリダイレクト先のURLはOAuthアプリケーションの設定で指定したものです。リダイレクト時にはGETパラメータで`state`と`code`が渡されます。`state`はセッションのCSRFトークンと照合し、異なる値であれば処理を中断しなければなりません。
+
+これは、CSRF攻撃を防ぐための措置で、**GitHubへ認証しに行った人とGitHubから認証して帰ってきた人が同一である**ことを確認するためのものです。これらが異なる場合、悪意ある攻撃者が他人を自分のアカウントで認証させ用途している可能性があります。例えば筆者がGitHubで認証しリダイレクトされるURLが発行された段階でリクエストを停止し、読者であるあなたに送りつけたとします。あなたがそのURLをクリックすると、筆者のアカウントで他アプリケーションにログインした状態になってしまいます。このままあなたが気づかず、未入力になっていた個人情報を入力するとどうでしょう？筆者は同じアカウントでログイン可能なので、個人情報の奪取に成功してしまいます。これを防ぐために、`state`パラメータによるCSRFトークンの検証が必要なのです。
+
+https://qiita.com/ist-n-m/items/67a5a0fb4f50ac1e30c1#oauth20-%E3%81%AE-csrfcross-stie-request-forgery
+
+:::message
+実際には`code`の有効期限が10分なので、攻撃リスクは低いかもしれませんが、被害が出てからでは遅いので`state`パラメータの検証は行うようにしましょう。
+:::
+
+さて、前述の設定で`http://localhost:3000/login/callback` が指定しているので、ここにリダイレクト後の処理を実装します。処理の流れは以下のようになります。
+
+1. セッションのCSRFトークンとリダイレクト時の`state`パラメータを照合
+2. `code`パラメータを取得
+3. `code`パラメータを使ってGitHubにアクセストークンを要求
+4. アクセストークンを取得
+5. セッションにアクセストークンを保存
+6. `/user`へリダイレクト
+
+`GITHUB_CLIENT_ID`と`GITHUB_CLIENT_SECRET`はGitHubのOAuthアプリケーションの設定で取得したものです。
+
+```ts
+// app/(auth)/login/callback/route.ts
+import { RedirectType, redirect } from "next/navigation";
+import { NextRequest } from "next/server";
+import { getMutableSession } from "../../../lib/session";
+
+type GithubAccessTokenResponse = {
+  access_token: string;
+  token_type: string;
+  scope: string;
+};
+
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const mutableSession = await getMutableSession();
+  if (mutableSession.currentUser.isLogin === true) {
+    throw new Error("Already login.");
+  }
+
+  // check state(csrf token)
+  const urlState = searchParams.get("state");
+  if (mutableSession.currentUser.state !== urlState) {
+    console.error("CSRF Token", mutableSession.currentUser.state, urlState);
+    throw new Error("CSRF Token not equaled.");
+  }
+
+  const code = searchParams.get("code");
+  const { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } = process.env;
+  if (GITHUB_CLIENT_ID === undefined || GITHUB_CLIENT_SECRET === undefined) {
+    throw new Error("GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET is not defined");
+  }
+
+  const githubTokenResponse: GithubAccessTokenResponse = await fetch(
+    `https://github.com/login/oauth/access_token?client_id=${GITHUB_CLIENT_ID}&client_secret=${GITHUB_CLIENT_SECRET}&code=${code}`,
+    {
+      method: "GET",
+      headers: {
+        Accept: " application/json",
+      },
+    },
+  ).then((res) => {
+    if (!res.ok) throw new Error("failed to get access token");
+    return res.json();
+  });
+
+  await mutableSession.onLogin(githubTokenResponse.access_token);
+
+  redirect("/user", RedirectType.replace);
+}
+
+// app/lib/session.ts
+class MutableSession {
+  // ...
+  async onLogin(accessToken: string) {
+    this.redisSession.currentUser = { isLogin: true, accessToken };
+    await this.save();
+  }
+  // ...
+}
+```
+
+これでアクセストークンを取得することに成功しました。`/user`ページで実際にGitHub APIを叩いてユーザー情報を取得してみます。
+
+### 3. アクセストークンを使ってAPIにアクセスする
+
+TBW
 
 ## 構成
 
