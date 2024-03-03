@@ -385,17 +385,50 @@ class MutableSession {
 
 ### 3. アクセストークンを使ってAPIにアクセスする
 
-TBW
+`/user`では、ログインを必須とするページな想定として`session.currentUser.isLogin`をチェックし、ログインしていない場合は`NotLogin`コンポーネントを返すようにします。
 
-## 構成
+認証済みの場合、アクセストークンを保持してるのでこれを使いGitHub APIからユーザー情報を取得します。リクエスト時には`Authorization`ヘッダーに`Bearer ${session.currentUser.accessToken}`を付与する必要があります。
 
-- OAuthの認可コード付与の実装
-  - OAuthプロバイダーに遷移する前に、セッションにCSRF tokenを保存
-  - OAuthプロバイダーにstateパラメータ付きでリダイレクト
-  - OAuthプロバイダー側で認証
-  - callbackのURLでstateの検証
-  - token取得
-  - userの取得
-  - 成功
-- 次のステップ
-  - RFCを読んでみる
+```tsx
+// app/(auth)/user/page.tsx
+import { getReadonlySession } from "../../lib/session";
+import { GithubUser, NotLogin } from "./presentational";
+
+// Partial type
+export type GithubUserResponse = {
+  id: number;
+  name: string;
+  email: string;
+};
+
+export default async function Page() {
+  const session = await getReadonlySession();
+  if (!session.currentUser.isLogin) {
+    return <NotLogin />;
+  }
+
+  const githubUser: GithubUserResponse = await fetch(
+    "https://api.github.com/user",
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.currentUser.accessToken}`,
+      },
+    },
+  ).then(async (res) => {
+    if (!res.ok) {
+      console.error(res.status, await res.json());
+      throw new Error("failed to get github user");
+    }
+    return res.json();
+  });
+
+  return <GithubUser githubUser={githubUser} />;
+}
+```
+
+GitHub OAuthの認可コード付与の実装はこれで以上です。アクセストークンを取得し、GitHub APIを利用することができるようになりました。
+
+## より深く理解するために
+
+自分でプロバイダーのドキュメントを読みながらOAuthクライアントを実装してみると、悪意ある攻撃やそれらに対する保護方法など、多くの学びが得られます。OAuth2.0やOpen ID Connectの仕様を明記してるRFCを読むとさらにより深い理解を得られるので、業務でこれらを利用すると言う方はぜひ一度RFCも読んでみることをお勧めします。
