@@ -413,16 +413,81 @@ GitHub OAuthの認可コード付与の実装はこれで以上です。アク�
 
 ### 余談: 単体テストの実装
 
-Todo: 単体テストの導入〜実装まで解説
 
-本稿の参考実装で登場するテストコードは[Vitest](https://vitest.dev/)で実装されているので、こちらの導入もおすすめします。
+本稿の参考実装で登場するテストコードは[Vitest](https://vitest.dev/)で実装しています。モックは[msw](https://mswjs.io/)と[ioredis-mock](https://www.npmjs.com/package/ioredis-mock)を利用しているので、下記のコマンドでインストールしてください。
 
 ```shell
-$ pnpm add -D vitest @vitejs/plugin-react ioredis-mock msw
+$ pnpm add -D vitest @vitejs/plugin-react msw ioredis-mock
 ```
 
-- vitest
-    - [/vitest.config.mts](https://github.com/AkifumiSato/next-oauth-pure-impl-example/blob/main/vitest.config.mts)
-    - [/vitest.setup.ts](https://github.com/AkifumiSato/next-oauth-pure-impl-example/blob/main/vitest.setup.ts)
-- msw
-    - [/app/mocks.ts](https://github.com/AkifumiSato/next-oauth-pure-impl-example/blob/main/app/mocks.ts)
+vitestとmswの設定は以下のように行います。
+
+```ts
+// vitest.config.mts
+/// <reference types="vitest" />
+import path from "path";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    globals: true,
+    alias: {
+      "@": path.resolve(__dirname, "./"),
+    },
+    environment: "jsdom",
+    include: ["app/**/*.test.{ts,tsx}"],
+    setupFiles: "./vitest.setup.ts",
+    env: {
+      GITHUB_CLIENT_ID: "GITHUB_CLIENT_ID",
+      GITHUB_CLIENT_SECRET: "GITHUB_CLIENT_SECRET",
+    },
+  },
+});
+
+// vitest.setup.ts
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
+import { server } from "./app/mocks";
+
+vi.mock("ioredis", async () => await import("ioredis-mock"));
+
+beforeAll(() =>
+  server.listen({
+    onUnhandledRequest: "error",
+  }),
+);
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
+const cookiesMock = vi.hoisted(() => ({
+  get: vi.fn(),
+  set: vi.fn(),
+}));
+vi.mock("next/headers", () => ({
+  cookies() {
+    return cookiesMock;
+  },
+}));
+
+const redirectMock = vi.hoisted(() => vi.fn());
+vi.mock("next/navigation", async (importOriginal) => {
+  return {
+    ...(await importOriginal<typeof import("next/navigation")>()),
+    redirect: redirectMock,
+  };
+});
+
+beforeEach(() => {
+  cookiesMock.get.mockClear();
+  cookiesMock.set.mockClear();
+  redirectMock.mockClear();
+});
+
+// app/mocks.ts
+import { setupServer } from "msw/node";
+
+export const server = setupServer();
+```
+
+todo: テストコードの実装
