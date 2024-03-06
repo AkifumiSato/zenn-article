@@ -3,7 +3,7 @@ title: "OAuthクライアントをNextAuthなしで実装する"
 emoji: "🔑"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["nextjs", "oauth"]
-published: false
+published: true
 ---
 
 [OAuth2.0](https://openid-foundation-japan.github.io/rfc6749.ja.html)は3rd partyアプリケーションがユーザーに代わってリソースサーバーへアクセスすることを可能にする、認可フレームワークです。X（Twitter）やGithub、Facebookなどの著名なOAuthプロバイダーはそれぞれ拡張や制限を儲けることで**認証**にも対応しており、「OAuth認証」という言葉が多く溢れていますが、OAuth自体はあくまで**認可**の仕組みです。これらの違いや注意点については筆者の[過去の記事](https://zenn.dev/akfm/articles/authentication-with-security)を参照いただけたらと思います。
@@ -25,7 +25,7 @@ GihHub OAuthを選んだのは、単に多くの開発者がアカウントを�
 :::
 
 :::message alert
-前述の通りOAuth自体は認可の仕組みであり、本稿はOAuth認証に対応しているGitHubを用いた参考実装です。<br>OAuth=認証に用いても良い訳ではないので、ご注意ください。
+OAuthは認可の仕組みであり、本稿はOAuthを用いた認証にも対応しているGitHubを用いた参考実装です。OAuthに対応してるからと言って必ずしも認証に用いても良い訳ではないので、ご注意ください。
 :::
 
 ## 参考実装
