@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "zenn preview",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "format": "dprint fmt ./articles/**",
+    "new:article": "zenn new:article",
     "prepare": "simple-git-hooks"
   },
   "simple-git-hooks": {
