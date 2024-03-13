@@ -3,14 +3,14 @@ title: "Server Actions時代のformライブラリconform"
 emoji: "🎃"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["react", "conform", "nextjs"]
-published: false
+published: true
 ---
 
 **conform**は[プログレッシブ・エンハンスメント](https://zenn.dev/cybozu_frontend/articles/think-about-pe)を意識して作られたReactのformライブラリです。
 
 https://conform.guide/
 
-[Remix](https://remix.run/)や[Next.js](https://nextjs.org/)などのフレームワークをサポートしています。特徴的なのがNext.jsの[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)にも対応していることです。[react-hook-form](https://react-hook-form.com/)がServer Actions対応が[検証中](https://github.com/react-hook-form/react-hook-form/pull/11061)のため、他ライブラリを検討していた筆者には打ってつけのライブラリでした。
+[Remix](https://remix.run/)や[Next.js](https://nextjs.org/)などのフレームワークをサポートしています。[react-hook-form](https://react-hook-form.com/)のServer Actions対応は現状[検証段階](https://github.com/react-hook-form/react-hook-form/pull/11061)なのですが、conformはすでに**Server Actionsにも対応**しています。
 
 本稿ではNext.js(App Router)におけるconformの使い方を中心に紹介します。
 
@@ -20,9 +20,13 @@ https://conform.guide/
 
 ### 基本的な使い方
 
-[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)は**クライアントサイドから呼び出すことができる、サーバー側で実行される関数**です。この機能の最も一般的なユースケースは、サーバー側のデータを変更する際に呼び出すことです。`<form action={serverAction}>`のようにformの`action`propsに指定するなどして利用することでJS未ロード時も動作することが可能で、ドキュメントなどではこの使い方がよく出てきます。
+Server Actionsは**クライアントサイドから呼び出すことができる、サーバー側で実行される関数**です。
 
-Server Actionsは`"use server";`ディレクティブによって識別されます。関数スコープの先頭やファイルの先頭に記述します。
+https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations
+
+この機能の最も一般的なユースケースは、サーバー側のデータを変更する際に呼び出すことです。ReactはJSXにおけるformタグを拡張しており、`<form action={serverAction}>`のようにformの`action`propsにServer Actions関数を指定するなどして利用する方法がドキュメントではよく出てきます。このように`action`に直接指定することで、JS未ロード時も動作することが可能になります。
+
+Server Actionsは`"use server";`ディレクティブによって識別されます。`"use server";`は関数スコープの先頭やファイルの先頭に記述します。
 
 ```tsx
 // action.ts
@@ -47,7 +51,7 @@ export default function Page() {
 
 ### `useFormState`
 
-状況によっては、Server Actionsの実行結果に応じて状態を変更したいこともあるでしょう。そのような場合には`useFormState`を利用することができます。
+Server Actionsの実行結果に応じて状態を変更したくなることもあるでしょう。そのような場合には`useFormState`を利用することができます。
 
 https://react.dev/reference/react-dom/hooks/useFormState
 
@@ -86,7 +90,7 @@ https://react.dev/reference/react-dom/hooks/useFormStatus
 
 ## react-hook-form
 
-App Router以前のNext.jsでformライブラリと言うと、筆者は**react-hook-form**を利用することが多かったです。react-hook-formを利用することで、[zod](https://zod.dev/)定義のバリデーションを容易に行うことができました。
+App Router以前のNext.jsでformライブラリと言うと、筆者は[react-hook-form](https://react-hook-form.com/)を利用することが多かったです。react-hook-formを利用することで、[zod](https://zod.dev/)定義のバリデーションを容易に行うことができました。
 
 ```tsx
 import { useForm } from "react-hook-form";
@@ -119,7 +123,7 @@ const App = () => {
 };
 ```
 
-しかし、前述の通りreact-hook-formはServer Actionsに本稿執筆時点ではまだ対応していません。かと言ってreact-hook-formが使い慣れてしまった筆者にとって、`zod.parse`を自分で呼び出して結果をエラーに変換するのは少々面倒に思えてしまい、Server Actions対応なformライブラリの台頭を待ち望んでいました。そこで最近知ったのが**conform**です。
+しかし前述の通り、本稿執筆時点ではreact-hook-formはServer Actionsに対応していません。かと言ってreact-hook-formが使い慣れてしまった筆者にとって、`zod.parse`を自分で呼び出して結果をエラーに変換したりエラー時のハンドリングを自前で設計・実装するのは少々面倒に思えてしまい、Server Actions対応なformライブラリの台頭を待ち望んでいました。そこで最近知ったのが**conform**です。
 
 ## conform
 
@@ -135,7 +139,7 @@ const App = () => {
 - Built-in accessibility helpers
 - Automatic type coercion with Zod
 
-react-hook-formをよく使ってた身からすると、移行先としてはとても良さそうに思えます。
+これらを読む限りreact-hook-formからの移行先としては、とても良さそうに思えます。
 
 ### インストール
 
@@ -147,9 +151,9 @@ $ pnpm add @conform-to/react @conform-to/zod
 
 ### Server Actions
 
-公式ドキュメントに[Next.jsとconformの実装例](https://conform.guide/integration/nextjs)があるので、こちらをもとに使い方を紹介します。
+公式ドキュメントに[Next.jsとconformの実装例](https://conform.guide/integration/nextjs)があります。ドキュメントだと説明がコメントアウトくらいしかないので、ここではもうちょっと詳細に使い方を説明します。
 
-以下のようなzodスキーマがあるものとして考えます。
+以下のようなzodスキーマを持つformを実装する場合を考えていきます。
 
 ```ts
 // schema.ts
@@ -162,7 +166,7 @@ export const loginSchema = z.object({
 });
 ```
 
-Server Actionは`@conform-to/zod`の`parseWithZod`を利用して以下のように書くことができます。
+Server Actionでは`@conform-to/zod`の`parseWithZod`を利用して以下のように書くことができます。
 
 ```ts
 // action.ts
@@ -215,9 +219,11 @@ export function LoginForm() {
 }
 ```
 
-`useFormState`の部分は前述の通りですが、これによって得られるstateを`useForm`の`lastResult`に渡します。`onValidate`でServer Actions側でも利用した`parseWithZod`を利用し上記のように1行書けば、Server Actions側と同じバリデーションをクライアントサイドで実行することが可能になります。`shouldValidate`はバリデーションを行うタイミングを指定するものです。
+`useFormState`の部分は前述の通りですが、これによって得られるstateを`useForm`の`lastResult`に渡しています。`lastResult`自体は省略可能なので、Server Actionsの戻り値を状態として扱う必要がなければ`useFormState`含め省略してください。
 
-これらによって得られた`action`/`form`/`fileds`を使って、form要素を組み立てればリアルタイムバリデーション＋Server Actionsなformが完成です。
+`onValidate`でServer Actions側でも利用した`parseWithZod`を利用し上記のように1行書けば、サーバーサイドと同じバリデーションをクライアントサイドで実行することが可能になります。
+
+これらによって得られた`action`/`form`/`fileds`を使って、form要素を組み立てればクライアントサイドバリデーション＋Server Actionsなformが完成です。
 
 ```tsx
 export function LoginForm() {
@@ -343,6 +349,6 @@ export function LoginForm() {
 
 ## 感想
 
-これまではServer Actionsを使って実装するとやはり、バリデーションやエラーハンドリングの設計・実装が面倒そうだと感じることが多かったので、conformによって本格的にServer Actionsを使うメリットが大きくなるのではないかと感じました。
+これまではServer Actionsを使って実装するとやはり、バリデーションやエラーハンドリングの設計・実装が面倒そうだと感じることが多かったので、conformによって本格的にServer Actionsを使うメリットが大きくなるのではないかと感じました。実際に使ってみても、コンセプト・使い勝手ともに良さそうに思いました。
 
-実際に使ってみても、コンセプト・使い勝手ともに良さそうに思いました。クライアントサイドでのバリデーションとサーバーサイドでのエラーレスポンスとハンドリングがこれほど簡単にできる上、a11yにも配慮されているのは個人的にとてもありがたいところです。a11yはつい欲張ってよくしたいと思う反面、少ない開発時間の中で学ぶのが難しく、知見者頼みになりがちなので...。ここらへんもServer Actionsをプロダクションで使う上でネックにもなりうると感じていた筆者としては嬉しい限りです。
+Server Actionsを使ってる方でformライブラリを探している方は、ぜひconformを検討することをお勧めします。
