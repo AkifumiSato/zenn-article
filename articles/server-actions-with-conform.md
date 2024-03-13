@@ -1,6 +1,6 @@
 ---
 title: "Server Actions時代のformライブラリconform"
-emoji: "🎃"
+emoji: "📝"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["react", "conform", "nextjs"]
 published: true
