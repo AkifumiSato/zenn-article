@@ -233,12 +233,12 @@ export function LoginForm() {
   return (
     <form id={form.id} onSubmit={form.onSubmit} action={action} noValidate>
       <div>
-        <label>Email</label>
+        <label htmlFor={fields.email.id}>>Email</label>
         <input type="email" name={fields.email.name} />
         <div>{fields.email.errors}</div>
       </div>
       <div>
-        <label>Password</label>
+        <label htmlFor={fields.password.id}>Password</label>
         <input type="password" name={fields.password.name} />
         <div>{fields.password.errors}</div>
       </div>
@@ -256,10 +256,93 @@ export function LoginForm() {
 
 ### カスタムエラー
 
-### `getInputProps`/`getSelectProps`/`getTextareaProps`
+zodでのバリデーションエラー以外にも、DB操作時にデータ不整合や権限エラーなどを扱うこともあるでしょう。そのような場合には`submission.reply({ formErrors: [error.message] })`のような形で、任意のエラーメッセージを渡すことができます。
+
+```tsx
+// action.ts
+"use server";
+
+import { redirect } from "next/navigation";
+import { parseWithZod } from "@conform-to/zod";
+import { loginSchema } from "@/app/schema";
+
+export async function login(prevState: unknown, formData: FormData) {
+  const submission = parseWithZod(formData, {
+    schema: loginSchema,
+  });
+
+  if (submission.status !== "success") {
+    return submission.reply();
+  }
+
+  // redirect("/dashboard");
+  return submission.reply({
+    formErrors: ["エラーメッセージ1", "エラーメッセージ2"],
+  });
+}
+```
+
+`formErrors`に指定されたエラー文字列の配列は、`useForm`の戻り値の`form.errors`で取得することができます。
+
+```tsx
+// form.tsx
+"use client";
+
+// ...
+
+export function LoginForm() {
+  // ...
+
+  return (
+    <form id={form.id} onSubmit={form.onSubmit} action={action} noValidate>
+      {/* ... */}
+      {form.errors && (
+        <div>
+          <h2>Error:</h2>
+          <ul>
+            {form.errors?.map((error) => (
+              <li key={error}>{error}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </form>
+  );
+}
+```
+
+バリデーションだけでなく、サーバー側エラーメッセージの受け渡しも簡単に実装できました。
+
+### a11yの改善
+
+[getFormProps](https://conform.guide/api/react/getFormProps)や[getInputProps](https://conform.guide/api/react/getInputProps)を利用することで、冗長な記述やa11y関連の属性設定を実現することができます。
+
+```tsx
+// form.tsx
+export function LoginForm() {
+  // ...
+
+  return (
+    <form {...getFormProps(form)}>
+      <div>
+        <label htmlFor={fields.email.id}>Email</label>
+        <input {...getInputProps(fields.email, { type: "email" })} />
+        <div>{fields.email.errors}</div>
+      </div>
+      <div>
+        <label htmlFor={fields.password.id}>Password</label>
+        <input {...getInputProps(fields.password, { type: "password" })} />
+        <div>{fields.password.errors}</div>
+      </div>
+      <button type="submit">Login</button>
+      {/* ... */}
+    </form>
+  );
+}
+```
 
 ## 感想
 
-- 使い勝手・コンセプトともによさそう
-- 割と新規なライブラリだろうけども、やってること的にもそこまで致命的なバグとかはなさそうな予感？
-- Server Actionsの良さが引き立つライブラリだなと感じた
+これまではServer Actionsを使って実装するとやはり、バリデーションやエラーハンドリングの設計・実装が面倒そうだと感じることが多かったので、conformによって本格的にServer Actionsを使うメリットが大きくなるのではないかと感じました。
+
+実際に使ってみても、コンセプト・使い勝手ともに良さそうに思いました。クライアントサイドでのバリデーションとサーバーサイドでのエラーレスポンスとハンドリングがこれほど簡単にできる上、a11yにも配慮されているのは個人的にとてもありがたいところです。a11yはつい欲張ってよくしたいと思う反面、少ない開発時間の中で学ぶのが難しく、知見者頼みになりがちなので...。ここらへんもServer Actionsをプロダクションで使う上でネックにもなりうると感じていた筆者としては嬉しい限りです。
