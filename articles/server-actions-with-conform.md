@@ -162,11 +162,10 @@ import { z } from "zod";
 export const loginSchema = z.object({
   email: z.string().email(),
   password: z.string(),
-  remember: z.boolean().optional(),
 });
 ```
 
-Server Actionでは`@conform-to/zod`の`parseWithZod`を利用して以下のように書くことができます。
+Server Actionは`@conform-to/zod`の`parseWithZod`を利用することで以下のように書くことができます。
 
 ```ts
 // action.ts
@@ -189,11 +188,11 @@ export async function login(prevState: unknown, formData: FormData) {
 }
 ```
 
-注目すべきは`submission.status !== "success"`でバリデーション結果を判定し、エラー時は`return submission.reply();`としていることです。エラーの詳細やzodErrorのハンドリングなどなしに、ただ`submission.reply()`を返すだけで良いのがとても嬉しいところです。
+注目すべきは`submission.status !== "success"`でバリデーション結果を判定し、エラー時は`return submission.reply();`としていることです。エラーの詳細の確認やzodErrorのハンドリングなどなしに、ただ`submission.reply()`を返すだけで良いのがとても嬉しいところです。
 
 参考実装なのでバリデーションが通ったら`redirect("/dashboard");`としていますが、この前にデータベース操作などの処理を挟むことも当然できます。
 
-このServer Actionsは`useFormState`と`@conform-to/react`の`useForm`を利用してform側で呼び出すことがで、formの組み立て準備が完了します。
+formコンポーネント側では`useFormState`とconformの`useForm`を利用して`form`/`fields`を取得します。これらはformやinput要素のpropsに渡す情報を持ったオブジェクトです。
 
 ```tsx
 // form.tsx
@@ -219,7 +218,7 @@ export function LoginForm() {
 }
 ```
 
-`useFormState`の部分は前述の通りですが、これによって得られるstateを`useForm`の`lastResult`に渡しています。`lastResult`自体は省略可能なので、Server Actionsの戻り値を状態として扱う必要がなければ`useFormState`含め省略してください。
+`useFormState`の部分は前述の通りですが、これによって得られるstateを`useForm`の`lastResult`に渡しています。`lastResult`自体は省略可能なので、form側で状態を扱う必要がなければ`useFormState`含め省略してください。
 
 `onValidate`でServer Actions側でも利用した`parseWithZod`を利用し上記のように1行書けば、サーバーサイドと同じバリデーションをクライアントサイドで実行することが可能になります。
 
@@ -288,7 +287,7 @@ export async function login(prevState: unknown, formData: FormData) {
 }
 ```
 
-`formErrors`に指定されたエラー文字列の配列は、`useForm`の戻り値の`form.errors`で取得することができます。
+`formErrors`に指定されたエラー文字列の配列は、`useForm`の戻り値の`form`に含まれる`errors`で参照することができます。
 
 ```tsx
 // form.tsx
@@ -306,7 +305,7 @@ export function LoginForm() {
         <div>
           <h2>Error:</h2>
           <ul>
-            {form.errors?.map((error) => (
+            {form.errors.map((error) => (
               <li key={error}>{error}</li>
             ))}
           </ul>
@@ -321,7 +320,7 @@ export function LoginForm() {
 
 ### a11yの改善
 
-[getFormProps](https://conform.guide/api/react/getFormProps)や[getInputProps](https://conform.guide/api/react/getInputProps)を利用することで、冗長な記述やa11y関連の属性設定を実現することができます。
+[getFormProps](https://conform.guide/api/react/getFormProps)や[getInputProps](https://conform.guide/api/react/getInputProps)を利用することで、冗長な記述を省略したりa11y関連の属性を適切に設定することができます。
 
 ```tsx
 // form.tsx
@@ -349,6 +348,6 @@ export function LoginForm() {
 
 ## 感想
 
-これまではServer Actionsを使って実装するとやはり、バリデーションやエラーハンドリングの設計・実装が面倒そうだと感じることが多かったので、conformによって本格的にServer Actionsを使うメリットが大きくなるのではないかと感じました。実際に使ってみても、コンセプト・使い勝手ともに良さそうに思いました。
+これまではServer Actionsを使って実装するとやはり、バリデーションやエラーハンドリングの設計・実装が面倒だと感じることが多かったので、conformによって本格的にServer Actionsを使うメリットが大きくなるのではないかと感じました。実際に使ってみても、コンセプト・使い勝手ともに良さそうに思いました。
 
 Server Actionsを使ってる方でformライブラリを探している方は、ぜひconformを検討することをお勧めします。
