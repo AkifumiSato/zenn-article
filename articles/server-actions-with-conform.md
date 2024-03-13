@@ -16,9 +16,35 @@ https://conform.guide/
 
 ## Server Actions
 
-TBW
+もう散々他の記事や公式ドキュメントで紹介されていますが、簡単にServer Actionsについて復習します。
 
 ### 基本的な使い方
+
+[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)はサーバー側で実行する関数ですが、`<form action={serverAction}>`のようにformの`action`propsに指定することで、クライアントサイドからサーバー側の関数を実行することができる機能です。この機能の最も一般的なユースケースは、データを変更する際に呼び出すことです。これ自体はReactの新機能ですが、Next.js App Routerで利用することができます。
+
+Server Actionsは`"use server";`ディレクティブによって識別されます。関数スコープの先頭やファイルの先頭に記述します。
+
+```tsx
+// action.ts
+"use server";
+
+async function createUser(formData: FormData) {
+  const fullname = formData.get('fullname');
+
+  // mutate data
+  // revalidate cache
+}
+
+// page.tsx
+export default function Page() {
+  return (
+    <form action={createUser}>
+      <input type="text" name="fullname" />
+      ...
+    </form>
+  )
+}
+```
 
 ### `useFormState`
 
