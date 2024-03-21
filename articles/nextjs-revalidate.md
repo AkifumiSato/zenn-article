@@ -146,21 +146,34 @@ https://github.com/vercel/next.js/blob/efc5ae42a85a4aeb866d02bfbe78999e790a5f15/
 
 > これらの関数は呼び出されたrevalidate情報を永続化し、再訪問時にそのrevalidate情報と比較することでキャッシュのinvalidateの要否を判断している
 
-という筆者の推測通りな実装であるように見受けられました。しかし「再訪問時にそのrevalidate情報と比較することで」という部分が当然これらの処理に含まれていないので、次に各キャッシュデータのtagが内部的にどう紐付けられているのか確認してみましょう。
+という筆者の推測通りな実装であるように見受けられました。しかし「再訪問時にそのrevalidate情報と比較することで」という部分が当然これらの処理に含まれていないので、次に各キャッシュデータのtagとこのマニフェストの比較処理を追ってみましょう。
 
 ## キャッシュデータのtag
+
+キャッシュデータのtagがどこで保存されているのか気になるところですが、闇雲に生成してそうな処理をさがしても非常に膨大な処理を彷徨うことになります。そこで、
+
+> これらの関数は呼び出されたrevalidate情報を永続化し、再訪問時にそのrevalidate情報と比較することでキャッシュのinvalidateの要否を判断している
+
+という推測の元`.next/cache/fetch-cache/tags-manifest.json`を読み込み利用している箇所を中心に調査したところ、`file-system-cache.ts`の以下の部分がそれらしき処理をしているように見受けられました。
+
+https://github.com/vercel/next.js/blob/e733853cf5ec47bad05ae11dd101f2b6672aa205/packages/next/src/server/lib/incremental-cache/file-system-cache.ts#L265-L291
+
+https://github.com/vercel/next.js/blob/e733853cf5ec47bad05ae11dd101f2b6672aa205/packages/next/src/server/lib/incremental-cache/file-system-cache.ts#L293-L314
+
+それぞれ`data?.value?.kind`という値が`PAGE`か`FETCH`かで分岐しています。`PAGE`はFull Route Cache、`FETCH`はData Cacheを表しているようです。Data Cacheの方では`wasRevalidated`の判定に`tags`と`softTags`を利用しています。fetchで明示的に指定したtagが`tags`、呼び出し元のパス名称に`_N_T_`を付与したtagが`softTags`に含まれています。
+
+ファイルシステムなどから取得したキャッシュデータである`data`の`lastModified`（ファイルの更新日時）に対し、それぞれマニフェストに永続化したrevalidate情報と比較して、キャッシュが破棄すべきかどうか検証しており、破棄すべきと判断されると`data = undefined`としています。
+
+ちなみに`softTags`は`next build`する時に`.next/server`配下に`[pathname].meta`というファイルが生成され、そこに関連するtag情報を保存しており、実行時にはこれを読み取ることで上記`softTags`が実現されています。
+
+[//]: # (https://github.com/vercel/next.js/blob/canary/packages/next/src/export/routes/app-page.ts#L119-L121)
+
+## `revalidate`とRouter Cacheのクリア
 
 TBW
 
 ## 構成
 
-- 各データのtagはどこに保存されるのか
-  - FS Cacheの`get`時にキャッシュが古いかどうかを検証してる
-    - Full Route Cache: https://github.com/vercel/next.js/blob/e733853cf5ec47bad05ae11dd101f2b6672aa205/packages/next/src/server/lib/incremental-cache/file-system-cache.ts#L276-L282
-    - Data Cache: https://github.com/vercel/next.js/blob/e733853cf5ec47bad05ae11dd101f2b6672aa205/packages/next/src/server/lib/incremental-cache/file-system-cache.ts#L296-L308
-      - tagsに明示的に指定したタグ、softTagsに`_N_T_`付のタグが入ってる
-  - https://github.com/vercel/next.js/blob/canary/packages/next/src/export/routes/app-page.ts#L119-L121
-    - build時にここでtagを`.meta`ファイルに書き込んでる
 - revalidateをSAで呼ぶとRouter Cacheがクリアされる
   - https://github.com/vercel/next.js/blob/e733853cf5ec47bad05ae11dd101f2b6672aa205/packages/next/src/server/app-render/action-handler.ts#L387-L391
     - ここでレスポンスのRSCを生成してる
