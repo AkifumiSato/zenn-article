@@ -1,9 +1,9 @@
 ---
-title: "Next.js revalidatePathの仕組み"
+title: "Next.js revalidatePath/revalidateTagの仕組み"
 emoji: "🚀"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["nextjs", "react"]
-published: false
+published: true
 ---
 
 以前、Next.jsの遷移の実装やRouter Cacheの実装について筆者が調べたことを記事にしました。
@@ -27,15 +27,21 @@ App Routerの機能である`revalidatePath`/`revalidateTag`について触れ�
 
 https://nextjs.org/docs
 
-## Next.jsの調査方法
+## Next.jsのデバッグ
 
 筆者のNext.jsの実装を調査する時のTipsです。興味のある方は参考にしてください。
 
 ### ローカル環境でNext.jsをbuildする
 
-forkしたNext.jsのリポジトリを自分の環境に落とし、気になるところに`console.log`を仕込むなど適宜修正＋buildして調査を行います。buildしたNext.jsをローカルアプリケーションで利用する方法については以下のドキュメントにまとまっています。
+forkしたNext.jsのリポジトリを自分の環境に落とし、気になるところに`console.log`を仕込むなど適宜修正buildして調査を行います。buildしたNext.jsをローカルアプリケーションで利用する方法については以下のドキュメントにまとまっています。
 
 https://github.com/vercel/next.js/blob/canary/contributing/core/developing-using-local-app.md
+
+上記手順とは異なりますが、筆者はローカルでNext.jsリポジトリを`pnpm build`した後、以下のように`packages/next`だけ`pnpm create next-app`したアプリケーションで利用する形をとっています。
+
+```shell-session
+$ pnpm add {nextjs_git_path}/next.js/packages/next
+```
 
 ### `NEXT_PRIVATE_DEBUG_CACHE`
 
@@ -51,11 +57,9 @@ Next.jsのリポジトリはモノリポ構成になっており、本体であ�
 
 https://github.com/vercel/next.js/tree/efc5ae42a85a4aeb866d02bfbe78999e790a5f15/packages/next
 
-今回の調査対象である`revalidatePath`などは`next/cache`よりimportするので、`cache.js`から探っていくと良いでしょう。
-
 ## `revalidatePath`/`revalidateTag`
 
-`revalidatePath`/`revalidateTag`実行時の挙動について、公式ドキュメントでは以下のような説明がなされています。
+上記デバッグ方法を駆使しながら、`revalidatePath`/`revalidateTag`実行時の挙動について調べていきたいと思いますが、その前に公式ドキュメントを確認します。ドキュメントでは以下のような説明がなされています。
 
 > `revalidatePath` only invalidates the cache when the included path is next visited.
 > (`revalidatePath`は、含まれるパスへ次に訪問されたときにのみキャッシュを無効にする。)
@@ -109,7 +113,7 @@ Updated tags manifest { version: 1, items: { '_N_T_/': { revalidatedAt: 17108372
 > In Next.js, the default cache handler for the Pages and App Router uses the filesystem cache.
 > (Next.jsでは、PagesとApp Routerのデフォルトのキャッシュハンドラはファイルシステムキャッシュを使用します。)
 
-`revalidatePath("/")`を呼んだのに出力を見ると`revalidateTag _N_T_/`となっているのがわかります。また、最後の行を見るとどうやらmanifestを更新してるような出力が見受けられます。この辺りを頭に入れた上で、実際の実装を探っていきましょう。
+`revalidatePath("/")`を呼んだのに出力を見るとpathではなく`revalidateTag _N_T_/`となっているのがわかります。また、最後の行を見るとどうやらmanifestを更新してるような出力が見受けられます。この辺りを頭に入れた上で、実際の実装を探っていきましょう。
 
 ### `revalidatePath`/`revalidateTag`の定義から処理を追う
 
@@ -137,11 +141,11 @@ https://github.com/vercel/next.js/blob/efc5ae42a85a4aeb866d02bfbe78999e790a5f15/
 
 https://github.com/vercel/next.js/blob/efc5ae42a85a4aeb866d02bfbe78999e790a5f15/packages/next/src/server/lib/incremental-cache/index.ts#L278-L295
 
-筆者が調べた限り`__NEXT_INCREMENTAL_CACHE_IPC_PORT`などは普通に`next start`しても未定義なので、これらは実質的にVercel専用ロジックではないかと推測されます。`this.cacheHandler`は[Custom Next.js Cache Handler](https://nextjs.org/docs/app/api-reference/next-config-js/incrementalCacheHandlerPath)によってカスタマイズすることができますが、前述の通りデフォルトではファイルシステムキャッシュが利用されるので以下の実装が利用されます。
+筆者が調べた限り`__NEXT_INCREMENTAL_CACHE_IPC_PORT`などは普通に`next start`しても未定義なので、これらは実質的にVercel専用ロジックではないかと推測されます。なので最後の`return this.cacheHandler?.revalidateTag?.(tag)`がセルフホスティグやローカル環境で実行される処理になります。`this.cacheHandler`は[Custom Next.js Cache Handler](https://nextjs.org/docs/app/api-reference/next-config-js/incrementalCacheHandlerPath)によってカスタマイズすることができますが、前述の通りデフォルトではファイルシステムキャッシュが利用されるので以下の実装が利用されます。
 
 https://github.com/vercel/next.js/blob/efc5ae42a85a4aeb866d02bfbe78999e790a5f15/packages/next/src/server/lib/incremental-cache/file-system-cache.ts#L108-L137
 
-ここでは`.next/cache/fetch-cache/tags-manifest.json`に最後の`revalidatedAt`を含むよう更新・保存してるだけであることがわかります。他にそれらしいロジックもなく、
+ここでは`this.tagsManifestPath`(`.next/cache/fetch-cache/tags-manifest.json`)に対象のタグ情報の`revalidatedAt`を更新・保存してるだけであることがわかります。他にそれらしいロジックもないので
 
 > これらの関数は呼び出し時のrevalidate情報をサーバー側に保存し、再訪問時にそのrevalidate情報からキャッシュの鮮度を判断してinvalidateを行っている
 
@@ -165,9 +169,11 @@ Full Route Cacheのtagは`data.value.headers?.[NEXT_CACHE_TAGS_HEADER]`より参
 
 https://github.com/vercel/next.js/blob/canary/packages/next/src/export/routes/app-page.ts#L119-L121
 
-この`fetchTags`は`next build`時に生成されます。`.next/server`配下の`[pathname].meta`に関連するtag情報を保存し、実行時にはこれを読み取ることでページに関連する`fetchTags`を実現しています。
+この`fetchTags`は`.next/server`配下の`[pathname].meta`より取得されます。このファイルは`next build`時に生成され、ページに関連するタグ情報を格納しています。
 
 Data Cacheの方では`wasRevalidated`の判定に`tags`と`softTags`を利用しています。fetchで明示的に指定したtagが`tags`、呼び出し元のパス名称に`_N_T_`を付与したtagが`softTags`に含まれています。取得したキャッシュデータである`data`の`lastModified`（ファイルシステムキャッシュの場合、ファイルの更新日時）に対し、それぞれマニフェストに保存されてるrevalidate情報と比較してキャッシュを破棄すべきかどうか検証し、破棄すべきと判断されると`data = undefined`としています。
+
+Data CacheもFull Route Cacheどちらの場合も、`data`が`undefined`だとキャッシュがなかったものとして後続処理に進みます。
 
 ## `revalidate`とRouter Cacheのクリア
 
