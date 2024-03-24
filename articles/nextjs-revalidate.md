@@ -145,7 +145,19 @@ https://github.com/vercel/next.js/blob/efc5ae42a85a4aeb866d02bfbe78999e790a5f15/
 
 https://github.com/vercel/next.js/blob/efc5ae42a85a4aeb866d02bfbe78999e790a5f15/packages/next/src/server/lib/incremental-cache/file-system-cache.ts#L108-L137
 
-ここでは`this.tagsManifestPath`(`.next/cache/fetch-cache/tags-manifest.json`)に対象のタグ情報の`revalidatedAt`を更新・保存してるだけであることがわかります。他にそれらしいロジックもないので
+ここでは`this.tagsManifestPath`(`.next/cache/fetch-cache/tags-manifest.json`)に対し、対象タグの`revalidatedAt`を更新してるだけであることがわかります。以下は`tags-manifest.json`の出力例で、`next start`後に`revalidatePath("/cache_debug")`と`revalidateTag("products")`を実行した後の状態です。
+
+```json
+{
+  "version": 1,
+  "items": {
+    "_N_T_/cache_debug": { "revalidatedAt": 1711279116900 },
+    "products": { "revalidatedAt": 1711279247881 }
+  }
+}
+```
+
+これらのことから、
 
 > これらの関数は呼び出し時のrevalidate情報をサーバー側に保存し、再訪問時にそのrevalidate情報からキャッシュの鮮度を判断してinvalidateを行っている
 
