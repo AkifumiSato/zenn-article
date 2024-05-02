@@ -60,16 +60,118 @@ Copilotは言語やフレームワークに対して得意不得意があるの�
 
 筆者は今回のようにライトに書くならDenoの方が好きと言うだけなので、深い意味はありません。
 
+### 環境
+
+筆者はWebStormを好んで利用しているので、WebStormで実演します。当然GitHub Copilotも有効になっています。VSCを使ってる方の方が多いでしょうが、今回の実演においてはほとんど差はありません。
+
 ### 実演(1) FizzBuzz
+
+FizzBuzzを実装してみます。よく言われることですが出力などは検査したくないので、ここではFizzBuzz関数の実装のみを行います。
+
+#### TODOリストを書く
+
+TDDなのでまずはTODOリスト、と言いたいところですが、TODOリストもGitHub Copilotにとって重要なヒントなのでTODOリストはテストファイルに書きたいと思います。ファイル名は愚直に命名して問題ないだろうことから以下のファイルをまず作成します。
+
+- `fizz_buzz.ts`
+- `fizz_buzz_test.ts`
+
+テストはファイルの最後にどんどん付け足していくでしょうから、`fib_buzz_test.ts`の末尾の方にTODOリストを書き始めます。途中まで書くと以下のようにTODOの記述自体も提案されることでしょう。
+
+![fizz buzz todo init](/images/tdd-with-copilot/fizz-buzz/todo-of-fizz.png)
+
+この補完を受け入れて改行すると次のTODOも提案されます。
+
+![todo of buzz impl](/images/tdd-with-copilot/fizz-buzz/todo-of-buzz.png)
+
+補完を受け入れつつ最初のTODOはこんなものでしょう。
+
+![fizz buzz todo 1st](/images/tdd-with-copilot/fizz-buzz/todo-1.png)
+
+#### テストを1つ書く
+
+最初のTODOに対するテストを書きます。ここではテストケース名はそのまま利用していいでしょう。途中まで入力するとまたGitHub Copilotが提案してくれます。
+
+![fizz buzz test case](/images/tdd-with-copilot/fizz-buzz/fizz-test-1.png)
+
+筆者は**AAAパターン**でテストを書くことが多いので、ここではそれに倣ってテストを書いていきます。AAAについては以下の記事でも述べてる通りで、**Arrange**（準備）、**Act**（実行）、**Assert**（確認）の3つのフェーズに分けてテストを書くスタイルです。
+
+https://zenn.dev/akfm/articles/frontend-unit-testing#aaa%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3
+
+最初のテストなのでどういうAPI設計にするかもここで考える必要があります。もちろんプロダクションコードは空なのでそんな関数などないと警告されますが、まずは使い勝手から考えていきます。ここはシンプルに`fizzBuzz`関数とします。適宜補完を受け入れながら以下のようにしました。
+
+![fizz buzz test impl](/images/tdd-with-copilot/fizz-buzz/fizz-test-2.png)
+
+「`fizzBuzz`関数から定義してればTypeScriptの補完が得られたので損してるのでは？」と思うかもしれませんが、GitHub Copilotはこのエラーを元にプロダクションコードを補完してくれることも多いので、無駄にはなりません。
+
+ではこのテストが失敗することを確認しましょう。以降も何度も実行するので`watch`しておきたいと思います。**ちゃんとテストが実行できていれば**失敗するはずです。
+
+```shell-session
+$ deno test --watch fizz_buzz_test.ts
+Watcher Test started.
+Check file:///Users/satouakifumi/work/git/sample/tdd-example-with-copilot/fizz_buzz_test.ts
+error: TS2304 [ERROR]: Cannot find name 'fizzBuzz'.
+  const result = fizzBuzz(3);
+                 ~~~~~~~~
+    at file:///Users/satouakifumi/work/git/sample/tdd-example-with-copilot/fizz_buzz_test.ts:15:18
+```
+
+ちゃんと失敗しました。前述のt-wadaさんの記事から引用すると
+
+> より正確に表現するなら「リスト、レッド、グリーン、リファクタ」であるということです。
+
+上記手順におけるリストとレッドが完了しました。
+
+#### シンプルな実装を書く
+
+次はテストが通るように、非常に質素な実装をします。`fizz_buzz.ts`に`export function`まで書いたら、以下のようになりました。
+
+![fizz buzz impl](/images/tdd-with-copilot/fizz-buzz/fizz-buzz-impl-1.png)
+
+これはFizzBuzzの実装完成系そのままですね。今回のように簡単な題材であればこれを受け入れるのも手でしょうが、それではTDDの実演とは言い難いのでここはあえて非常に質素な実装に退化させます。分岐を削って整えて、1行のみにしてしまいます。
+
+![fizz buzz impl 2](/images/tdd-with-copilot/fizz-buzz/fizz-buzz-impl-2.png)
+
+これでテストコード側でimportすればOKなはずです。
+
+![fizz buzz test 3](/images/tdd-with-copilot/fizz-buzz/fizz-test-3.png)
+
+しかしここでテスト結果を見ると失敗しています。
+
+```shell-session
+3の倍数の場合はFizzを返す => https://jsr.io/@std/testing/0.224.0/_test_suite.ts:191:10
+error: AssertionError: Values are not equal.
+
+
+    [Diff] Actual / Expected
+
+
+-   fizz
++   Fizz
+```
+
+なんと、補完を受け入れてるうちに**大文字小文字の違いを見逃してしまいました**。TDDしてなかったらこのミスを最後まで気づかなかったかもしれません。TDDだと最初に実現したいことをリストに書き出すので、この手のミスが起こりづらいのです。このように、GitHub Copilotが完全でなくともTDDによって救われることが多々あるのが、筆者がGitHub CopilotとTDDが相性がいいと考える理由の1つです。
+
+これはプロダクションコードの戻り値を`Fizz`にすればもちろんテストが通ってGREENになります。
+
+```shell-session
+3の倍数の場合はFizzを返す ... ok (0ms)
+
+ok | 1 passed | 0 failed (1ms)
+```
+
+まだリファクタリングするほどプロダクションコードがないので、次のテストに進みます。
+
+#### 2つ目のテスト
 
 TBW
 
 ## 構成
 
 - 実演(1)
-  - FizzBuzzをTDDで実装してみよう
-  - Copilotは言語やフレームワークに対して得意不得意があるので、TypeScriptで書く
-    - Nodeの方が得意かもしれないが、基本そこまで差は感じたことがないのでDenoで実装してみます
+  - TODO Listを書く
+  - テストを1つ書く
+  - シンプルな実装を書く
+  - リファクタを検討する
 - 実演(2)
   - fetcherを実装し、httpステータスに応じて戻り値やthrowしてみよう
 - Copilot Chat
