@@ -79,6 +79,10 @@ TDDなのでまずはTODOリスト、と言いたいところですが、TODOリ
 
 ![fizz buzz todo init](/images/tdd-with-copilot/fizz-buzz/todo-of-fizz.png)
 
+:::message
+少しわかりづらいかもしれませんが、WebStormだと上記のようにコメントアウトが濃い緑色、GitHub Copilotの提案が灰色で表示されます。
+:::
+
 この補完を受け入れて改行すると次のTODOも提案されます。
 
 ![todo of buzz impl](/images/tdd-with-copilot/fizz-buzz/todo-of-buzz.png)
@@ -97,7 +101,9 @@ TDDなのでまずはTODOリスト、と言いたいところですが、TODOリ
 
 https://zenn.dev/akfm/articles/frontend-unit-testing#aaa%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3
 
-最初のテストなのでどういうAPI設計にするかもここで考える必要があります。もちろんプロダクションコードは空なのでそんな関数などないと警告されますが、まずは使い勝手から考えていきます。ここはシンプルに`fizzBuzz`関数とします。適宜補完を受け入れながら以下のようにしました。
+最初のテストなのでどういうAPI設計にするかもここで考える必要があります。もちろんプロダクションコードは空なのでそんな関数などないと警告されますが、まずは使い勝手から考えていきます。ここはシンプルに`fizzBuzz`関数と想定しましょう。G
+
+itHub Copilotからもテストコード案は提案されますが、最初のテストコードでは安易に受け入れずしっかり強い意思とこだわりを持って実装することが大事です。最終的には以下のようにしました。
 
 ![fizz buzz test impl](/images/tdd-with-copilot/fizz-buzz/fizz-test-2.png)
 
@@ -159,11 +165,48 @@ error: AssertionError: Values are not equal.
 ok | 1 passed | 0 failed (1ms)
 ```
 
-まだリファクタリングするほどプロダクションコードがないので、次のテストに進みます。
+まだリファクタリングするほどプロダクションコードがないので、TODOリストにチェックを入れて次のテストに進みます。
 
 #### 2つ目のテスト
 
-TBW: 5の倍数の実装から
+次は「5の倍数の場合はBuzzを返す」のテストコードです。
+
+![buzz test 1](/images/tdd-with-copilot/fizz-buzz/buzz-test-1.png)
+
+この段階ですでに、**GitHub Copilotが良質な提案をするようになってきた**ことがみて取れます。筆者の経験上、TDDに限らず多くの場合2つ目のテストから提案の質が一気に高くなります。まさしくAIとのペアプログラミングをしてる感覚です。
+
+```shell-section
+5の倍数の場合はBuzzを返す => https://jsr.io/@std/testing/0.224.0/_test_suite.ts:191:10
+error: AssertionError: Values are not equal.
+
+
+    [Diff] Actual / Expected
+
+
+-   Fizz
++   Buzz
+```
+
+#### シンプルな実装を書く
+
+テストが失敗したので、プロダクションコードを修正します。`return "Fizz";`を消して`_n`を`n`にします。
+
+![buzz impl 1](/images/tdd-with-copilot/fizz-buzz/buzz-impl-1.png)
+
+まさに今欲しいコードが提案されました。今回は題材が簡単なのでばかばかしく感じるかもしれませんが、しっかりTDDのフローで考えるとお手本のようなシンプルな実装です。しっかりテストも通ってます。
+
+```shell-session
+3の倍数の場合はFizzを返す ... ok (0ms)
+5の倍数の場合はBuzzを返す ... ok (0ms)
+
+ok | 2 passed | 0 failed (1ms)
+```
+
+このようにプロダクションコードの一部を修正する時にも、GitHub Copilotが意図を組んで提案してくれるようになります。最初から全部を実装するような補完を提案してきた時と違い、GitHub CopilotもしっかりTDDに寄り添ってくれています。
+
+#### 3つ目のテスト
+
+TBW: 15の倍数
 
 ## 構成
 
