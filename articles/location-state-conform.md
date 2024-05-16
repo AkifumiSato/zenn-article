@@ -153,12 +153,98 @@ _ブラウザバック・フォワード後_
 
 ### @location-state/conformを追加・実装
 
-### @location-state/conform導入後の挙動
+`@location-state/core`と`@location-state/conform`を追加します。
 
-- TBW: examplesのキャプチャを貼って詳細に説明
+```bash
+$ pnpm add @location-state/core @location-state/conform
+```
+
+Providerを設定する必要があるので、`app/layout.tsx`にClient ComponentsでProviderを追加します。
+
+```tsx
+// app/providers.tsx
+"use client";
+
+import { LocationStateProvider } from "@location-state/core";
+import type { ReactNode } from "react";
+
+export function Providers({ children }: { children: ReactNode }) {
+  return <LocationStateProvider>{children}</LocationStateProvider>;
+}
+```
+
+```tsx
+// app/layout.tsx
+import { Providers } from "./providers";
+
+export default function RootLayout({
+  children,
+ }: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
+}
+```
+
+これで準備ができたので、conformとlocation-stateを統合します。`@location-state/conform`は`useLocationForm`というhooksを提供しており、`formOptions`と`getLocationFormProps`を取得できます。前者はconformの`useForm`のオプション、後者は`getFormProps`をラップした物になります。
+
+```tsx
+// form.tsx
+"use client";
+
+// ...
+import { useLocationForm } from "@location-state/conform";
+// ...
+
+export default function Form({ storeName }: { storeName: "session" | "url" }) {
+  // ...
+  const [formOptions, getLocationFormProps] = useLocationForm({
+    location: {
+      name: "static-form",
+      storeName,
+    },
+  });
+  const [form, fields] = useForm({
+    // ...
+    ...formOptions,
+  });
+
+  return (
+    <form {...getLocationFormProps(form)} action={action} noValidate>
+      // ...
+    </form>
+  );
+}
+```
+
+これだけで、ブラウザバック時にもフォームの状態が復元されるようになります。実際の挙動を確認してみましょう。
+
+_入力時_
+
+![location-state conform 0](/images/location-state-conform/location-conform-0.png)
+
+_ブラウザバック・フォワード後_
+
+![location-state conform 1](/images/location-state-conform/location-conform-1.png)
+
+ちゃんと入力してた値が復元されています。
+
+### 動的formの対応
+
+conformは動的にフィールドを追加するようなformにも対応しています。`@location-state/conform`も同様に対応しています。
+
+使い方は上記のような静的なformと変わらないですが、exampleに実装があるので必要な方は参考にしてみてください。
+
+https://github.com/recruit-tech/location-state/blob/0bad20cf44c184f6853845aca994ee685b488f9c/apps/example-next-conform/src/app/forms/%5BstoreName%5D/dynamic-form/form.tsx
 
 ## 感想
 
-- 開発中に色々試してて気づいたんですが、conformで作った動的フォームがPEに対応できることに驚きました
-- 開発中、formが空になる体験をみてやっぱりかなり辛い体験だなぁと思いました
-- この気持ちを減らすべく、もっと多くの人に使ってもらえたら嬉しいです
+開発中、formが空になる体験はやっぱりかなり辛いなぁと改めて感じました。多くの方がブラウザバックのことをあまり気にせず実装していると思うのですが、ユーザーにとってはかなり重要な体験だと思います。
+
+この気持ちを減らすべく、location-stateがもっと多くの人に使ってもらえたら嬉しいです。
