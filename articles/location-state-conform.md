@@ -10,21 +10,21 @@ published: false
 
 ## location-stateとは
 
-location-stateは**履歴位置に同期する状態管理ライブラリ**です。
+location-stateは履歴位置に同期する状態管理ライブラリです。
 
 https://github.com/recruit-tech/location-state
 
-Next.jsなどを採用している場合、ページ内の`useState`は遷移時のunmountで状態が破棄され、ブラウザバック時には**復元されません**。そのため、アコーディオンやform要素の状態はブラウザバック時にはリセットされてしまいます。これはNext.jsに限らず、ReactやVueなどをベースにしたモダンなフロントエンドフレームワークを採用して、クライアントサイドルーティングが発生するSPA遷移の場合に起きがちな挙動です。クライアントサイドルーティングが不在なMPAでは、bfcacheやブラウザ側の復元処理によってDOMの状態が復元されます。
+Next.jsなどを採用している場合、ページ内の`useState`は遷移時のunmountで状態が破棄され、ブラウザバック時には**復元されません**。そのため、アコーディオンやform要素の状態はブラウザバック時にはリセットされてしまいます。これはNext.jsに限らず、ReactやVueなどをベースにしたモダンなフロントエンドフレームワークを採用して、クライアントサイドルーティングが発生する場合に起きがちな挙動です。クライアントサイドルーティングが不在なMPAでは、bfcacheやブラウザ側の復元処理によってDOMの状態が復元されます。
 
-筆者もサイト利用時に、formの入力途中に前のページの情報を確認するためにブラウザバックし、再度formに戻ってきたら入力内容が消えていた経験があります。ユーザーにとって、SPAとMPAでブラウザバック時の挙動が異なることは望ましくありません。
+筆者もサイト利用時に、formの入力途中で前のページの情報を確認するためにブラウザバックし、再度formに戻ってきたら入力内容が消えていた経験があります。これは、従来のMPAなら復元されていたことでしょう。SPAとMPAでブラウザバック時の挙動が異なることはユーザーにとって望ましくありません。
 
 :::message
-SPAとMPAの挙動の違いについては、筆者の[過去の記事](https://zenn.dev/akfm/articles/recoi-sync-next#%E3%83%96%E3%83%A9%E3%82%A6%E3%82%B6%E3%83%90%E3%83%83%E3%82%AF%E6%99%82%E3%81%AEui%E7%8A%B6%E6%85%8B%E3%81%AE%E5%BE%A9%E5%85%83)で詳細に解説しているので、興味がある方はぜひご覧ください。
+ブラウザバック挙動の違いについては、筆者の[過去の記事](https://zenn.dev/akfm/articles/recoi-sync-next#%E3%83%96%E3%83%A9%E3%82%A6%E3%82%B6%E3%83%90%E3%83%83%E3%82%AF%E6%99%82%E3%81%AEui%E7%8A%B6%E6%85%8B%E3%81%AE%E5%BE%A9%E5%85%83)で詳細に解説しているので、興味がある方はぜひご覧ください。
 :::
 
-しかし、開発者が自前で履歴ごとに復元されるような状態管理を実装するのは非常に大変です。これらの課題を解消すべく開発されたのがlocation-stateです。
+しかし、開発者が自前で履歴ごとに復元されるような状態管理を実装するのは非常に大変です。これらの課題を解消すべく開発されたのが[@location-state/conform](https://www.npmjs.com/package/@location-state/conform)です。
 
-以下の記事でlocation-stateの詳細について解説しているので、より詳細に知りたい方は以下の記事をご覧ください。
+より詳細にlocation-stateについて知りたい方は、リリース時に書いた以下の記事をご参照ください。
 
 https://zenn.dev/akfm/articles/location-state
 
@@ -55,7 +55,101 @@ https://www.npmjs.com/package/@location-state/conform
 
 ### @location-state/conformなしでの挙動
 
-- TBW: examplesのキャプチャを貼って詳細に説明
+まず素のconformの実装と挙動を確認します。location-stateのリポジトリにある[example](https://github.com/recruit-tech/location-state/tree/main/apps/example-next-conform)を簡易化しつつ確認していきたいと思います。
+
+Next.jsでconformを使う時は、`@conform-to/react`と`@conform-to/zod`を利用します。Server Actionsではzod schemaを`parseWithZod`と併用して`submission`を作成し、必要に応じて`submission.reply()`するのが基本的な使い方になります。
+
+```tsx
+// action.ts
+"use server";
+
+import { parseWithZod } from "@conform-to/zod";
+import { redirect } from "next/navigation";
+import { User } from "./schema";
+
+export async function saveUser(prevState: unknown, formData: FormData) {
+  const submission = parseWithZod(formData, {
+    schema: User,
+  });
+
+  if (submission.status !== "success") {
+    return submission.reply();
+  }
+
+  redirect("/success");
+}
+```
+
+formコンポーネント側では`useForm`を利用して`form`オブジェクトと`fields`オブジェクトを取得します。この際`onValidate`でvalidation挙動を設定できるので、`return parseWithZod(formData, { schema: User });`とすれば、zod schemaに従ったvalidationが行われます。
+
+あとは適宜form要素で`form`や`fields`これらを参照することでformを組み立てるのがconformの基本的な使い方です。
+
+```tsx
+// form.tsx
+"use client";
+
+import { getFormProps, getInputProps, useForm } from "@conform-to/react";
+import { parseWithZod } from "@conform-to/zod";
+import { useFormState } from "react-dom";
+import { saveUser } from "./action";
+import { User } from "./schema";
+
+export default function Form({ storeName }: { storeName: "session" | "url" }) {
+  const [lastResult, action] = useFormState(saveUser, undefined);
+  const [form, fields] = useForm({
+    lastResult,
+    onValidate({ formData }) {
+      return parseWithZod(formData, { schema: User });
+    },
+  });
+
+  return (
+    <form {...getFormProps(form)} action={action} noValidate>
+      <div style={{ display: "flex", columnGap: "10px" }}>
+        <label htmlFor={fields.firstName.id}>First name</label>
+        <input
+          {...getInputProps(fields.firstName, {
+            type: "text",
+          })}
+          key={fields.firstName.key}
+        />
+        <div>{fields.firstName.errors}</div>
+      </div>
+      <div style={{ display: "flex", columnGap: "10px", marginTop: "10px" }}>
+        <label htmlFor={fields.lastName.id}>Last name</label>
+        <input
+          {...getInputProps(fields.lastName, {
+            type: "text",
+          })}
+          key={fields.firstName.key}
+        />
+        <div>{fields.lastName.errors}</div>
+      </div>
+      <div style={{ display: "flex", columnGap: "10px" }}>
+        <button type="submit">submit</button>
+        <button type="submit" {...form.reset.getButtonProps()}>
+          Reset
+        </button>
+      </div>
+    </form>
+  );
+}
+```
+
+実際にこれで作った画面は以下のようになります。
+
+_初期状態_
+![pure conform 0](/images/location-state-conform/pure-conform-0.png)
+
+_入力後_
+![pure conform 1](/images/location-state-conform/pure-conform-1.png)
+
+しかし前述の通り、入力後にリロードやブラウザバックを行うと初期状態に戻ってしまいます。
+
+_ブラウザバック・フォワード後_
+![pure conform 2](/images/location-state-conform/pure-conform-2.png)
+
+`@location-state/conform`を導入してリロード時やブラウザバック時の復元を実現しましょう。
 
 ### @location-state/conformを追加・実装
 
