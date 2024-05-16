@@ -1,16 +1,16 @@
 ---
 title: "@location-state/conformをリリースした"
-emoji: "😺"
+emoji: "📝"
 type: "tech" # tech: 技術記事 / idea: アイデア
-topics: ["react", "conform", "nextjs"]
-published: false
+topics: ["react", "nextjs", "conform"]
+published: true
 ---
 
 この記事はlocation-stateをconformに対応させるために開発した、[@location-state/conform](https://www.npmjs.com/package/@location-state/conform)の紹介記事です。
 
 ## location-stateとは
 
-location-stateは履歴位置に同期する状態管理ライブラリです。
+location-stateは履歴位置に同期する状態管理ライブラリです。主にNext.jsをサポートしています。
 
 https://github.com/recruit-tech/location-state
 
@@ -22,7 +22,7 @@ Next.jsなどを採用している場合、ページ内の`useState`は遷移時
 ブラウザバック挙動の違いについては、筆者の[過去の記事](https://zenn.dev/akfm/articles/recoi-sync-next#%E3%83%96%E3%83%A9%E3%82%A6%E3%82%B6%E3%83%90%E3%83%83%E3%82%AF%E6%99%82%E3%81%AEui%E7%8A%B6%E6%85%8B%E3%81%AE%E5%BE%A9%E5%85%83)で詳細に解説しているので、興味がある方はぜひご覧ください。
 :::
 
-しかし、開発者が自前で履歴ごとに復元されるような状態管理を実装するのは非常に大変です。これらの課題を解消すべく開発されたのが[@location-state/conform](https://www.npmjs.com/package/@location-state/conform)です。
+しかし、開発者が自前で履歴ごとに復元されるような状態管理を実装するのは非常に大変です。これらの課題を解消すべく開発されたのが[location-state](https://github.com/recruit-tech/location-state)です。
 
 より詳細にlocation-stateについて知りたい方は、リリース時に書いた以下の記事をご参照ください。
 
@@ -30,24 +30,24 @@ https://zenn.dev/akfm/articles/location-state
 
 ## conform
 
-さて、今回はこのlocation-stateがconformに対応したわけなので、conformについても簡単に紹介しておきます。conformは[react-hook-form](https://react-hook-form.com/)などより後発な、Reactのformライブラリです。
+さて、今回はこのlocation-stateがconformに対応したわけなので、conformについても簡単に紹介します。conformは[react-hook-form](https://react-hook-form.com/)などより後発な、Reactのformライブラリです。
 
 https://ja.conform.guide/
 
 主な特徴としては以下が挙げられます。
 
-- validationライブラリとの統合が容易
+- zodなどとの統合が容易
 - 強力なTypeScriptサポート
 - Server ActionsやReactのhooksとの親和性が高い
 - Progressive Enhancementに対応
 
-筆者はconformを、**Server Actions時代のformライブラリ**として台頭する可能性があると考え、非常に注目しています。以下の記事でより詳細に紹介しているので、興味のある方はぜひご覧ください。
+筆者はconformを、**Server Actions時代のformライブラリ**として台頭する可能性があると考え、非常に注目しています。以下の記事でより詳細に紹介しているので、conformに馴染みのない方はぜひご覧ください。
 
 https://zenn.dev/akfm/articles/server-actions-with-conform
 
-## location state conform
+## @location-state/conform
 
-ブラウザバック体験を破壊しないようサポートしたいlocation-stateをconformに対応させたのが、今回開発した`@location-state/conform`です。
+conformでもブラウザバック・フォワード時にちゃんと状態が復元されるようにlocation-stateと統合したのが、今回開発した`@location-state/conform`です。
 
 https://www.npmjs.com/package/@location-state/conform
 
@@ -82,7 +82,7 @@ export async function saveUser(prevState: unknown, formData: FormData) {
 
 formコンポーネント側では`useForm`を利用して`form`オブジェクトと`fields`オブジェクトを取得します。この際`onValidate`でvalidation挙動を設定できるので、`return parseWithZod(formData, { schema: User });`とすれば、zod schemaに従ったvalidationが行われます。
 
-あとは適宜form要素で`form`や`fields`これらを参照することでformを組み立てるのがconformの基本的な使い方です。
+あとは適宜form要素で`form`や`fields`を参照することでformを組み立てるのがconformの基本的な使い方です。
 
 ```tsx
 // form.tsx
@@ -149,11 +149,11 @@ _入力後_
 _ブラウザバック・フォワード後_
 ![pure conform 2](/images/location-state-conform/pure-conform-2.png)
 
-`@location-state/conform`を導入してリロード時やブラウザバック時の復元を実現しましょう。
+これをブラウザバック・フォワード時に復元されるようにするのが、`@location-state/conform`です。`@location-state/conform`を導入してリロード時やブラウザバック時の復元を実装してみましょう。
 
 ### @location-state/conformを追加・実装
 
-`@location-state/core`と`@location-state/conform`を追加します。
+まず、`@location-state/core`と`@location-state/conform`を追加します。
 
 ```bash
 $ pnpm add @location-state/core @location-state/conform
@@ -192,7 +192,7 @@ export default function RootLayout({
 }
 ```
 
-これで準備ができたので、conformとlocation-stateを統合します。`@location-state/conform`は`useLocationForm`というhooksを提供しており、`formOptions`と`getLocationFormProps`を取得できます。前者はconformの`useForm`のオプション、後者は`getFormProps`をラップした物になります。
+これで準備ができたので、次はconformを利用してる部分を修正します。`@location-state/conform`は`useLocationForm`というhooksを提供しており、`formOptions`と`getLocationFormProps`を取得できます。前者はconformの`useForm`のオプション、後者は`getFormProps`をラップした物になります。
 
 ```tsx
 // form.tsx
@@ -233,18 +233,16 @@ _ブラウザバック・フォワード後_
 
 ![location-state conform 1](/images/location-state-conform/location-conform-1.png)
 
-ちゃんと入力してた値が復元されています。
+ちゃんと入力してた値が復元されています。もちろん、リロード時にもこの値は復元されます。
 
 ### 動的formの対応
 
-conformは動的にフィールドを追加するようなformにも対応しています。`@location-state/conform`も同様に対応しています。
-
-使い方は上記のような静的なformと変わらないですが、exampleに実装があるので必要な方は参考にしてみてください。
+conformは動的にフィールドを追加するようなformにも対応しており、`@location-state/conform`も同様に動的なformにも対応しています。使い方は上記のような静的なformと変わらないですが、exampleに実装があるので必要な方は参考にしてみてください。
 
 https://github.com/recruit-tech/location-state/blob/0bad20cf44c184f6853845aca994ee685b488f9c/apps/example-next-conform/src/app/forms/%5BstoreName%5D/dynamic-form/form.tsx
 
 ## 感想
 
-開発中、formが空になる体験はやっぱりかなり辛いなぁと改めて感じました。多くの方がブラウザバックのことをあまり気にせず実装していると思うのですが、ユーザーにとってはかなり重要な体験だと思います。
+開発中、formが空になる体験はやっぱりかなり辛いなぁと改めて感じました。多くの方がブラウザバックのことをあまり気にせず実装していると思うのですが、ユーザーにとってはかなり重要な体験だと思います。特にformでは、住所などの長い情報を入力したのに消えてしまうと再度入力するのがとても億劫になります。こういった体験にストレスを感じたことのある方は多いのではないでしょうか？
 
 この気持ちを減らすべく、location-stateがもっと多くの人に使ってもらえたら嬉しいです。
