@@ -47,7 +47,7 @@ https://zenn.dev/akfm/articles/server-actions-with-conform
 
 ## @location-state/conform
 
-conformでもブラウザバック・フォワード時にちゃんと状態が復元されるようにlocation-stateと統合したのが、今回開発した`@location-state/conform`です。
+conformでもブラウザバック・フォワード時にちゃんと状態が復元されるようにlocation-stateと統合したのが、今回開発した`@location-state/conform`です。例によって[koichik](https://twitter.com/koichik)さんに監修いただきました。
 
 https://www.npmjs.com/package/@location-state/conform
 
@@ -237,7 +237,7 @@ _ブラウザバック・フォワード後_
 
 ### 動的formの対応
 
-conformは動的にフィールドを追加するようなformにも対応しており、`@location-state/conform`も同様に動的なformにも対応しています。使い方は上記のような静的なformと変わらないですが、exampleに実装があるので必要な方は参考にしてみてください。
+conformは動的にフィールドを追加するようなformにも対応しており、`@location-state/conform`も同様に動的なformに対応しています。使い方は上記のような静的なformと変わらないですが、exampleに実装があるので必要な方は参考にしてみてください。
 
 https://github.com/recruit-tech/location-state/blob/0bad20cf44c184f6853845aca994ee685b488f9c/apps/example-next-conform/src/app/forms/%5BstoreName%5D/dynamic-form/form.tsx
 
