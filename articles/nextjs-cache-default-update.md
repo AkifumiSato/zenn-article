@@ -40,6 +40,10 @@ https://twitter.com/feedthejim/status/1792969608489738554
 > ◆ next/after, our own little version of waitUntil(`next/after`の追加)
 > ◆ the experimental React Compiler support(React Compiler(別名React Forget)のexperimentalサポート)
 
+このツイートの後日、これらの変更の説明を含むv15のアナウンス記事が公開されました。
+
+https://nextjs.org/blog/next-15-rc#caching-updates
+
 これらに対するupgradeガイドは本稿執筆時点では公式ドキュメント上にまだ公開されてないものの、リポジトリ上ではマージされていることが確認できました。
 
 https://github.com/vercel/next.js/blob/93c861d67bfb88109ee3bb7ddc9b8801f0c07bba/docs/02-app/01-building-your-application/11-upgrading/02-version-15.mdx
@@ -108,7 +112,7 @@ https://nextjs.org/docs/app/api-reference/next-config-js/staleTimes
 
 実際に使ってみないとわからない部分もあるかもしれませんが、これらの情報を眺める限りでは基本的に初見殺しだったキャッシュ周りが改善される良いbreaking changeじゃないかなと筆者は考えています。
 
-しかし、キャッシュ周りについては以前から[Discussionで強くフィードバック](https://github.com/vercel/next.js/discussions/54075)されてたり要望は多かったのですが、なぜこのタイミングでの変更となったのでしょう？これについてもコアチームのJimmy Lai氏がツイートで説明しています。(より詳細な説明は近日中にブログで公開されるとのことです。)
+しかし、キャッシュ周りについては以前から[Discussionで強くフィードバック](https://github.com/vercel/next.js/discussions/54075)されてたり要望は多かったのですが、なぜこのタイミングでの変更となったのでしょう？これについてもコアチームのJimmy Lai氏がツイートで説明しています。
 
 https://twitter.com/feedthejim/status/1792973728512426304
 
