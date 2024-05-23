@@ -1,9 +1,9 @@
 ---
-title: "Next.js braking change - cache by default"
+title: "Next.js braking change - caching by default"
 emoji: "🚀"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["nextjs", "react"]
-published: false
+published: true
 ---
 
 Next.js App Routerは巷では難しいと評されることが多々あります。これはReactの新機能であるServer Componentsをはじめとする**Server 1stとも言えるパラダイムシフト**を必要とすること、そして初見殺しな**デフォルトのキャッシュ挙動**に起因していると筆者は考えています。
