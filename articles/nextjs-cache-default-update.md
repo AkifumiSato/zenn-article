@@ -73,6 +73,10 @@ fetch(`https://...`, { cache: 'force-store' })
 fetch('https://...', { next: { revalidate: 3600 } })
 ```
 
+:::message
+Route Segment Configの[fetchCache](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#fetchcache)を設定すれば、fetchのオプションのデフォルトを`{ cache: 'force-store' }`にすることができます。ただしこれはドキュメントの通り、高度なオプションです。設定する場合は慎重に検討することをお勧めします。
+:::
+
 ### Router Cacheの無効化
 
 Router Cacheのデフォルト有効期限はいくつかの条件によって決定されるのですが、ほとんどの場合は[dynamic rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)かどうかによって決定されます。
