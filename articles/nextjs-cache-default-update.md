@@ -20,7 +20,7 @@ https://nextjs.org/docs/app/api-reference/next-config-js/staleTimes
 
 そしてここに来てさらに、v15でRouter Cacheや[Data Cache](https://nextjs.org/docs/app/building-your-application/caching)のデフォルト設定が変更されることが発表されました。これは非常に大きな変更だと筆者は捉えています。
 
-本稿はv15で行われるキャッシュ周りの破壊的変更と、その背景や[PPR](https://nextjs.org/docs/app/api-reference/next-config-js/partial-prerendering)との関係について解説します。
+本稿ではv15で行われるキャッシュ周りの破壊的変更と、その背景や[PPR](https://nextjs.org/docs/app/api-reference/next-config-js/partial-prerendering)との関係について解説します。
 
 ## v15の破壊的変更概要
 
@@ -39,6 +39,10 @@ https://twitter.com/feedthejim/status/1792969608489738554
 > ◆ incremental PPR migration support(インクリメンタルなPPRマイグレーションをサポート)
 > ◆ next/after, our own little version of waitUntil(`next/after`の追加)
 > ◆ the experimental React Compiler support(React Compiler(別名React Forget)のexperimentalサポート)
+
+これらに対するupgradeガイドは本稿執筆時点では公式ドキュメント上にまだ公開されてないものの、リポジトリ上ではマージされていることが確認できました。
+
+https://github.com/vercel/next.js/blob/93c861d67bfb88109ee3bb7ddc9b8801f0c07bba/docs/02-app/01-building-your-application/11-upgrading/02-version-15.mdx
 
 ## キャッシュ設定の破壊的変更
 
