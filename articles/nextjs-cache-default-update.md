@@ -8,13 +8,13 @@ published: true
 
 Next.js App Routerは巷では難しいと評されることが多々あります。これはReactの新機能であるServer Componentsをはじめとする**Server 1stとも言えるパラダイムシフト**を必要とすること、そして初見殺しな**デフォルトのキャッシュ挙動**に起因していると筆者は考えています。
 
-パラダイムシフトが必要となるServer ComponentsやServer ActionsなどのReactの新機能については、エラーで指摘・修正のヒントが提示されるなど初学者のフォローもしっかり考慮した設計がなされてたり、多くのドキュメントや記事が公開されているので、これらについてはhooksが登場した時のようにあとは理解が世の中に広まるまでの時間の問題なのかなとも感じています。
+パラダイムシフトが必要となるServer ComponentsやServer ActionsなどのReactの新機能については、エラーで指摘・修正のヒントが提示されるなどの初学者のフォローもしっかり考慮した設計がなされてたり、多くのドキュメントや記事が公開されているので、これらについてはhooksが登場した時のようにあとは世の中に理解が広まるまでの時間の問題なのかなとも感じています。
 
-一方でキャッシュについては、デフォルトで積極的かつ何層にも分けてキャッシュされる上、「意図せずキャッシュされてる状態」は当然エラーにならず動作してしまうため、初学者にとってNext.jsのキャッシュはつまづきやすいポイントだと筆者は考えています。筆者は特にクライアントサイドのキャッシュである[Router Cache](https://nextjs.org/docs/app/building-your-application/caching#router-cache)に着目し、その複雑さや問題点について過去に記事にしたこともありました。
+一方でキャッシュについては、デフォルトで積極的かつ何層にも分けてキャッシュされる上、「意図せずキャッシュされてる状態」は当然エラーにならず動作してしまうため、初学者にとってNext.jsのキャッシュはつまづきやすいポイントだと筆者は感じています。筆者は特に、クライアントサイドのキャッシュである[Router Cache](https://nextjs.org/docs/app/building-your-application/caching#router-cache)に着目しその複雑さや問題点について過去に記事にしたこともありました。
 
 https://zenn.dev/akfm/articles/next-app-router-client-cache
 
-上記執筆時点では、Router Cacheは最低でも30sは利用されてしまうことを筆者は問題視していたのですが、その後`experimental.staleTime`が導入されてRouter Cacheの寿命を設定できるようになり、状況は大きく改善されました。
+上記執筆時点では、Router Cacheは最低でも30sは利用されてしまうことを筆者は問題視していたのですが、その後`experimental.staleTime`が導入されてRouter Cacheの有効期限を設定できるようになり、状況は大きく改善されました。
 
 https://nextjs.org/docs/app/api-reference/next-config-js/staleTimes
 
@@ -24,15 +24,15 @@ https://nextjs.org/docs/app/api-reference/next-config-js/staleTimes
 
 ## v15の破壊的変更概要
 
-Next.jsコアチームのメンバーである[Jimmy Lai氏](https://twitter.com/feedthejim)によって、Next.js@15で変更される内容が公表されました。
+Next.jsコアチームのメンバーである[Jimmy Lai氏](https://twitter.com/feedthejim)によって、Next.jsのv15で変更される内容が公表されました。
 
 https://twitter.com/feedthejim/status/1792969159321723244
 
-> ◆ no more fetch caching by default ✅(fetchをデフォルトでキャッシュすることを廃止)
-> ◆ no more client caching by default ✅(クライアントサイドでデフォルトでキャッシュすることを廃止)
-> ◆ no more static GET routes by default ✅(GET routeをデフォルトで静的化することを廃止)
+> ◆ no more fetch caching by default ✅(fetchをデフォルトキャッシュすることを廃止)
+> ◆ no more client caching by default ✅(クライアントサイドでデフォルトキャッシュすることを廃止)
+> ◆ no more static GET routes by default ✅(GET routeをデフォルト静的化することを廃止)
 
-これにより、**Data CacheとRouter Cacheがデフォルトで無効化**されることになります。その他、破壊的変更ではなく機能追加として以下も発表されました。
+これにより、**Data CacheとRouter Cacheがデフォルトで無効化**されることになります。その他、機能追加として以下も発表されました。
 
 https://twitter.com/feedthejim/status/1792969608489738554
 
@@ -41,8 +41,6 @@ https://twitter.com/feedthejim/status/1792969608489738554
 > ◆ the experimental React Compiler support(React Compiler(別名React Forget)のexperimentalサポート)
 
 これらの内容は2024/05/23に行われたVercelのイベント[SHIP](https://vercel.com/ship)でも発表されました。
-
-Todo: [SHIP](https://vercel.com/ship)で発表された内容が他にもあれば追記
 
 ## キャッシュ設定の破壊的変更
 
@@ -85,7 +83,7 @@ Router Cacheのデフォルト有効期限はいくつかの条件によって�
 実際には`Link`コンポーネントの`prefetch`propsや、`router.prefetch()`によって有効期限が変わることがあります。興味のある方は筆者の[過去の記事](https://zenn.dev/akfm/articles/next-app-router-client-cache#client-side-cache%E3%81%AE%E7%A8%AE%E5%88%A5)をご参照ください。
 :::
 
-v14以前は、static renderingなら5m、dynamic renderingなら30sがデフォルトで設定されていました。v15以降、**dynamic renderingのデフォルトが0sに変更**されます。staticには変更ありません。
+v14以前はstatic renderingなら5m、dynamic renderingなら30sがデフォルトで設定されていました。v15以降、**dynamic renderingのデフォルトが0sに変更**されます。staticには変更ありません。
 
 dynamic renderingはRoute Segment Configの[dynamic](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#dynamic)の設定や[dynamic functions](https://nextjs.org/docs/app/building-your-application/routing/route-handlers#dynamic-functions)の利用有無によって決定されるので、これらを利用していないstatic renderingなページにおいてはRouter Cacheがデフォルトでは無効化されないということです。
 
@@ -94,11 +92,11 @@ dynamic renderingはRoute Segment Configの[dynamic](https://nextjs.org/docs/app
 | static    | 静的ページ、ブログ記事ページ | 5m      | 5m     |
 | dynamic   | ユーザーのマイページ     | **30s** | **0s** |
 
-ブログ記事ページをrevalidateしたのに、他のユーザーにはRouter Cacheが残ってて古い情報が見えてしまうなどのケースが想定されます。これを制御したい場合、前述の`staleTime`を設定する必要があります。
+これにより、ブログ記事ページをrevalidateしたのに他のユーザーにはRouter Cacheが残ってて古い情報が見えてしまうなどのケースが想定されます。これを制御したい場合、前述の`staleTime`を設定する必要があります。
 
 https://nextjs.org/docs/app/api-reference/next-config-js/staleTimes
 
-static renderingはデフォルトで強くキャッシュしても個人的には違和感はないので、個人的にはいい判断じゃないかなと思っています。
+とはいえ個人的な意見としては、static renderingはデフォルトで強くキャッシュしても違和感はないので、デフォルト設定としてはこれは悪くない判断じゃないかなと思っています。
 
 ## なぜこのタイミングで変更されたのか
 
@@ -119,7 +117,7 @@ https://twitter.com/feedthejim/status/1792973728512426304
 
 https://twitter.com/koichik/status/1793086908299653452
 
-PPRによって静的化できる部分が増えたことで、Data Cacheをデフォルトで有効にしておく必然性がなくなったのです。デフォルトにおいて、データ単位のキャッシュに代わってhtmlやRSC Payload単位でのキャッシュされる範囲が広がったとイメージするとわかりやすいかもしれません。
+PPRによって静的化できる部分が増えたことで、Data Cacheをデフォルトで有効にしておく必然性がなくなったのです。デフォルトにおいては、データ単位のキャッシュに代わってhtmlやRSC Payload単位でのキャッシュされる範囲が広がったとイメージするとわかりやすいかもしれません。
 
 ## v15以降でのNext.jsの設計思想
 
@@ -127,12 +125,12 @@ PPRによって静的化できる部分が増えたことで、Data Cacheをデ�
 
 https://twitter.com/koichik/status/1793092931542487535
 
-Next.js@15以降はページ単位の静的・動的という思想ではなく、ページやSuspenseによって隔てられた境界ごとに静的・動的が決定できるようになります。開発者としては「必要な部分だけを動的にすることができる」と考えられるので、レンダリング設計としてはシンプルでわかりやすい気もします。
+Next.js v15以降はページ単位の静的・動的という思想ではなく、ページやSuspenseによって隔てられた境界ごとに静的・動的が決定できるようになります。開発者としては「必要な部分だけを動的にすることができる」と捉えることもできるので、レンダリング設計としてはシンプルでわかりやすい気もします。
 
 ## 感想
 
-Next.jsは定期的に大きな概念更新が行われます。巷で「進化が早すぎる」「too much」などと評されるのはそれが原因なのかもしれません。一方でその進化はユーザーの体験へと繋がるものが多く、筆者としては重視すべき点だと考えています。
+Next.jsは定期的に大きな概念の追加やアップデートが行われます。巷で「進化が早すぎる」「too much」などと評されるのはそれが原因なのかもしれません。一方でその進化はユーザーの体験へと繋がるものが多く、重視すべき点だと筆者は考えています。
 
-PPRは1つの新たな概念なので、我々はそれを理解し使いこなすまでに学習コストが伴います。正直筆者自身、まだPPRについての理解度や解像度は荒い部分があります。一方でPPR以降の世界では前述の通り「必要な部分だけを動的にすることができる」という世界になることで、レンダリングプロセスの理解容易性とユーザー体験どちらをとっても歓迎すべき変更な気がしてます。パフォーマンス観点はアプリケーション実装者がチューニングしなければならないケースも当然ありますが、フレームワーク側でデフォルトで対処されてると平均値が上がっていくので1Webユーザーとしても嬉しいところです。
+PPRは1つの新たな概念なので、我々がそれを理解し使いこなすには学習コストが伴います。正直筆者自身、まだPPRについての理解度や解像度は荒い部分があります。一方でPPR以降の世界では前述の通り「必要な部分だけを動的にすることができる」という世界になることで、レンダリングプロセスの理解容易性とユーザー体験どちらをとっても歓迎すべき変更な気はしてます。パフォーマンス観点はアプリケーション実装者がチューニングしなければならないケースも当然ありますが、フレームワーク側でデフォルトで対処されてると平均値が上がっていくので1Webユーザーとしても嬉しいところです。
 
-PPRが安定化して使える日が近い将来なのだと思うと楽しみですが、フレームワーク内部としては大幅な変更でしょうから、バグや既存影響など出ないかは少々心配なところです。v15への更新に限らないですが、Next.jsのアップデートは慎重に行いましょう。
+PPRが安定化して使える日が近い将来なのだと思うと楽しみですが、フレームワーク内部としては大幅な変更でしょうから、バグや既存影響など出ないかは少々心配なところです。Next.jsの場合v15への更新に限らないですが、アップデートは慎重に行いましょう。
