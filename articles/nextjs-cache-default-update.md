@@ -40,8 +40,6 @@ https://twitter.com/feedthejim/status/1792969608489738554
 > ◆ next/after, our own little version of waitUntil(`next/after`の追加)
 > ◆ the experimental React Compiler support(React Compiler(別名React Forget)のexperimentalサポート)
 
-これらの内容は2024/05/23に行われたVercelのイベント[SHIP](https://vercel.com/ship)でも発表されました。
-
 ## キャッシュ設定の破壊的変更
 
 前述の通り、v15でData CacheとRouter Cacheはデフォルトで無効化されます。簡単におさらいするとData Cacheは`fetch`はじめサーバー側でのデータアクセス時に保持されるデータそのもののキャッシュで、Router Cacheはクライアントサイドに保持されるRSC Payloadのキャッシュです。
