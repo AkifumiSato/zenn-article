@@ -1,5 +1,5 @@
 ---
-title: "Next.js braking change - disable router/fetch cache by default"
+title: "Next.js breaking change - disable router/fetch cache by default"
 emoji: "🚀"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["nextjs", "react"]
