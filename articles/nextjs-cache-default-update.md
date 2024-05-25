@@ -6,6 +6,11 @@ topics: ["nextjs", "react"]
 published: true
 ---
 
+:::message alert
+追記: [Router Cacheの無効化](#router-cacheの無効化)について、筆者の理解に誤りがあったことが判明しました。執筆段階だとRCが未リリースだったこともあり、検証不足で過去の知識のまま誤った情報を記載してしまいました。
+申し訳ありません。
+:::
+
 Next.js App Routerは巷では難しいと評されることが多々あります。これはReactの新機能であるServer Componentsをはじめとする**Server 1stとも言えるパラダイムシフト**を必要とすること、そして初見殺しな**デフォルトのキャッシュ挙動**に起因していると筆者は考えています。
 
 パラダイムシフトが必要となるServer ComponentsやServer ActionsなどのReactの新機能については、エラーで指摘・修正のヒントが提示されるなどの初学者のフォローもしっかり考慮した設計がなされてたり、多くのドキュメントや記事が公開されているので、これらについてはhooksが登場した時のようにあとは世の中に理解が広まるまでの時間の問題なのかなとも感じています。
@@ -87,6 +92,12 @@ Route Segment Configの[fetchCache](https://nextjs.org/docs/app/api-reference/fi
 
 ### Router Cacheの無効化
 
+:::message alert
+追記: 冒頭記載の通り、筆者の認識に誤りがあったため訂正します。
+誤った情報を記載してしまい申し訳ありません。
+:::
+
+::::details 初稿時の誤った情報（一応残しています）
 Router Cacheのデフォルト有効期限はいくつかの条件によって決定されるのですが、ほとんどの場合は[dynamic rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)かどうかによって決定されます。
 
 :::message
@@ -107,6 +118,29 @@ dynamic renderingはRoute Segment Configの[dynamic](https://nextjs.org/docs/app
 https://nextjs.org/docs/app/api-reference/next-config-js/staleTimes
 
 とはいえ個人的な意見としては、static renderingはデフォルトで強くキャッシュしても違和感はないので、デフォルト設定としてはこれは悪くない判断じゃないかなと思っています。
+::::
+
+Router Cacheの有効期限は、`static`なものとして扱われる`loading.tsx`や明示的なprefetch（`Link`の`prefetch`指定時や`router.prefetch()`）対象を除くpageやlayoutについて、defaultで無効化されます。
+
+これらの有効期限はそれぞれ`statc`/`dynamic`として、`experimental.staleTimes`を使って設定することができます。
+
+https://rc.nextjs.org/docs/app/api-reference/next-config-js/staleTimes
+
+```js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    staleTimes: {
+      dynamic: 30, // default: 0
+      static: 180, // default: 300
+    },
+  },
+}
+ 
+module.exports = nextConfig
+```
+
+ちなみに、ブラウザバック・フォワード時には有効期限に関係なくRouter Cacheが利用されるようになっているようです。
 
 ## なぜこのタイミングで変更されたのか
 
