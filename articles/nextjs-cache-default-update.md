@@ -7,8 +7,8 @@ published: true
 ---
 
 :::message alert
-追記: [Router Cacheの無効化](#router-cacheの無効化)について、筆者の理解に誤りがあったことが判明しました。執筆段階だとRCが未リリースだったこともあり、検証不足で過去の知識のまま誤った情報を記載してしまいました。
-申し訳ありません。
+追記: [Router Cacheの無効化](#router-cacheの無効化)について、記載に誤りがありました。
+検証不足・知識不足で理解を誤りました。申し訳ありません。
 :::
 
 Next.js App Routerは巷では難しいと評されることが多々あります。これはReactの新機能であるServer Componentsをはじめとする**Server 1stとも言えるパラダイムシフト**を必要とすること、そして初見殺しな**デフォルトのキャッシュ挙動**に起因していると筆者は考えています。
@@ -122,7 +122,7 @@ https://nextjs.org/docs/app/api-reference/next-config-js/staleTimes
 
 Router Cacheの有効期限は、`static`なものとして扱われる`loading.tsx`や明示的なprefetch（`Link`の`prefetch`指定時や`router.prefetch()`）対象を除くpageやlayoutについて、defaultで無効化されます。
 
-これらの有効期限はそれぞれ`statc`/`dynamic`として、`experimental.staleTimes`を使って設定することができます。
+これらの有効期限はそれぞれ`static`/`dynamic`として、`experimental.staleTimes`を使って設定することができます。
 
 https://rc.nextjs.org/docs/app/api-reference/next-config-js/staleTimes
 
