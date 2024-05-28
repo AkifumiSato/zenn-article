@@ -1,5 +1,5 @@
 ---
-title: "PPRがSSR/SSG論争を過去のものにする"
+title: "PPRに見る新時代pre-rendering - SSR/SSG論争の終焉"
 emoji: "👑"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["nextjs", "react"]
@@ -33,19 +33,19 @@ export default function Page() {
 export const experimental_ppr = true
 ```
 
-PPRはNext.jsのpre-rendering方式の歴史を更新する重大な機能開発で、個人的にはとても注目度の高いトピックなのですが、筆者の観測範囲では話題になってるのはまだ一部でそこまで盛り上がってないように感じます。
+PPRはNext.js開発チームにとっても重大な機能開発であり、個人的にはとても注目度の高いトピックなのですが、筆者の観測範囲では話題になってるのは一部でそこまで盛り上がってないように感じます。
 
-本稿を通じてPPRとは何か、何を解決しようとしているのか、そして筆者がPPRを重大な機能開発だと捉えている所以をお伝えできればと思います。
+本稿を通じてPPRとは何か、何を解決しようとしているのか、そしてPPRが重大な機能開発たる所以をお伝えできればと思います。
 
 ## pre-renderingを振り返る
 
-PPRの話をする前に、これまでのNext.jsのpre-renderingについて振り返ってみましょう。これまでのNext.jsがサポートしているpre-rendering方式は3つありました。
+PPRの話をする前に、これまでのNext.jsのpre-renderingについて振り返ってみましょう。これまで、Next.jsがサポートしているpre-rendering方式は3つありました。
 
 - **SSR**: server-side rendering
 - **SSG**: static-site generation
 - **ISR**: incremental static regeneration
 
-### Pages Router開発時代
+### Pages Router時代
 
 Next.jsは元々、SSRができるReactフレームワークとして2016/10に登場しました。以下は当時のVercel（旧Zeit）のアナウンス記事です。
 
@@ -55,19 +55,15 @@ https://vercel.com/blog/next
 
 ここからは筆者の主観も含みます。当時は[Gatsby](https://www.gatsbyjs.com/)の台頭もありSSG人気が根強く、SSRしかできなかったNext.jsのユーザーはGatsbyに流れることも多かったように思います。実際、当時の筆者はNext.jsよりGatsbyを好んで使っていました。しかしNext.js v9系で需要の多かったdynamicルーティングやGatsbyが弱かったTypeScript対応などの実装、そして上記SSGやISRのサポートによりNext.jsは一気に注目を集めるようになりました。筆者にはこのv9系で一気に実装された機能群が、 今日のNext.jsの人気に繋がっているようにさえ思えます。
 
-SSRかSSGかなど、pre-rendering方式は多くのユーザーの関心を集め、フレームワークの人気を支える重要な要素となる機能なのです。
+SSRかSSGかというpre-rendering方式の議論は多くのユーザーの関心を集め、今日のNext.jsの人気を支える重要な要素となっている機能なのです。
 
 ### App Router登場以降
 
 さて、上記のv9時点ではNext.jsはいわゆるPages Routerしか存在しませんでした。その後[v13](https://nextjs.org/blog/next-13)で発表されたApp Routerでは、RSC(React Server Components)やServer Actions・多層のキャッシュなど多くのパラダイムシフトが必要となりました。App Routerでは、pre-rendering方式に関してはどのような変化があったのでしょうか？
 
-結論から言うとApp Routerでも従来のSSR/SSG/ISR相当の機能をサポートしていますが、App Routerのドキュメントでは**SSR/SSG/ISRなどの用語は基本的に使用されていません**。
+結論から言うとApp Routerは従来同様SSR/SSG/ISR相当の機能をサポートしていますが、App Routerのドキュメントでは**SSR/SSG/ISRなどの用語は基本的に使用されていません**。
 
-これらの単語が使われない理由について明確な説明を見つけることはできませんでしたが、筆者には大きく2つの理由が思い当たります。1つはRSCとSSRという概念が混在することで混乱を招く可能性があったこと、もう1つはISRが概念自体難しいと評されていたことです。ISRが難しいと評されていたのは筆者の観測範囲なので日本国内だけなのかもしれませんが、、、
-
-いずれにせよApp RouterではSSR/SSG/ISRという概念の理解を求めるのをやめたようです。
-
-### static/dynamic rendering
+これらの単語が使われない理由について明確な説明を見つけることはできませんでしたが、筆者には大きく2つの理由が思い当たります。1つはRSCとSSRという概念が混在することで混乱を招く可能性があったこと、もう1つはISRが概念自体難しいと評されていたことです(ISRが難しいと評されていたのは筆者の観測範囲なので日本国内だけなのかもしれませんが)。
 
 現在App RouterはSSR/SSG/ISRではなく、[static rendering](https://rc.nextjs.org/docs/app/building-your-application/rendering/server-components#static-rendering-default)と[dynamic rendering](https://rc.nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)という2つの概念を使って多くの機能を説明しています。
 
@@ -91,9 +87,13 @@ PPRはstatic renderingしつつ、部分的にdynamic renderingにすること�
 
 ![ppr shell](/images/nextjs-partial-pre-rendering/ppr-shell.png)
 
-商品ページ全体やナビゲーションはstatic renderingで静的化され、一方カートやレコメンド情報といったユーザーごとに異なるUI部分はdynamic renderingにすることができます。このdynamic renderingな部分は**dynamic hole**(もしくはasync hole)などと呼ばれ、`Suspense`によって境界を定義することができます。Next.jsのPPRではまずレスポンスとしてstatic renderingな部分のみを即座にクライアントに返すことで、高速な表示が可能になります。そのため初期表示においてはholeの部分には`Suspense`に指定したloaderなどの`fallback`が表示されることになります。
+商品ページ全体やナビゲーションはstatic renderingで静的化され、一方カートやレコメンド情報といったユーザーごとに異なるUI部分はdynamic renderingにすることができます。このdynamic renderingな部分は**dynamic hole**(もしくはasync hole)などと呼ばれ、`Suspense`によって境界を定義することができます。
 
-PPRで境界を定義づけるのは`Suspense`です。現状experimentalなので前述の設定などは必要ですが、他に**新たなAPIを学ぶ必要はありません**。
+Next.jsのPPRではまずレスポンスのStreamにstatic renderingされたhtml部分から即座にクライアントに返し始めます。App Routerでは初期ロードのhtml要素はstatic renderingの結果が反映されているおで、初期表示においてはholeの部分には`Suspense`に指定したloaderなどの`fallback`が表示されることになります。レスポンスの最後の方(htmlの最後の方)でRSC Payloadを含む部分が返され、ここにdynamic renderingのRSC Payloadも含まれます。そのため1つのリクエストの前半パートでstaticな部分を返してユーザーに表示、後半パートでdynamicな部分を徐々に返すという手法をとることで1つのhttpリクエストで静的・動的なレンダリングを混在させつつ高速なレスポンスを実現しています。
+
+Todo: ↑の説明書き直した方がいいかも
+
+実際にPPRで境界を定義づけるのは`Suspense`です。現状experimentalなので前述の設定などは必要ですが、他に**新たなAPIを学ぶ必要はありません**。
 
 ```tsx
 export default function Page() {
@@ -138,6 +138,8 @@ export default function Page() {
 ## SSR/SSG論争
 
 また筆者の主観を含みますが、PPR以前は「SSRとSSGどちらにすべきか」というような対立的選論争が起きがちでした。
+
+TBW: SSR/SSGのユースケースについて
 
 ISRはどうなのか気になるかもしれませんが、ISRは概念自体が難しいのかキャッシュのハンドリング観点からVercel以外だと使いづらいからなのか、筆者の周りだと利用してないというチームの方が多かったです。この辺は昨今Cache Handlerが設定できるようになったことにより、セルフホスティング環境でも使いやすくなったかもしれません。
 
