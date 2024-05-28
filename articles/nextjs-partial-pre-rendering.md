@@ -137,6 +137,12 @@ export default function Page() {
 
 ## SSR/SSG論争
 
+また筆者の主観を含みますが、PPR以前は「SSRとSSGどちらにすべきか」というような対立的選論争が起きがちでした。
+
+ISRはどうなのか気になるかもしれませんが、ISRは概念自体が難しいのかキャッシュのハンドリング観点からVercel以外だと使いづらいからなのか、筆者の周りだと利用してないというチームの方が多かったです。この辺は昨今Cache Handlerが設定できるようになったことにより、セルフホスティング環境でも使いやすくなったかもしれません。
+
+https://zenn.dev/akfm/articles/nextjs-cache-handler-redis
+
 - 現状筆者には理想的なpre-rendering方式に思える
 - Next.jsは今後この形になっていく
 - Remixなどの他フレームワークはどうなんだろう
