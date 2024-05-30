@@ -7,7 +7,7 @@ published: true
 ---
 
 :::message alert
-本稿はNext.js v15.0.0-rc.0時点の情報を元に執筆しており、PPRはさらにexperimentalな機能です。v15.0.0のリリース時や、PPRがstableな機能として提供される際には機能の一部が変更されてる可能性がありますので、ご注意下さい。
+本稿は Next.js v15.0.0-rc.0 時点の情報を元に執筆しており、PPR はさらに experimental な機能です。v15.0.0 のリリース時や、PPR が stable な機能として提供される際には機能の一部が変更されてる可能性がありますので、ご注意下さい。
 :::
 
 **Partial Pre-Rendering**(以降 PPR)は Next.js v14.0 で発表された、SSR や SSG にならぶ**新たな pre-rendering 方式**です。
@@ -62,7 +62,7 @@ https://vercel.com/blog/next
 
 当時は[Gatsby](https://www.gatsbyjs.com/)の台頭もあり SSG 人気が根強く、SSR しかできなかった Next.js のユーザーは Gatsby に流れることも多かったように思います。
 
-_2019年ごろはGatsbyの方が上回っている_
+_2019 年ごろは Gatsby の方が上回っている_
 ![npm trends](/images/nextjs-partial-pre-rendering/npm-trends.png)
 
 実際、当時の筆者は好んで Gatsby を使っていました。しかし Next.js v9 系で需要の多かった dynamic ルーティングや Gatsby が弱かった TypeScript 対応などの実装、そして上記 SSG や ISR のサポートにより Next.js は一気に注目を集めるようになりました。筆者にはこの v9 系で実装された機能群が、 今日の Next.js の人気に繋がったように思えます。
@@ -77,12 +77,12 @@ SSR か SSG かという pre-rendering 方式の議論は多くのユーザー�
 
 現在 App Router は SSR/SSG/ISR ではなく、[static rendering](https://rc.nextjs.org/docs/app/building-your-application/rendering/server-components#static-rendering-default)と[dynamic rendering](https://rc.nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)という 2 つの概念を使って多くの機能を説明しています。
 
-- **static rendering**: 従来のSSG や ISR 相当で、build 時や revalidate 実行後にレンダリング
-  - revalidateなし: SSG 相当
-  - revalidateあり: ISR 相当
-- **dynamic rendering**: 従来のSSR 相当で、リクエストごとにレンダリング
+- **static rendering**: 従来の SSG や ISR 相当で、build 時や revalidate 実行後にレンダリング
+  - revalidate なし: SSG 相当
+  - revalidate あり: ISR 相当
+- **dynamic rendering**: 従来の SSR 相当で、リクエストごとにレンダリング
 
-Pages RouterではSSGかISRかはbuild時に実行する関数で設定する必要があったため静的に決定されていましたが、App Routerにおけるrevalidateは`revalidatePath`や`revalidateTag`で動的に行うことができるので、SSGかISRかは静的に決定されません。そのためNext.jsからするとSSGとISRを区別することに意味がなくなってしまったことが、これらの用語を使わなくなった理由かもしれません。
+Pages Router では SSG か ISR かは build 時に実行する関数で設定する必要があったため静的に決定されていましたが、App Router における revalidate は`revalidatePath`や`revalidateTag`で動的に行うことができるので、SSG か ISR かは静的に決定されません。そのため Next.js からすると SSG と ISR を区別することに意味がなくなってしまったことが、これらの用語を使わなくなった理由かもしれません。
 
 ### 現状の Next.js の問題点
 
@@ -150,7 +150,7 @@ export default function Page() {
 
 実際に PPR によって dynamic hole が置き換わる様子を観察してみましょう。
 
-前述の通り Next.js のレスポンスは Stream になっており、PPRの場合はまず static rendering な部分を送信します。その後 dynamic rendering な部分が送信され、クライアントサイドの処理で dynamic hole を置き換えます。
+前述の通り Next.js のレスポンスは Stream になっており、PPR の場合はまず static rendering な部分を送信します。その後 dynamic rendering な部分が送信され、クライアントサイドの処理で dynamic hole を置き換えます。
 
 以下のサンプルコードを元に、挙動を観察してみます。
 
@@ -173,7 +173,7 @@ export default function Home() {
 }
 
 async function RandomTodo() {
-  const todo = await fetch("https://dummyjson.com/todos/random", {
+  const todoDto: TodoDto = await fetch("https://dummyjson.com/todos/random", {
     // v15.0.0-rc.0時点ではデフォルトでno-storeだが、明示的に指定しないとdynamic renderingにならない
     cache: "no-store",
   }).then((res) => res.json());
@@ -182,12 +182,22 @@ async function RandomTodo() {
   return (
     <>
       <h2>Random Todo</h2>
-      <code>
-        <pre>{JSON.stringify(todo, null, 2)}</pre>
-      </code>
+      <ul>
+        <li>id: {todoDto.id}</li>
+        <li>todo: {todoDto.todo}</li>
+        <li>completed: {todoDto.completed ? "true" : "false"}</li>
+        <li>userId: {todoDto.userId}</li>
+      </ul>
     </>
   );
 }
+
+type TodoDto = {
+  id: number;
+  todo: string;
+  completed: boolean;
+  userId: number;
+};
 ```
 
 `RandomTodo`はリクエストの度にランダムな TODO 情報を取得するコンポーネントです。今回は Stream の様子を観察したいので、あえて 3 秒遅延させています。
@@ -206,11 +216,9 @@ _初期描画_
 _dynamic rendering 完了後_
 ![ppr stream end](/images/nextjs-partial-pre-rendering/ppr-stream-end.png)
 
-初期描画時は html のレスポンスが途中までしか帰ってきておらず、`loading...`が表示されています。実際 DevTools の html を見ても、途中までしか返ってきてない様子が見て取れます。
+初期描画時は html のレスポンスが`<main>`の直後の`<script>`タグまでしか帰ってきておらず、画面上には`loading...`が表示されています。dynamic rendering が完了すると同じレスポンスでクライアントに残りの HTML が送信され、、それを受け取った Next.js が`loading...`を`Random Todo`に置き換えます。
 
-dynamic rendering が完了すると同じレスポンスでクライアントに残りのHTMLが送信され、、それを受け取った Next.js が`loading...`を`Random Todo`に置き換えます。
-
-実際に上記のサンプルコードを実行した時のhtmlに含まれる`<body>`を見てみましょう。`<div hidden id="S:0">`以降が遅れて送信されてくるdynamic renderingの部分です。
+実際に上記のサンプルコードを実行した時の html に含まれる`<body>`を見てみましょう。`<div hidden id="S:0">`以降が遅れて送信されてくる dynamic rendering の部分です。
 
 ```html
 <body>
@@ -228,16 +236,28 @@ dynamic rendering が完了すると同じレスポンスでクライアント�
   <!-- 📍ここまでがstatic rendering、以降dynamic rendering -->
   <div hidden id="S:0">
     <h2>Random Todo</h2>
-    <code>
-      <pre>
-{
-  &quot;id &quot;: 138,
-  &quot;todo &quot;: &quot;Compliment someone &quot;,
-  &quot;completed &quot;: false,
-  &quot;userId &quot;: 76
-}</pre
-      >
-    </code>
+    <ul>
+      <li>
+        id:
+        <!-- -->
+        182
+      </li>
+      <li>
+        todo:
+        <!-- -->
+        Explore a nearby trail
+      </li>
+      <li>
+        completed:
+        <!-- -->
+        true
+      </li>
+      <li>
+        userId:
+        <!-- -->
+        188
+      </li>
+    </ul>
   </div>
   <script>
     $RC = function (b, c, e) {
@@ -278,25 +298,25 @@ dynamic rendering が完了すると同じレスポンスでクライアント�
   <script>
     self.__next_f.push([
       1,
-      '1:I[4129,[],""]\n3:"$Sreact.suspense"\n5:I[8330,[],""]\n6:I[3533,[],""]\n8:I[6344,[],""]\n9:[]\n',
+      '1:I[4293,[],""]\n3:"$Sreact.suspense"\n5:I[1041,[],""]\n6:I[4762,[],""]\n8:I[2246,[],""]\n9:[]\n',
     ]);
   </script>
   <script>
     self.__next_f.push([
       1,
-      '0:[null,["$","$L1",null,{"buildId":"nEXD0Hu3p8AtFQuHj1ZPn","assetPrefix":"","initialCanonicalUrl":"/ppr","initialTree":["",{"children":["ppr",{"children":["__PAGE__",{}]}]},"$undefined","$undefined",true],"initialSeedData":["",{"children":["ppr",{"children":["__PAGE__",{},[["$L2",["$","main",null,{"children":[["$","h1",null,{"children":"PPR Page"}],["$","$3",null,{"fallback":"loading...","children":"$L4"}]]}]],null],null]},["$","$L5",null,{"parallelRouterKey":"children","segmentPath":["children","ppr","children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L6",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","notFoundStyles":"$undefined","styles":null}],null]},[["$","html",null,{"lang":"en","children":["$","body",null,{"children":["$","$L5",null,{"parallelRouterKey":"children","segmentPath":["children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L6",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\\"Segoe UI\\",Roboto,Helvetica,Arial,sans-serif,\\"Apple Color Emoji\\",\\"Segoe UI Emoji\\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":"404"}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],"notFoundStyles":[],"styles":null}]}]}],null],null],"couldBeIntercepted":false,"initialHead":[false,"$L7"],"globalErrorComponent":"$8","missingSlots":"$W9"}]]\n',
+      '0:[null,["$","$L1",null,{"buildId":"6K-rjHj3iXikXC7ozNr2u","assetPrefix":"","initialCanonicalUrl":"/ppr","initialTree":["",{"children":["ppr",{"children":["__PAGE__",{}]}]},"$undefined","$undefined",true],"initialSeedData":["",{"children":["ppr",{"children":["__PAGE__",{},[["$L2",["$","main",null,{"children":[["$","h1",null,{"children":"PPR Page"}],["$","$3",null,{"fallback":"loading...","children":"$L4"}]]}]],null],null]},["$","$L5",null,{"parallelRouterKey":"children","segmentPath":["children","ppr","children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L6",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","notFoundStyles":"$undefined","styles":null}],null]},[["$","html",null,{"lang":"en","children":["$","body",null,{"children":["$","$L5",null,{"parallelRouterKey":"children","segmentPath":["children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L6",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\\"Segoe UI\\",Roboto,Helvetica,Arial,sans-serif,\\"Apple Color Emoji\\",\\"Segoe UI Emoji\\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":"404"}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],"notFoundStyles":[],"styles":null}]}]}],null],null],"couldBeIntercepted":false,"initialHead":[false,"$L7"],"globalErrorComponent":"$8","missingSlots":"$W9"}]]\n',
     ]);
   </script>
   <script>
     self.__next_f.push([
       1,
-      'a:"$Sreact.fragment"\n7:["$","$a","eZy4y-XpmIcc-gbnXZore",{"children":[["$","meta","0",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","1",{"charSet":"utf-8"}],["$","title","2",{"children":"Create Next App"}],["$","meta","3",{"name":"description","content":"Generated by create next app"}],["$","link","4",{"rel":"icon","href":"/favicon.ico","type":"image/x-icon","sizes":"16x16"}]]}]\n2:null\n',
+      'a:"$Sreact.fragment"\n7:["$","$a","DwzW5r4-q0DsRW72bLFYv",{"children":[["$","meta","0",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","1",{"charSet":"utf-8"}]]}]\n2:null\n',
     ]);
   </script>
   <script>
     self.__next_f.push([
       1,
-      '4:[["$","h2",null,{"children":"Random Todo"}],["$","code",null,{"children":["$","pre",null,{"children":"{\\n  \\"id\\": 138,\\n  \\"todo\\": \\"Compliment someone\\",\\n  \\"completed\\": false,\\n  \\"userId\\": 76\\n}"}]}]]\n',
+      '4:[["$","h2",null,{"children":"Random Todo"}],["$","ul",null,{"children":[["$","li",null,{"children":["id: ",182]}],["$","li",null,{"children":["todo: ","Explore a nearby trail"]}],["$","li",null,{"children":["completed: ","true"]}],["$","li",null,{"children":["userId: ",188]}]]}]]\n',
     ]);
   </script>
 </body>
