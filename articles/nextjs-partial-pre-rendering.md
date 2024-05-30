@@ -31,11 +31,11 @@ const nextConfig = {
 module.exports = nextConfig;
 
 // page.tsx(layout.tsxでも可)
+export const experimental_ppr = true;
+
 export default function Page() {
   // ...
 }
-
-export const experimental_ppr = true;
 ```
 
 PPR は Next.js コアチームにとっても重大な機能開発であり、個人的にはとても注目度の高いトピックなのですが、筆者の観測範囲では話題になってるのは一部でそこまで盛り上がってないように感じます。
@@ -159,6 +159,8 @@ export default function Page() {
 import { Suspense } from "react";
 import { setTimeout } from "node:timers/promises";
 
+export const experimental_ppr = true;
+
 export default function Home() {
   return (
     <main>
@@ -186,8 +188,6 @@ async function RandomTodo() {
     </>
   );
 }
-
-export const experimental_ppr = true;
 ```
 
 `RandomTodo`はリクエストの度にランダムな TODO 情報を取得するコンポーネントです。今回は Stream の様子を観察したいので、あえて 3 秒遅延させています。
