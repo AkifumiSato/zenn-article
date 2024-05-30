@@ -58,11 +58,11 @@ Next.js は元々、SSR ができる React フレームワークとして 2016/1
 
 https://vercel.com/blog/next
 
-上記 v1 のアナウンスから長い間 Next.js は SSR をするためのフレームワークでしたが、約 3 年半後に登場する[v9.3](https://nextjs.org/blog/next-9-3)で SSG、[v9.5](https://nextjs.org/blog/next-9-5)で ISR が導入されたことで Next.js は複数の pre-rendering 方式をサポートするフレームワークとなりました。
+上記 v1 のアナウンスから長い間 Next.js は SSR をするためのフレームワークでしたが、約 3 年半後の2019年に登場する[v9.3](https://nextjs.org/blog/next-9-3)で SSG、[v9.5](https://nextjs.org/blog/next-9-5)で ISR が導入されたことで Next.js は複数の pre-rendering 方式をサポートするフレームワークとなりました。
 
 当時は[Gatsby](https://www.gatsbyjs.com/)の台頭もあり SSG 人気が根強く、SSR しかできなかった Next.js のユーザーは Gatsby に流れることも多かったように思います。
 
-_2019 年ごろは Gatsby の方が上回っている_
+_2019 年ごろは Gatsby の方が上回っている(見づらくてすいません)_
 ![npm trends](/images/nextjs-partial-pre-rendering/npm-trends.png)
 
 実際、当時の筆者は好んで Gatsby を使っていました。しかし Next.js v9 系で需要の多かった dynamic ルーティングや Gatsby が弱かった TypeScript 対応などの実装、そして上記 SSG や ISR のサポートにより Next.js は一気に注目を集めるようになりました。筆者にはこの v9 系で実装された機能群が、 今日の Next.js の人気に繋がったように思えます。
@@ -73,7 +73,7 @@ SSR か SSG かという pre-rendering 方式の議論は多くのユーザー�
 
 上記 v9 時点では、Next.js はいわゆる Pages Router しか存在しませんでした。その後[v13](https://nextjs.org/blog/next-13)で発表された App Router では、RSC(React Server Components)や Server Actions・多層のキャッシュなど多くのパラダイムシフトが必要となりました。App Router では、pre-rendering 方式に関してはどのような変化があったのでしょうか？
 
-結論から言うと App Router は**従来同様 SSR/SSG/ISR 相当の機能をサポート**していますが、App Router のドキュメントでは基本的に SSR/SSG/ISR などの**用語は使用されていません**。
+結論から言うと App Router は従来同様**SSR/SSG/ISR 相当の機能をサポート**していますが、App Router のドキュメントでは基本的に SSR/SSG/ISR などの**用語は使用されていません**。
 
 現在 App Router は SSR/SSG/ISR ではなく、[static rendering](https://rc.nextjs.org/docs/app/building-your-application/rendering/server-components#static-rendering-default)と[dynamic rendering](https://rc.nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)という 2 つの概念を使って多くの機能を説明しています。
 
@@ -144,7 +144,7 @@ export default function Page() {
 </main>
 ```
 
-初期表示には上記の DOM が利用され、`<ShoppingCart>`や`<Recommendations>`のレンダリングが終わり次第 dynamic hole のスケルトン UI を置き換えます。これらが**1 つの http リクエスト内で完結する**のも大きな特徴です。
+初期表示には上記の DOM が利用され、これらは静的化されているので即座にリクエストもとに送信されます。その後、`<ShoppingCart>`や`<Recommendations>`のレンダリングが終わり次第 dynamic hole のスケルトン UI を置き換えます。これらが**1 つの http リクエスト内で完結する**のも大きな特徴です。
 
 ### PPR の観察
 
