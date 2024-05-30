@@ -6,11 +6,16 @@ topics: ["nextjs", "react"]
 published: true
 ---
 
+:::message alert
+本稿はNext.js v15.0.0-rc.0時点の情報を元に執筆しており、PPRはさらにexperimentalな機能です。v15.0.0のリリース時や、PPRがstableな機能として提供される際には機能の一部が変更されてる可能性がありますので、ご注意下さい。
+:::
+
 **Partial Pre-Rendering**(以降 PPR)は Next.js v14.0 で発表された、SSR や SSG にならぶ**新たな pre-rendering 方式**です。
 
 https://nextjs.org/blog/next-14#partial-prerendering-preview
 
-PPR は本稿執筆時点の 2024/05 現在も開発中で、v15 の RC 版にて experimental フラグを有効にすることで利用することができます。`ppr: true`とすれば全部のページが対象となり、`ppr: "incremental"`とすれば`export const experimental_ppr = true`を設定した Route Segment のみが PPR の対象となります。
+PPR は前述の通り開発中の機能で、v15 の RC 版にて experimental フラグを有効にすることで利用することができます。
+`ppr: true`とすれば全部のページが対象となり、`ppr: "incremental"`とすれば`export const experimental_ppr = true`を設定した Route Segment のみが PPR の対象となります。
 
 https://rc.nextjs.org/docs/app/api-reference/next-config-js/ppr
 
@@ -353,12 +358,6 @@ https://twitter.com/sumiren_t/status/1793620259586666643
 dynamic rendering を含むページでも、PPR なら TTFB(Time to First Bytes)を SSG 相当にすることが可能です。しかし、パフォーマンスにおける「速い」かどうかは、計測する指標によっても異なります。例えば TTI(Time to Interactive)においては、遅延レンダリングの部分が interactive になるまでの時間は SSR とそう変わらないでしょう。
 
 この点は確かに混乱しやすいところかもしれません。PPR におけるパフォーマンスの話をする際には、どの速度指標における話なのか注意して話す必要があるでしょう。
-
-### RC 版の experimental 段階である
-
-PPR は本稿執筆現在、v15 の RC 版で experimental で提供されています。筆者が試した限りでは壊滅的に動かないといったことはなさそうですが、まだまだ使用してるユーザーが少なく、潜在的なバグもまだ予想されます。
-
-現段階では実験的プロダクトや local 環境でのみ利用するのが良いでしょう。
 
 ## 感想
 
