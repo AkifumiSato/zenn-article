@@ -84,6 +84,10 @@ SSR か SSG かという pre-rendering 方式の議論は多くのユーザー�
 
 Pages Router では SSG か ISR かは build 時に実行する関数で設定する必要があったため静的に決定されていましたが、App Router における revalidate は`revalidatePath`や`revalidateTag`で動的に行うことができるので、SSG か ISR かは静的に決定されません。そのため Next.js からすると SSG と ISR を区別することに意味がなくなってしまったことが、これらの用語を使わなくなった理由かもしれません。
 
+また、もう1つ理由として考えられるのは、ISRはVercel以外での運用が難しいと評される機能でネガティブなイメージがついてしまっていたことです。今日では**Cache Handler**によってキャッシュの永続化先を選択できるようになったため、ISR登場時よりはセルフホスティング環境などでも運用しやすくなったはずです。詳しくは筆者の過去記事をご参照ください。
+
+https://zenn.dev/akfm/articles/nextjs-cache-handler-redis
+
 ### 現状の Next.js の問題点
 
 さて、だいぶ整理された pre-rendering 方式ですが、現状の Next.js ユーザーからのフィードバックとして以下のようなものがあったそうです。
