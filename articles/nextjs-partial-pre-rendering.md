@@ -208,9 +208,9 @@ _dynamic rendering 完了後_
 
 初期描画時は html のレスポンスが途中までしか帰ってきておらず、`loading...`が表示されています。実際 DevTools の html を見ても、途中までしか返ってきてない様子が見て取れます。
 
-dynamic rendering が完了すると Stream を介してクライアントに残りのレスポンスが送信され、それを受け取った Next.js が`loading...`を`Random Todo`に置き換えます。
+dynamic rendering が完了すると同じレスポンスでクライアントに残りのHTMLが送信され、、それを受け取った Next.js が`loading...`を`Random Todo`に置き換えます。
 
-実際に上記のサンプルコードを実行した時のレスポンスに含まれる`<body>`を見てみましょう。`<div hidden id="S:0">`以降が遅れて送信されてくるレスポンスです。
+実際に上記のサンプルコードを実行した時のhtmlに含まれる`<body>`を見てみましょう。`<div hidden id="S:0">`以降が遅れて送信されてくるdynamic renderingの部分です。
 
 ```html
 <body>
