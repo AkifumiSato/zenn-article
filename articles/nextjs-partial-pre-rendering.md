@@ -144,13 +144,13 @@ export default function Page() {
 </main>
 ```
 
-初期表示には上記の DOM が利用され、`<ShoppingCart>`や`<Recommendations>`のレンダリングが終わり次第 Stream を介してクライアントサイドに送信され、dynamic hole のスケルトン UI を置き換えます。これらが**1 つの http リクエスト内で完結する**のも大きな特徴です。
+初期表示には上記の DOM が利用され、`<ShoppingCart>`や`<Recommendations>`のレンダリングが終わり次第 dynamic hole のスケルトン UI を置き換えます。これらが**1 つの http リクエスト内で完結する**のも大きな特徴です。
 
 ### PPR の観察
 
 実際に PPR によって dynamic hole が置き換わる様子を観察してみましょう。
 
-前述の通り Next.js のレスポンスは Stream になっており、PPR においては static rendering な部分をまず返却します。その後 dynamic rendering が完了したら Stream を介してクライアントに送信され、dynamic hole の部分を置き換えます。
+前述の通り Next.js のレスポンスは Stream になっており、PPRの場合はまず static rendering な部分を送信します。その後 dynamic rendering な部分が送信され、クライアントサイドの処理で dynamic hole を置き換えます。
 
 以下のサンプルコードを元に、挙動を観察してみます。
 
