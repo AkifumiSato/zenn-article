@@ -75,15 +75,14 @@ SSR か SSG かという pre-rendering 方式の議論は多くのユーザー�
 
 結論から言うと App Router は**従来同様 SSR/SSG/ISR 相当の機能をサポート**していますが、App Router のドキュメントでは基本的に SSR/SSG/ISR などの**用語は使用されていません**。
 
-これらの用語が使われない理由について明確な説明を見つけることはできませんでしたが、RSC と SSR という概念がドキュメント上で多用すると混乱を招く可能性があったことなどが理由として考えられます。
-
-### static rendering と dynamic rendering
-
 現在 App Router は SSR/SSG/ISR ではなく、[static rendering](https://rc.nextjs.org/docs/app/building-your-application/rendering/server-components#static-rendering-default)と[dynamic rendering](https://rc.nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)という 2 つの概念を使って多くの機能を説明しています。
 
-**static rendering**は従来における SSG や ISR 相当で、build 時や revalidate 実行後にレンダリングされます。**dynamic rendering**はリクエストごとにレンダリングされる、従来の SSR 相当の rendering です。
+- **static rendering**: 従来のSSG や ISR 相当で、build 時や revalidate 実行後にレンダリング
+  - revalidateなし: SSG 相当
+  - revalidateあり: ISR 相当
+- **dynamic rendering**: 従来のSSR 相当で、リクエストごとにレンダリング
 
-ISR は後発だったのでマーケティング的にも機能名称が必要だったのかもしれませんが、整理するとこの static/dynamic rendering の方が概念としてはとても分かりやすいように筆者は感じています。
+Pages RouterではSSGかISRかはbuild時に実行する関数で設定する必要があったため静的に決定されていましたが、App Routerにおけるrevalidateは`revalidatePath`や`revalidateTag`で動的に行うことができるので、SSGかISRかは静的に決定されません。そのためNext.jsからするとSSGとISRを区別することに意味がなくなってしまったことが、これらの用語を使わなくなった理由かもしれません。
 
 ### 現状の Next.js の問題点
 
