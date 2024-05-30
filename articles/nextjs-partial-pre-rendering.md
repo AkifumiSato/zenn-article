@@ -92,7 +92,7 @@ https://zenn.dev/akfm/articles/nextjs-cache-handler-redis
 ここまでSSRと一言に括ってしまってましたが、SSRの中でも技術的な進化がありました。現在App RouterのSSRは**Streaming SSR**をサポートしています。
 
 :::message
-Pages Routerについては[v12で一時期サポート](https://nextjs.org/blog/next-12#react-server-components)されましたが、現在はStreaming SSRをサポートしていません。
+Pages Routerについては[v12のアルファ機能](https://nextjs.org/blog/next-12#react-server-components)として実装されましたが現在は削除され、Streaming SSRをサポートしていません。
 :::
 
 Streaming SSRはページのレンダリングの一部を`<Suspense>`で遅延レンダリングにすることが可能で、レンダリングが完了するごとに徐々に結果がクライアントへと送信されます。
@@ -210,7 +210,7 @@ type TodoDto = {
 :::message
 今回の主題ではないのですが、v15.0.0-rc.0 時点ではデフォルトで fetch は`no-store`ですが、**明示的に指定しないと dynamic rendering にならない**という仕様になっているのでサンプルコードでは明示的に指定しています。同様の対策として[`unstable_noStore`](https://nextjs.org/docs/app/api-reference/functions/unstable_noStore)などの[dynamic functions](https://nextjs.org/docs/app/building-your-application/routing/route-handlers#dynamic-functions)を使ってdynamic renderingにすることも可能です。
 
-デフォルトの`no-store`の仕様については[RC 中に変更される可能性](https://x.com/feedthejim/status/1794778189354705190)が示唆されています。
+デフォルトの仕様については[RC 中に変更される可能性](https://x.com/feedthejim/status/1794778189354705190)が示唆されています。
 :::
 
 このページの表示とレスポンスの様子は以下のようになります。
