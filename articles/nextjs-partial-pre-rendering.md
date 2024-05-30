@@ -92,7 +92,7 @@ https://zenn.dev/akfm/articles/nextjs-cache-handler-redis
 ここまでSSRと一言に括ってしまってましたが、SSRの中でも技術的な進化がありました。現在App RouterのSSRは**Streaming SSR**をサポートしています。
 
 :::message
-Pages Routerについてはexperimentalで有効化できた時期があった気がするんですが、現在の仕様は不明です。
+Pages Routerについては[v12で一時期サポート](https://nextjs.org/blog/next-12#react-server-components)されましたが、現在はStreaming SSRをサポートしていません。
 :::
 
 Streaming SSRはページのレンダリングの一部を`<Suspense>`で遅延レンダリングにすることが可能で、レンダリングが完了するごとに徐々に結果がクライアントへと送信されます。
