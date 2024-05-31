@@ -87,28 +87,107 @@ Pages Router では SSG か ISR かは build 時に実行する関数で設定�
 
 https://zenn.dev/akfm/articles/nextjs-cache-handler-redis
 
-## Streaming SSR
+### Streaming SSR
 
-ここまで SSR と一言に括ってしまってましたが、SSR の中でも技術的な進化がありました。現在 App Router の SSR は**Streaming SSR**をサポートしています。
+App Router登場時、SSR の中でも技術的な進化がありました。現在 App Router の SSR は**Streaming SSR**をサポートしています。
 
 :::message
 Pages Router については[v12 のアルファ機能](https://nextjs.org/blog/next-12#react-server-components)として実装されましたが現在は削除され、Streaming SSR をサポートしていません。
 :::
 
-Streaming SSR はページのレンダリングの一部を`<Suspense>`で遅延レンダリングにすることが可能で、レンダリングが完了するごとに徐々に結果がクライアントへと送信されます。以下の実装例で考えてみます。
+Streaming SSR はページのレンダリングの一部を`<Suspense>`で遅延レンダリングにすることが可能で、レンダリングが完了するごとに徐々に結果がクライアントへと送信されます。
 
 ```tsx
-// app/streaming-ssr/page.tsx
+import { Suspense } from 'react'
+import { PostFeed, Weather } from './Components'
+ 
+export default function Posts() {
+  return (
+    <section>
+      <Suspense fallback={<p>Loading feed...</p>}>
+        <PostFeed />
+      </Suspense>
+      <Suspense fallback={<p>Loading weather...</p>}>
+        <Weather />
+      </Suspense>
+    </section>
+  )
+}
+```
+
+上記の実装例においては最初に`Loading feed...`や`Loading weather...`が表示され、サーバー側で`<PostFeed>`や`<Weather>`のレンダリングが完了すると順々にクライアントにレンダリング結果が送信されて`fallback`が置き換えられます。また、これらが**1 つの http レスポンスで完結**し、レスポンスのhtmlに`<PostFeed>`や`<Weather>`のDOMが含まれるのでSEO観点もフォローしていることが大きな特徴です。
+
+より詳細にStreaming SSR の仕組みが知りたい方は、uhyo さんの記事が参考になると思います。
+
+https://zenn.dev/uhyo/books/rsc-without-nextjs/viewer/streaming-ssr
+
+## SSG/SSRでの静的・動的要素の混在
+
+ページの一部のレンダリングに時間がかかるため、部分的にレンダリングを遅延させたいというケースは一般的にもよくあるケースだと思います。Zennにおいてもログイン時はユーザーアイコンが表示されますが、これはCSR fetchで取得するようになっており、ログイン情報の取得時間に依存せずページを即座に表示できるようになっています。
+
+このように一部のレンダリングを遅延させたいというケースにおいて、App Routerでは大きく以下2つの実装パターンがありました。
+
+- **SSG + CSR fetch**: ページ自体は SSG にしておいて動的な部分だけを CSR fetch で動的にする
+- **Streaming SSR**: ページの一部を`<Suspense>`で遅延レンダリングにする
+
+しかしこれらは互いにいくつかの点でメリット・デメリットが相反する関係にあり、状況によって最適解が異なります。そのため、これらの選択の議論や説明時にはSSGやStreaming SSRについての高度な理解が必要になります。
+
+これらのメリデメについてページ全体のSSR案も含め、簡単に整理してみます。なおTTFBはTime to First Bytes、TTIはTime to Interactiveの略です。
+
+| 観点       | SSG+CSR fetch | SSR(ページ全体) | Streaming SSR |
+|----------|---------------|------------|---------------|
+| TTFB     | 有利            | 不利         | わずかに不利        |
+| TTI      | 不利            | 有利         | 有利            |
+| 安定性      | 有利            | 不利         | 不利            |
+| SEO      | 不利            | 有利         | 有利            |
+| CDNキャッシュ | 可能            | 不可         | 不可            |
+| 実装       | 冗長になりがち       | シンプル       | シンプル          |
+
+:::message
+App RouterはVercelやセルフホスティングサーバーを用意することが最も基本的な運用パターンとなっているので、「サーバーが必要・不要」と言った観点は省略しています。
+:::
+
+TTFBはSSRが最も不利で、Streaming SSRを駆使すれば大幅に改善する可能性もありますが、それでもレンダリング時に静的なファイルを返すだけのSSGの方が当然有利です。実装観点ではCSR fetchの場合クライアントサイド処理とサーバー側のエンドポイントを繋ぐ処理(API Routes、tRPC、GraphQLなど)が必要になるので、SSRやStreaming SSRの方がシンプルと筆者は考えます。
+
+Streaming SSRはページ全体をSSRするより多くのメリットを持っている一方、SSGが持つTTFBの速度や安定性は得られないことがトレードオフでした。これを解消する手段として登場したのが、本稿の主題である**PPR**です。
+
+## PPR とは
+
+PPR は Streaming SSR をさらに進化させた技術で、**ページを static rendering しつつ、部分的に dynamic rendering にする**ことが可能なレンダリングモデルです。SSG・ISR のページの一部に SSR な部分を組み合わせられるようなイメージ、あるいは Streaming SSR のスケルトン部分を SSG/ISR にするイメージです。[公式の説明](https://rc.nextjs.org/learn/dashboard-app/partial-prerendering#what-is-partial-prerendering)より EC サイトの商品ページの例を拝借すると、以下のような構成が可能になります。
+
+![ppr shell](/images/nextjs-partial-pre-rendering/ppr-shell.png)
+
+商品ページ全体やナビゲーションは static rendering で静的化され、一方カートやレコメンド情報といったユーザーごとに異なる UI 部分は dynamic rendering にすることができます。もちろん商品情報自体が更新されることもあるでしょうが、この例では必要に応じて revalidate することを想定しています。
+
+### 静的化とStreamingレンダリングの恩恵
+
+Streaming SSRでは`<Suspense>`の外側について、リクエストごとに以下のような処理がされてました。
+
+1. Server Componentsを実行
+2. Client Componentsを実行
+3. 1と2の結果からHTMLを生成
+4. 3の結果をレスポンスに流す
+
+PPRではこの1~3をbuild時に実行し静的化するため、Next.jsサーバーは初期表示に使うDOMの送信を**より高速で安定したレスポンス**にすることができます。
+
+### PPR の挙動観察
+
+PPR において遅延レンダリングさせる部分が dynamic rendering な場合、それらは**dynamic hole**、もしくは async hole やただの hole と呼ばれます。PPR を有効化して実際に dynamic hole が置き換わる様子を観察してみましょう。
+
+以下のサンプルコードを元に挙動を観察してみます。
+
+```tsx
+// app/ppr/page.tsx
 import { Suspense } from "react";
 import { setTimeout } from "node:timers/promises";
 
-// 📍PPRは無効化
-// export const experimental_ppr = true;
+// 📍PPRを有効化
+export const experimental_ppr = true;
 
 export default function Home() {
   return (
     <main>
-      <h1>Streaming SSR Page</h1>
+      <h1>PPR Page</h1>
       <Suspense fallback={<>loading...</>}>
         <RandomTodo />
       </Suspense>
@@ -144,7 +223,8 @@ type TodoDto = {
 };
 ```
 
-`<RandomTodo>`はリクエストの度にランダムな TODO 情報を取得するコンポーネントです。API への fetch に`no-store`を指定しているので、ページ全体が dynamic rendering となります。また、今回は Stream の様子を観察したいのでリクエスト後にあえて 3 秒遅延させています。
+`<RandomTodo>`はリクエストの度にランダムな TODO 情報を取得するコンポーネントです。
+ページ自体である`<Home>`は static renderingですが、API への fetch に`no-store`を指定しているので、`<RandomTodo>`はdynamic rendering となります。また、今回は Stream の様子を観察したいのでリクエスト後にあえて 3 秒遅延させています。
 
 :::message
 今回の主題ではないのですが、v15.0.0-rc.0 時点ではデフォルトで fetch は`no-store`ですが、**明示的に指定しないと dynamic rendering にならない**という仕様になっているのでサンプルコードでは明示的に指定しています。同様の対策として[`unstable_noStore`](https://nextjs.org/docs/app/api-reference/functions/unstable_noStore)などの[dynamic functions](https://nextjs.org/docs/app/building-your-application/routing/route-handlers#dynamic-functions)を使って dynamic rendering にすることも可能です。
@@ -155,218 +235,14 @@ type TodoDto = {
 実際に画面を表示した時の様子が以下です。
 
 _初期表示_
-![stream start](/images/nextjs-partial-pre-rendering/stream-start.png)
-
-_約 3 秒後_
-![stream end](/images/nextjs-partial-pre-rendering/stream-end.png)
-
-初期表示の時点では`<Suspense>`の`fallback`に指定した`loading...`が表示されており、その後`<RandomTodo>`のレンダリング結果が送信されてくると`loading...`が置き換えられている様子が確認できます。
-
-DevToolsを確認すると、レスポンスのhtmlも初期表示用のDOMが送信された時点で一度止まっていることがわかります。初期表示時点で送信されてきた`<body>`配下のDOMは以下です。
-
-```html
-<main>
-  <h1>Streaming SSR Page</h1>
-  <!--$?-->
-  <template id="B:0"></template>
-  loading...
-  <!--/$-->
-</main>
-<script
-  src="/_next/static/chunks/webpack-b5d81ab04c5b38dd.js"
-  async=""
-></script>
-<script>
-  (self.__next_f = self.__next_f || []).push([0]);
-  self.__next_f.push([2, null]);
-</script>
-<script>
-  self.__next_f.push([
-    1,
-    '1:I[4129,[],""]\n3:"$Sreact.suspense"\n5:I[8330,[],""]\n6:I[3533,[],""]\n8:I[6344,[],""]\n9:[]\n',
-  ]);
-</script>
-<script>
-  self.__next_f.push([
-    1,
-    '0:[null,["$","$L1",null,{"buildId":"IVswg2uNFzZunMK3bKt42","assetPrefix":"","initialCanonicalUrl":"/streaming-ssr","initialTree":["",{"children":["streaming-ssr",{"children":["__PAGE__",{}]}]},"$undefined","$undefined",true],"initialSeedData":["",{"children":["streaming-ssr",{"children":["__PAGE__",{},[["$L2",["$","main",null,{"children":[["$","h1",null,{"children":"Streaming SSR Page"}],["$","$3",null,{"fallback":"loading...","children":"$L4"}]]}]],null],null]},["$","$L5",null,{"parallelRouterKey":"children","segmentPath":["children","streaming-ssr","children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L6",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","notFoundStyles":"$undefined","styles":null}],null]},[["$","html",null,{"lang":"en","children":["$","body",null,{"children":["$","$L5",null,{"parallelRouterKey":"children","segmentPath":["children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L6",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\\"Segoe UI\\",Roboto,Helvetica,Arial,sans-serif,\\"Apple Color Emoji\\",\\"Segoe UI Emoji\\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":"404"}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],"notFoundStyles":[],"styles":null}]}]}],null],null],"couldBeIntercepted":false,"initialHead":[false,"$L7"],"globalErrorComponent":"$8","missingSlots":"$W9"}]]\n',
-  ]);
-</script>
-<script>
-  self.__next_f.push([
-    1,
-    'a:"$Sreact.fragment"\n7:["$","$a","YhMIPzqOngOVCvTPC0l1l",{"children":[["$","meta","0",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","1",{"charSet":"utf-8"}],["$","title","2",{"children":"Create Next App"}],["$","meta","3",{"name":"description","content":"Generated by create next app"}],["$","link","4",{"rel":"icon","href":"/favicon.ico","type":"image/x-icon","sizes":"16x16"}]]}]\n2:null\n',
-  ]);
-</script>
-```
-
-約 3 秒後、`<RandomTodo>`のレンダリングが完了した時点で残りのDOM として以下が送信されてきます。
-
-```html
-<script>
-  self.__next_f.push([
-    1,
-    '4:[["$","h2",null,{"children":"Random Todo"}],["$","ul",null,{"children":[["$","li",null,{"children":["id: ",133]}],["$","li",null,{"children":["todo: ","Learn GraphQL"]}],["$","li",null,{"children":["completed: ","true"]}],["$","li",null,{"children":["userId: ",169]}]]}]]\n',
-  ]);
-</script>
-<div hidden id="S:0">
-  <h2>Random Todo</h2>
-  <ul>
-    <li>
-      id:
-      <!-- -->
-      133
-    </li>
-    <li>
-      todo:
-      <!-- -->
-      Learn GraphQL
-    </li>
-    <li>
-      completed:
-      <!-- -->
-      true
-    </li>
-    <li>
-      userId:
-      <!-- -->
-      169
-    </li>
-  </ul>
-</div>
-<script>
-  $RC = function (b, c, e) {
-    c = document.getElementById(c);
-    c.parentNode.removeChild(c);
-    var a = document.getElementById(b);
-    if (a) {
-      b = a.previousSibling;
-      if (e) (b.data = "$!"), a.setAttribute("data-dgst", e);
-      else {
-        e = b.parentNode;
-        a = b.nextSibling;
-        var f = 0;
-        do {
-          if (a && 8 === a.nodeType) {
-            var d = a.data;
-            if ("/$" === d)
-              if (0 === f) break;
-              else f--;
-            else ("$" !== d && "$?" !== d && "$!" !== d) || f++;
-          }
-          d = a.nextSibling;
-          e.removeChild(a);
-          a = d;
-        } while (a);
-        for (; c.firstChild; ) e.insertBefore(c.firstChild, a);
-        b.data = "$";
-      }
-      b._reactRetry && b._reactRetry();
-    }
-  };
-  $RC("B:0", "S:0");
-</script>
-```
-
-注目すべきは script の`$RC`らへんです。最初に送られてきたDOMにある `<template>` の id が`B:0`、後半送られてきた `<RandomTodo>` の DOM が`S:0`、これらを`$RC("B:0", "S:0")`で置換しているのがわかります。また、script が直接記述されてることからも前述の通りこれらが**1 つの http レスポンスで完結**していることもわかります。
-
-より詳細にStreaming SSR の仕組みが知りたい方は、uhyo さんの記事が参考になると思います。
-
-https://zenn.dev/uhyo/books/rsc-without-nextjs/viewer/streaming-ssr
-
-### SSG + CSR fetch vs Streaming SSR
-
-上述の例のようなページの一部を動的にしたい場合、ページ自体はSSGにしておいて動的な部分だけをCSR fetchで動的にするという手段もあります。そうすればNext.jsサーバーからしたらページ自体は静的なので、高速で安定したレスポンスも実現することができます。
-
-しかし、SSG+CSR fetchが高速なレスポンスを実現したとて、Streaming SSRと比較して**一概にどちらがパフォーマンス的優位とは言えない**ことに留意する必要があります。SSG+CSR fetchではTTFB(Time To First Byte)は短縮が見込めますが、TTI(Time To Interactive)はhttp通信のラウンドトリップが追加で発生するなどの理由から遅くなる可能性があります。Streaming SSRはTTFBでは不利ですがTTI観点では1 http レスポンスで完結するので有利になります。
-
-## PPR とは
-
-さて、本項の主題であるPPR は Streaming SSR をさらに進化させた技術で、**ページを static rendering しつつ、部分的に dynamic rendering にする**ことが可能なレンダリングモデルです。SSG・ISR のページの一部に SSR な部分を組み合わせられるようなイメージ、あるいは Streaming SSR のスケルトン部分を SSG/ISR にするイメージです。[公式の説明](https://rc.nextjs.org/learn/dashboard-app/partial-prerendering#what-is-partial-prerendering)より EC サイトの商品ページの例を拝借すると、以下のような構成が可能になります。
-
-![ppr shell](/images/nextjs-partial-pre-rendering/ppr-shell.png)
-
-商品ページ全体やナビゲーションは static rendering で静的化され、一方カートやレコメンド情報といったユーザーごとに異なる UI 部分は dynamic rendering にすることができます。もちろん商品情報自体が更新されることもあるでしょうが、この例では必要に応じて revalidate することを想定しています。
-
-### 静的化とStreamingレンダリングの恩恵
-
-Streaming SSRでは`<Suspense>`の外側について、リクエストごとに以下のような処理がされてました。
-
-1. Server Componentsを実行 
-2. Client Componentsを実行 
-3. 1と2の結果からHTMLを生成 
-4. 3の結果をレスポンスに流す
-
-PPRではこの1~3をbuild時に実行し静的化するため、Next.jsサーバーは初期表示に使うDOMの送信を**より高速で安定したレスポンス**にすることができます。[SSG + CSR fetch vs Streaming SSR](#ssg--csr-fetch-vs-streaming-ssr)のトレードオフの議論において、どちらのメリットも得られるというのがPPRのすごさです。
-
-前述の例で言うと、`<Home>`はリクエストの度に毎回計算する必要はありませんでしたが、`<RandomTodo>`によってページ全体がdynamic renderingだったので毎回上記の処理を実行していました。PPRが有効になると、リクエストの度に計算されるのは`<RandomTodo>`のみとなります。
-
-### PPRによるReactらしい設計責務
-
-RSC 以降の React では、データフェッチをはじめとしたサーバー側処理もコンポーネント責務にするなど、「必要なことは全てコンポーネントにカプセル化する」という方向性が強まっているように感じます。そしてレンダリングに境界を設け並行性を高めるのが`<Suspense>`です。
-
-そのため、`<Supense>`境界をもってdynamic renderingとstatic renderingが切り替えることが可能になるPPRは、非常に昨今の **React らしい設計**ではないかと筆者は考えています。実際、PPRを利用するには冒頭述べたexperimental設定を除き**新たなAPIを学習する必要がない**ことも従来の設計に則ってることの裏付けと言えるでしょう。
-
-### SSR/SSG論争の終焉
-
-昨今のNext.jsも「必要なことは全てコンポーネントにカプセル化する」という方向性により、ページ単位で考えることが減ってきている傾向がみられます。もちろんWebの仕組み上URLを元にしているので、ページ単位で考えなければいけないmeta情報やURLに含まれる動的パスやパラメータなど、「ページ」という概念を無くすことはできません。
-
-しかし、ことレンダリングモデルについては必ずしもページという概念が必須ではありません。従来はSSR/SSG/ISRどれをとってもページ単位で考える必要がありましたが、PPR以降はより細粒度な`<Suspense>`境界を元にしたUI単位で考えることが可能になります。**SSR/SSG論争**というと少々大袈裟かもしれませんが、SSRにするかSSG(+CSR fetch)にするかというトレードオフを元にした議論は、実現したい要件やコンテキストによって最適解がケースバイケースなので、高度な議論となり負荷の高いものでした。PPR以降はより細粒度な、「**どこまでをstaticに、どこからをdynamicにするか**」という議論へとシフトすることになるので、SSR/SSG論争に比べれば明確で負荷の低い議論になるのではないかと筆者は期待しています。
-
-:::message
-App RouterはVercelやセルフホスティングサーバーを用意することが最も基本的な運用パターンとなっているので、「SSGだとサーバーが不要」と言った議論は省略しています。
-:::
-
-### PPR の挙動観察
-
-PPR において遅延レンダリングさせる部分が dynamic rendering な場合、それらは**dynamic hole**、もしくは async hole やただの hole と呼ばれます。PPR を有効化して実際に dynamic hole が置き換わる様子も観察してみましょう。
-
-Streaming SSR で使ったサンプルコードを元に`/app/ppr/page.tsx`を作成し、挙動を観察してみます。
-
-```tsx
-// app/ppr/page.tsx
-
-// ...
-
-// 📍PPRを有効化
-export const experimental_ppr = true;
-
-// 📍h1を修正したのみ
-export default function Home() {
-  return (
-    <main>
-      <h1>PPR Page</h1>
-      <Suspense fallback={<>loading...</>}>
-        <RandomTodo />
-      </Suspense>
-    </main>
-  );
-}
-
-async function RandomTodo() {
-  const todoDto: TodoDto = await fetch("https://dummyjson.com/todos/random", {
-    // v15.0.0-rc.0時点ではデフォルトでno-storeだが、明示的に指定しないとdynamic renderingにならない
-    cache: "no-store",
-  }).then((res) => res.json());
-  // ...
-}
-
-// ...
-```
-
-PPR が有効化されたので Streaming SSR と違い、ページ自体である`<Home>`は static rendering になり`<RandomTodo>`の部分のみが dynamic rendering になります。
-
-このページの表示とレスポンスの様子は以下のようになります。
-
-_初期表示_
 ![stream start](/images/nextjs-partial-pre-rendering/ppr-stream-start.png)
 
 _約 3 秒後_
 ![stream end](/images/nextjs-partial-pre-rendering/ppr-stream-end.png)
 
-基本的な動作は Streaming SSR 同様で、初期表示時点では`loading...`が表示されています。dynamic rendering が完了するとクライアントに残りの DOM が送信され、`loading...`が`Random Todo`に置き換えられます。
+初期表示の時点では`<Suspense>`の`fallback`に指定した`loading...`が表示されており、その後`<RandomTodo>`のレンダリング結果が送信されてくると`loading...`が置き換えられている様子が確認できます。
 
-レンダリング結果の DOM も確認してみます。最初にクライアントへ送信される DOM は以下です。
+DevToolsを確認すると、レスポンスのhtmlも初期表示用のDOMが送信された時点で一度止まっていることがわかります。初期表示時点で送信されてきた`<body>`配下のDOMは以下です。
 
 ```html
 <main>
@@ -382,9 +258,9 @@ _約 3 秒後_
 ></script>
 ```
 
-Streaming SSRの場合、上記のような最初に送信されるDOMもサーバー側でSSRされたものでしたが、PPRではbuild時やrevalidate後のリクエストでこのDOMを生成するのでNext.jsサーバーは静的ファイルをクライアントへ即座に送信するのみです。
+Streaming SSRだと`<Home>`はリクエストの度に毎回計算する必要がありましたが、PPRでは静的化されているので`<Home>`がレンダリングされるのはbuild時やrevalidate後のみで、リクエストの度に計算されるのは`<RandomTodo>`のみとなります。そのためNext.jsサーバーは上記のDOMを含む静的ファイルを即座にクライアントへ送信することができます。
 
-以降のDOMはStreaming SSR 同様、レンダリングが完了次第送信されます。
+dynamic renderingな`<RandomTodo>`以降のDOMはStreaming SSR 同様、レンダリングが完了次第送信されます。
 
 ```html
 <div hidden id="S:0">
@@ -474,11 +350,42 @@ Streaming SSRの場合、上記のような最初に送信されるDOMもサー�
 </script>
 ```
 
-多少scriptタグの位置が異なれど、基本的にはStreaming SSRと同じようなレスポンスが得られました。
+注目すべきは script の`$RC`らへんです。最初に送られてきたDOMにある `<template>` の id が`B:0`、後半送られてきた `<RandomTodo>` の DOM が`S:0`、これらを`$RC("B:0", "S:0")`で置換しているのがわかります。また、script が直接記述されてることからも前述の通りこれらが**1 つの http レスポンスで完結**していることもわかります。
 
-比較実験してないので筆者の理解の範囲における意見ですが、遅延表示するケースにおいてこの実装は理論上非常に高速なのではないかと推測できます。
+## PPR考察
 
-## PPR の注意点
+PPRの動作についてはおおよそ理解いただけたかと思いますが、実際我々はこのPPRをどう受け止めるべきなのでしょう？機能を知ることと役割を知ることは別な議論です。筆者なりにPPRがもたらす変化について、いくつか考察してみたいと思います。
+
+### SSG+CSR fetch/Streaming SSRとの比較
+
+[SSG/SSRでの静的・動的要素の混在](#ssgssrでの静的動的要素の混在)で示した表に、PPRを追加して比較してみます。
+
+| 観点       | SSG+CSR fetch | SSR(ページ全体) | Streaming SSR | PPR      |
+|----------|---------------|------------|---------------|----------|
+| TTFB     | 有利            | 不利         | わずかに不利        | **有利**   |
+| TTI      | 不利            | 有利         | 有利            | **有利**   |
+| 安定性      | 有利            | 不利         | 不利            | **有利**   |
+| SEO      | 不利            | 有利         | 有利            | **有利**   |
+| CDNキャッシュ | 可能            | 不可         | 不可            | **不可**   |
+| 実装       | 冗長になりがち       | シンプル       | シンプル          | **シンプル** |
+
+PPRではSSG+CSR fetch相当のTTFBと安定性、Streaming SSR相当のTTIとSEO観点のメリット、実装のシンプルさを得られます。html内に動的な要素が含まれるためCDNキャッシュこそできませんが、多くの点においてPPRによるメリットが得られることがわかります。
+
+PPRは従来のレンダリングモデルのいいとこ取りをした、上位互換なレンダリングモデルと言えるでしょう。
+
+### PPRによるReactらしい設計責務
+
+RSC 以降の React では、データフェッチをはじめとしたサーバー側処理もコンポーネント責務にするなど、「必要なことは全てコンポーネントにカプセル化する」という方向性が強まっているように感じます。そしてレンダリングに境界を設け並行性を高めるのが`<Suspense>`です。
+
+そのため、`<Supense>`境界をもってdynamic renderingとstatic renderingが切り替えることが可能になるPPRは、非常に昨今の **React らしい設計**ではないかと筆者は考えています。実際、PPRを利用するには冒頭述べたexperimental設定を除き**新たなAPIを学習する必要がない**ことも従来の設計に則ってることの裏付けと言えるでしょう。
+
+### SSR/SSG論争の終焉
+
+昨今のNext.jsも「必要なことは全てコンポーネントにカプセル化する」という方向性により、ページ単位で考えることが減ってきている傾向がみられます。もちろんWebの仕組み上URLを元にしているので、ページ単位で考えなければいけないmeta情報やURLに含まれる動的パスやパラメータなど、「ページ」という概念を無くすことはできません。
+
+しかし、ことレンダリングモデルについては必ずしもページという概念が必須ではありません。従来はSSR/SSG/ISRどれをとってもページ単位で考える必要がありましたが、PPR以降はより細粒度な`<Suspense>`境界を元にしたUI単位で考えることが可能になります。これにより「SSRにすべきかSSGにすべきか」といった論争は過去のものとなり、PPR以降はより細粒度な「**どこまでをstaticに、どこからをdynamicにするか**」という議論へとシフトすることになります。
+
+## PPR のデメリット考察
 
 ここまで PPR を銀の弾丸のように述べてきましたが、PPR にも当然注意点があります。筆者が思う注意点をいくつか紹介したいと思います。
 
@@ -496,7 +403,7 @@ https://twitter.com/sumiren_t/status/1793620259586666643
 
 > 一部を静的化できる＝ SSR でも SG と同じだけ速い、みたいな勘違いがされてないといいなという話でした（自分も前はそういう勘違いをしていたので）
 
-dynamic rendering を含むページでも、PPR なら TTFB(Time to First Bytes)を SSG 相当にすることが可能です。しかし、パフォーマンスにおける「速い」かどうかは、計測する指標によっても異なります。例えば TTI(Time to Interactive)においては、遅延レンダリングの部分が interactive になるまでの時間は SSR とそう変わらないでしょうし、SSG+CSR fetch であれば前述の理由から TTFB は早くても TTI については SSR 以下になってしまう可能性も十分あります。
+dynamic rendering を含むページでも、PPR なら TTFBを SSG 相当にすることが可能です。しかし、パフォーマンスにおける「速い」かどうかは、計測する指標によっても異なります。例えば TTIにおいては、遅延レンダリングの部分が interactive になるまでの時間は SSR とそう変わらないでしょうし、SSG+CSR fetch であれば前述の理由から TTFB は早くても TTI については SSR 以下になってしまう可能性も十分あります。
 
 パフォーマンス観点は確かに混乱しやすいところかもしれません。PPR においても、パフォーマンスの話はどの速度指標についての話なのか注意する必要があるでしょう。
 
