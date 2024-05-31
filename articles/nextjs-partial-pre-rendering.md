@@ -1,5 +1,5 @@
 ---
-title: "Partial Pre-Rendering: 新時代レンダリングモデルとStreamingレンダリングの威力"
+title: "PPR - pre-rendering新時代の到来とSSR/SSG論争の終焉"
 emoji: "👑"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["nextjs", "react"]
@@ -59,7 +59,7 @@ https://vercel.com/blog/next
 
 上記 v1 のアナウンスから長い間 Next.js は SSR をするためのフレームワークでしたが、約 3 年半後の 2019 年に登場する[v9.3](https://nextjs.org/blog/next-9-3)で SSG、[v9.5](https://nextjs.org/blog/next-9-5)で ISR が導入されたことで Next.js は複数のレンダリングモデルをサポートするフレームワークとなりました。
 
-当時は[Gatsby](https://www.gatsbyjs.com/)の台頭もあり SSG 人気が根強く、SSR しかできなかった Next.js のユーザーは Gatsby に流れることも多かったように思います。実際 npm trends で確認すると 2019 年頃は Gatsby の方が上回っています(見づらくてすいません)。
+当時は[Gatsby](https://www.gatsbyjs.com/)の台頭もあり SSG 人気が根強く、SSR しかできなかった Next.js のユーザーは Gatsby に流れることも多かったように思います。npm trends で確認すると 2019 年頃は Gatsby の方が上回っています(見づらくてすいません)。
 
 _npm trends(Gatsby vs Next.js)_
 ![npm trends](/images/nextjs-partial-pre-rendering/npm-trends.png)
@@ -278,17 +278,17 @@ https://zenn.dev/uhyo/books/rsc-without-nextjs/viewer/streaming-ssr
 
 上述の例のようなページの一部を動的にしたい場合、ページ自体はSSGにしておいて動的な部分だけをCSR fetchで動的にするという手段もあります。そうすればNext.jsサーバーからしたらページ自体は静的なので、高速で安定したレスポンスも実現することができます。
 
-しかしSSG+CSR fetchの場合、パフォーマンス的には上記の理由からTTFB(Time To First Byte)は短縮が見込めますが、TTI(Time To Interactive)はhttp通信のラウンドトリップが追加で発生するなどの理由から遅くなる可能性があります。Streaming SSRはTTFBでは不利ですがTTI観点では1 http レスポンスで完結するので有利になります。
+しかし、SSG+CSR fetchが高速なレスポンスを実現したとて、Streaming SSRと比較して**一概にどちらがパフォーマンス的優位とは言えない**ことに留意する必要があります。SSG+CSR fetchではTTFB(Time To First Byte)は短縮が見込めますが、TTI(Time To Interactive)はhttp通信のラウンドトリップが追加で発生するなどの理由から遅くなる可能性があります。Streaming SSRはTTFBでは不利ですがTTI観点では1 http レスポンスで完結するので有利になります。
 
 ## PPR とは
 
-PPR は Streaming SSR をさらに進化させた技術で、**ページを static rendering しつつ、部分的に dynamic rendering にする**ことが可能なレンダリングモデルです。SSG・ISR のページの一部に SSR な部分を組み合わせられるようなイメージ、あるいは Streaming SSR のスケルトン部分を SSG/ISR にするイメージです。[公式の説明](https://rc.nextjs.org/learn/dashboard-app/partial-prerendering#what-is-partial-prerendering)より EC サイトの商品ページの例を拝借すると、以下のような構成が可能になります。
+さて、本項の主題であるPPR は Streaming SSR をさらに進化させた技術で、**ページを static rendering しつつ、部分的に dynamic rendering にする**ことが可能なレンダリングモデルです。SSG・ISR のページの一部に SSR な部分を組み合わせられるようなイメージ、あるいは Streaming SSR のスケルトン部分を SSG/ISR にするイメージです。[公式の説明](https://rc.nextjs.org/learn/dashboard-app/partial-prerendering#what-is-partial-prerendering)より EC サイトの商品ページの例を拝借すると、以下のような構成が可能になります。
 
 ![ppr shell](/images/nextjs-partial-pre-rendering/ppr-shell.png)
 
 商品ページ全体やナビゲーションは static rendering で静的化され、一方カートやレコメンド情報といったユーザーごとに異なる UI 部分は dynamic rendering にすることができます。もちろん商品情報自体が更新されることもあるでしょうが、この例では必要に応じて revalidate することを想定しています。
 
-### PPRによるメリット
+### 静的化とStreamingレンダリングの恩恵
 
 Streaming SSRでは`<Suspense>`の外側について、リクエストごとに以下のような処理がされてました。
 
@@ -297,17 +297,31 @@ Streaming SSRでは`<Suspense>`の外側について、リクエストごとに�
 3. 1と2の結果からHTMLを生成 
 4. 3の結果をレスポンスに流す
 
-PPRではこの1~3をbuild時に実行し静的化するため、Next.jsサーバーは初期表示に使うDOMの送信を**より高速で安定したレスポンス**にすることができます。[SSG + CSR fetch vs Streaming SSR](#ssg--csr-fetch-vs-streaming-ssr)のトレードオフの議論において、いいとこどりをしたのがPPRとも言えます。
+PPRではこの1~3をbuild時に実行し静的化するため、Next.jsサーバーは初期表示に使うDOMの送信を**より高速で安定したレスポンス**にすることができます。[SSG + CSR fetch vs Streaming SSR](#ssg--csr-fetch-vs-streaming-ssr)のトレードオフの議論において、どちらのメリットも得られるというのがPPRのすごさです。
 
 前述の例で言うと、`<Home>`はリクエストの度に毎回計算する必要はありませんでしたが、`<RandomTodo>`によってページ全体がdynamic renderingだったので毎回上記の処理を実行していました。PPRが有効になると、リクエストの度に計算されるのは`<RandomTodo>`のみとなります。
 
-また、PPRはStreaming SSRを進化させたものなので、冒頭述べたexperimental設定を除き**新たなAPIを学習する必要はありません**。我々開発者はStreaming SSR同様`<Suspense>`で遅延レンダリングする部分を指定するだけで、PPRを実現できます。
+### PPRによるReactらしい設計責務
 
-### PPR の観察
+RSC 以降の React では、データフェッチをはじめとしたサーバー側処理もコンポーネント責務にするなど、「必要なことは全てコンポーネントにカプセル化する」という方向性が強まっているように感じます。そしてレンダリングに境界を設け並行性を高めるのが`<Suspense>`です。
 
-PPR において遅延レンダリングさせる部分が dynamic rendering な場合、それらは**dynamic hole**、もしくは async hole やただの hole と呼ばれます。
+そのため、`<Supense>`境界をもってdynamic renderingとstatic renderingが切り替えることが可能になるPPRは、非常に昨今の **React らしい設計**ではないかと筆者は考えています。実際、PPRを利用するには冒頭述べたexperimental設定を除き**新たなAPIを学習する必要がない**ことも従来の設計に則ってることの裏付けと言えるでしょう。
 
-PPR によって dynamic hole が置き換わる様子も観察してみましょう。Streaming SSR で使ったサンプルコードを元に`/app/ppr/page.tsx`を作成し、挙動を観察してみます。
+### SSR/SSG論争の終焉
+
+昨今のNext.jsも「必要なことは全てコンポーネントにカプセル化する」という方向性により、ページ単位で考えることが減ってきている傾向がみられます。もちろんWebの仕組み上URLを元にしているので、ページ単位で考えなければいけないmeta情報やURLに含まれる動的パスやパラメータなど、「ページ」という概念を無くすことはできません。
+
+しかし、ことレンダリングモデルについては必ずしもページという概念が必須ではありません。従来はSSR/SSG/ISRどれをとってもページ単位で考える必要がありましたが、PPR以降はより細粒度な`<Suspense>`境界を元にしたUI単位で考えることが可能になります。**SSR/SSG論争**というと少々大袈裟かもしれませんが、SSRにするかSSG(+CSR fetch)にするかというトレードオフを元にした議論は、実現したい要件やコンテキストによって最適解がケースバイケースなので、高度な議論となり負荷の高いものでした。PPR以降はより細粒度な、「**どこまでをstaticに、どこからをdynamicにするか**」という議論へとシフトすることになるので、SSR/SSG論争に比べれば明確で負荷の低い議論になるのではないかと筆者は期待しています。
+
+:::message
+App RouterはVercelやセルフホスティングサーバーを用意することが最も基本的な運用パターンとなっているので、「SSGだとサーバーが不要」と言った議論は省略しています。
+:::
+
+### PPR の挙動観察
+
+PPR において遅延レンダリングさせる部分が dynamic rendering な場合、それらは**dynamic hole**、もしくは async hole やただの hole と呼ばれます。PPR を有効化して実際に dynamic hole が置き換わる様子も観察してみましょう。
+
+Streaming SSR で使ったサンプルコードを元に`/app/ppr/page.tsx`を作成し、挙動を観察してみます。
 
 ```tsx
 // app/ppr/page.tsx
@@ -490,4 +504,4 @@ dynamic rendering を含むページでも、PPR なら TTFB(Time to First Bytes
 
 PPR は現存するレンダリングモデルにおいて最も理想的ではないかと筆者は感じています。もちろん裏側では非常に複雑なことをやっているわけですが、我々 Next.js ユーザーからすれば「基本は static rendering、一部を dynamic rendering」というルールに従うのみなのも、シンプルで良い点です。そしてその境界を`<Suspense>`で定義するという使い方も、筆者としてはとても好印象です。
 
-RSC 以降の React では、データフェッチをはじめとしたサーバー側処理もコンポーネント責務にするなど、「必要なことは全てコンポーネントにカプセル化する」という方向性が強まっているように感じます。そしてレンダリングに境界を設け並行性を高めるのが`<Suspense>`です。これらを鑑みても、PPR は非常に昨今の React らしい設計と言えるのではないでしょうか。
+v15のGA時に[PPRのロードマップ](https://nextjs.org/blog/next-15-rc#incremental-adoption-of-partial-prerendering-experimental)が発表されるとのことです。PPRが今後どういった進化を遂げるのか、非常に楽しみです。
