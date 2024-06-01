@@ -19,7 +19,7 @@ PPR は前述の通り開発中の機能で、v15 の RC 版にて experimental 
 https://rc.nextjs.org/docs/app/api-reference/next-config-js/ppr
 
 ```js
-// next.config.js
+// next.config.mjs
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
@@ -27,8 +27,10 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;
+```
 
+```tsx
 // page.tsx(layout.tsxでも可)
 export const experimental_ppr = true;
 
