@@ -264,7 +264,7 @@ DevToolsを確認すると、レスポンスも初期表示用のHTMLが送信�
 
 Streaming SSRだと`<Home>`はリクエストの度に毎回計算する必要がありましたが、PPRでは静的化されているので`<Home>`がレンダリングされるのはbuild時やrevalidate後のみで、リクエストの度に計算されるのは`<RandomTodo>`のみとなります。そのためNext.jsサーバーは上記のDOMを含む静的ファイルを即座にクライアントへ送信することができます。
 
-dynamic renderingな`<RandomTodo>`以降のDOMはStreaming SSR 同様、レンダリングが完了次第送信されます。
+dynamic renderingな`<RandomTodo>`以降のHTMLはStreaming SSR 同様、レンダリングが完了次第送信されます。
 
 ```html
 <div hidden id="S:0">
@@ -354,7 +354,7 @@ dynamic renderingな`<RandomTodo>`以降のDOMはStreaming SSR 同様、レン�
 </script>
 ```
 
-注目すべきは script の`$RC`らへんです。最初に送られてきたDOMにある `<template>` の id が`B:0`、後半送られてきた `<RandomTodo>` の DOM が`S:0`、これらを`$RC("B:0", "S:0")`で置換しているのがわかります。また、script が直接記述されてることからも前述の通りこれらが**1 つの http レスポンスで完結**していることもわかります。
+注目すべきは script の`$RC`周辺です。最初に送られてきたDOMにある `<template>` の id が`B:0`、後半送られてきた `<RandomTodo>` の DOM が`S:0`、これらを`$RC("B:0", "S:0")`で置換しているのがわかります。また、script が直接記述されてることからも前述の通りこれらが**1 つの http レスポンスで完結**していることもわかります。
 
 ## PPR考察
 
