@@ -117,7 +117,7 @@ export default function Posts() {
 }
 ```
 
-上記の実装例においては、最初に`fallback`(`Loading feed...`や`Loading weather...`)が表示され、サーバー側で`<PostFeed>`や`<Weather>`のレンダリングが完了すると順々にクライアントにレンダリング結果が送信されて`fallback`が置き換えられます。また、これらが**1 つの http レスポンスで完結**し、レスポンスのhtmlに`<PostFeed>`や`<Weather>`のDOMが含まれるのでSEO観点もフォローしていることが大きな特徴です。
+上記の実装例においては、最初に`fallback`(`Loading feed...`や`Loading weather...`)が表示され、サーバー側で`<PostFeed>`や`<Weather>`のレンダリングが完了すると順々にクライアントにレンダリング結果が送信されて`fallback`が置き換えられます。また、これらが**1 つの http レスポンスで完結**し、レスポンスのHTMLに`<PostFeed>`や`<Weather>`のDOMが含まれるのでSEO観点もフォローしていることが大きな特徴です。
 
 より詳細にStreaming SSR の仕組みが知りたい方は、uhyo さんの記事が参考になると思います。
 
@@ -172,7 +172,7 @@ Streaming SSRでは`<Suspense>`の外側について、リクエストごとに�
 
 https://zenn.dev/uhyo/articles/react-server-components-multi-stage#%E4%B8%80%E8%A8%80%E3%81%A7react-server-components%E3%82%92%E7%90%86%E8%A7%A3%E3%81%99%E3%82%8B
 
-PPRではこの1~3をbuild時に実行し静的化するため、Next.jsサーバーは初期表示に使うDOMの送信を**より高速で安定したレスポンス**にすることができます。
+PPRではこの1~3をbuild時に実行し静的化するため、Next.jsサーバーは初期表示に使うHTMLの送信を**より高速で安定したレスポンス**にすることができます。
 
 ### PPR の挙動観察
 
@@ -246,7 +246,7 @@ _約 3 秒後_
 
 初期表示の時点では`<Suspense>`の`fallback`に指定した`loading...`が表示されており、その後`<RandomTodo>`のレンダリング結果が送信されてくると`loading...`が置き換えられている様子が確認できます。
 
-DevToolsを確認すると、レスポンスのhtmlも初期表示用のDOMが送信された時点で一度止まっていることがわかります。初期表示時点で送信されてきた`<body>`配下のDOMは以下です。
+DevToolsを確認すると、レスポンスも初期表示用のHTMLが送信された時点でで一度止まっていることがわかります。初期表示時点で送信されてきた`<body>`配下のHTMLは以下です。
 
 ```html
 <main>
@@ -371,7 +371,7 @@ PPRの動作についてはおおよそ理解いただけたかと思います�
 | CDNキャッシュ     | **不可**   | 可能               | 不可            | 
 | 実装           | **シンプル** | 冗長になりがち          | シンプル          |
 
-PPRではSSG+Client fetch相当のTTFBと実装のシンプルさを同時に得られます。html内に動的な要素が含まれるためCDNキャッシュこそできませんが、他の点においてはSSG+Client fetchとStreaming SSR両方のメリットを併せ持っています。
+PPRではSSG+Client fetch相当のTTFBと実装のシンプルさを同時に得られます。HTML内に動的な要素が含まれるためCDNキャッシュこそできませんが、他の点においてはSSG+Client fetchとStreaming SSR両方のメリットを併せ持っています。
 
 ### PPRによるReactらしい設計責務
 
