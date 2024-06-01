@@ -176,7 +176,7 @@ PPRではこの1~3をbuild時に実行し静的化するため、Next.jsサー�
 
 ### PPR の挙動観察
 
-PPR において遅延レンダリングさせる部分が dynamic rendering な場合、それらは**dynamic hole**、もしくは async hole やただの hole と呼ばれます。PPR を有効化して実際に dynamic hole が置き換わる様子を観察してみましょう。
+PPR においてdynamic renderingされる部分を遅延させる場合、それらは**dynamic hole**、もしくは async hole やただの hole と呼ばれます。PPR を有効化して実際に dynamic hole が置き換わる様子を観察してみましょう。
 
 以下のサンプルコードを元に挙動を観察してみます。
 
