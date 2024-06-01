@@ -117,7 +117,7 @@ export default function Posts() {
 }
 ```
 
-上記の実装例においては最初に`Loading feed...`や`Loading weather...`が表示され、サーバー側で`<PostFeed>`や`<Weather>`のレンダリングが完了すると順々にクライアントにレンダリング結果が送信されて`fallback`が置き換えられます。また、これらが**1 つの http レスポンスで完結**し、レスポンスのhtmlに`<PostFeed>`や`<Weather>`のDOMが含まれるのでSEO観点もフォローしていることが大きな特徴です。
+上記の実装例においては、最初に`fallback`(`Loading feed...`や`Loading weather...`)が表示され、サーバー側で`<PostFeed>`や`<Weather>`のレンダリングが完了すると順々にクライアントにレンダリング結果が送信されて`fallback`が置き換えられます。また、これらが**1 つの http レスポンスで完結**し、レスポンスのhtmlに`<PostFeed>`や`<Weather>`のDOMが含まれるのでSEO観点もフォローしていることが大きな特徴です。
 
 より詳細にStreaming SSR の仕組みが知りたい方は、uhyo さんの記事が参考になると思います。
 
