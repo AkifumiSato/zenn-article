@@ -163,12 +163,14 @@ PPR は Streaming SSR をさらに進化させた技術で、**ページを stat
 
 ### 静的化とStreamingレンダリングの恩恵
 
-Streaming SSRでは`<Suspense>`の外側について、リクエストごとに以下のような処理がされてました。
+Streaming SSRでは`<Suspense>`の外側について、リクエストごとに以下のような処理がされてました。Componentsの実行を多段計算と称してることについてはuhyoさんの記事をご参照ください。
 
-1. Server Componentsを実行
-2. Client Componentsを実行
+1. Server Components(多段階計算の1段目)を実行
+2. Client Components(多段階計算の2段目)を実行
 3. 1と2の結果からHTMLを生成
-4. 3の結果をレスポンスに流す
+4. 3の結果(Reactツリー)をレスポンスに流す
+
+https://zenn.dev/uhyo/articles/react-server-components-multi-stage#%E4%B8%80%E8%A8%80%E3%81%A7react-server-components%E3%82%92%E7%90%86%E8%A7%A3%E3%81%99%E3%82%8B
 
 PPRではこの1~3をbuild時に実行し静的化するため、Next.jsサーバーは初期表示に使うDOMの送信を**より高速で安定したレスポンス**にすることができます。
 
