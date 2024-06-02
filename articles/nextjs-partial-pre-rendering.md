@@ -117,7 +117,7 @@ export default function Posts() {
 }
 ```
 
-上記の実装例においては、最初に`fallback`(`Loading feed...`や`Loading weather...`)が表示され、サーバー側で`<PostFeed>`や`<Weather>`のレンダリングが完了すると順々にクライアントにレンダリング結果が送信されて`fallback`が置き換えられます。また、これらが**1 つの HTTP レスポンスで完結**し、レスポンスのHTMLに`<PostFeed>`や`<Weather>`のDOMが含まれるのでSEO観点もフォローしていることが大きな特徴です。
+上記の実装例においては、最初に`fallback`(`Loading feed...`や`Loading weather...`)が表示され、サーバー側で`<PostFeed>`や`<Weather>`のレンダリングが完了すると順々にクライアントにレンダリング結果が送信されて`fallback`が置き換えられます。また、これらが**1 つの HTTP レスポンスで完結**し、レスポンスのHTMLに`<PostFeed>`や`<Weather>`のHTMLが含まれるのでSEO観点もフォローしていることが大きな特徴です。
 
 より詳細にStreaming SSR の仕組みが知りたい方は、uhyo さんの記事が参考になると思います。
 
@@ -136,12 +136,12 @@ https://zenn.dev/uhyo/books/rsc-without-nextjs/viewer/streaming-ssr
 
 これらのメリデメについて簡単に整理してみます。なおTTFBはTime to First Bytesの略です。
 
-| 観点           | SSG+Client fetch | Streaming SSR |
-|--------------| ---------------- | ------------- |
-| TTFB         | 有利             | 若干不利      |
+| 観点                 | SSG+Client fetch | Streaming SSR |
+| -------------------- | ---------------- | ------------- |
+| TTFB                 | 有利             | 若干不利      |
 | HTTPラウンドトリップ | 複数回           | 1回           |
-| CDNキャッシュ     | 可能             | 不可          |
-| 実装           | 冗長になりがち   | シンプル      |
+| CDNキャッシュ        | 可能             | 不可          |
+| 実装                 | 冗長になりがち   | シンプル      |
 
 :::message
 App RouterはVercelやセルフホスティングサーバーを用意することが最も基本的な運用パターンとなっているので、「サーバーが必要・不要」と言った観点は省略しています。
@@ -356,7 +356,7 @@ dynamic renderingな`<RandomTodo>`以降のHTMLはStreaming SSR 同様、レン�
 </script>
 ```
 
-注目すべきは `<script>` の`$RC`周辺です。最初に送られてきたHTMLにある `<template>` の id が`B:0`、後半送られてきた `<RandomTodo>` の HTML が`S:0`、これらを`$RC("B:0", "S:0")`で置換しているのがわかります。また、script が直接記述されてることからも前述の通りこれらが**1 つの HTTP レスポンスで完結**していることもわかります。
+注目すべきは `<script>` の`$RC`周辺です。最初に送られてきたHTMLにある `<template>` の id が`B:0`、後半送られてきた `<RandomTodo>` の HTML が`S:0`、これらを`$RC("B:0", "S:0")`で置換しているのがわかります。また、 `<script>` が直接記述されてることからも前述の通りこれらが**1 つの HTTP レスポンスで完結**していることもわかります。
 
 ## PPR考察
 
@@ -366,12 +366,12 @@ PPRの動作についてはおおよそ理解いただけたかと思います�
 
 [SSG/SSRにおける静的・動的データの混在](#ssgssrにおける静的動的データの混在)で示した表に、PPRを追加して比較してみます。
 
-| 観点           | PPR          | SSG+Client fetch | Streaming SSR |
-|--------------| ------------ | ---------------- | ------------- |
-| TTFB         | **有利**     | 有利             | 若干不利      |
+| 観点                 | PPR          | SSG+Client fetch | Streaming SSR |
+| -------------------- | ------------ | ---------------- | ------------- |
+| TTFB                 | **有利**     | 有利             | 若干不利      |
 | HTTPラウンドトリップ | 1回          | 複数回           | 1回           |
-| CDNキャッシュ     | **不可**     | 可能             | 不可          |
-| 実装           | **シンプル** | 冗長になりがち   | シンプル      |
+| CDNキャッシュ        | **不可**     | 可能             | 不可          |
+| 実装                 | **シンプル** | 冗長になりがち   | シンプル      |
 
 PPRではSSG+Client fetch相当のTTFBと実装のシンプルさを同時に得られます。HTML内に動的な要素が含まれるためCDNキャッシュこそできませんが、他の点においてはSSG+Client fetchとStreaming SSR両方のメリットを併せ持っています。
 
@@ -379,7 +379,7 @@ PPRではSSG+Client fetch相当のTTFBと実装のシンプルさを同時に得
 
 RSC 以降の React では、データフェッチをはじめとしたサーバー側処理もコンポーネント責務にするなど、「必要なことは全てコンポーネントにカプセル化する」という方向性が強まっているように感じます。そしてレンダリングに境界を設け並行性を高めるのが`<Suspense>`です。
 
-そのため、`<Supense>`境界をもってdynamic renderingとstatic renderingが切り替えることが可能になるPPRは、非常に昨今の **React らしい設計**ではないかと筆者は考えています。実際、PPRを利用するには冒頭述べたexperimental設定を除き**新たなAPIを学習する必要がない**ことも従来の設計に則ってることの裏付けと言えるでしょう。
+そのため、`<Supense>`境界をもってdynamic renderingとstatic renderingが切り替えることが可能になるPPRは、非常に昨今の **React らしい設計**ではないかと筆者は考えています。実際、PPRを利用するには冒頭述べたexperimental設定を除き**新たなAPIを学習する必要がない**こともReact らしい設計に則ってることの裏付けと言えるでしょう。
 
 ### SSR/SSG論争の終焉
 
