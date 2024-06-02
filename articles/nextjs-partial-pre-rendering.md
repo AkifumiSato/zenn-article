@@ -167,8 +167,8 @@ Streaming SSRでは`<Suspense>`の外側について、リクエストごとに�
 
 1. Server Components(多段階計算の1段目)を実行
 2. Client Components(多段階計算の2段目)を実行
-3. 1と2の結果からHTMLを生成
-4. 3の結果(Reactツリー)をレスポンスに流す
+3. 1と2の結果(Reactツリー)からHTMLを生成
+4. 3の結果をレスポンスに流す
 
 https://zenn.dev/uhyo/articles/react-server-components-multi-stage#%E4%B8%80%E8%A8%80%E3%81%A7react-server-components%E3%82%92%E7%90%86%E8%A7%A3%E3%81%99%E3%82%8B
 
