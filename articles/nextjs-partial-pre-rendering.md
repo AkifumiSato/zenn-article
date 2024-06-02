@@ -14,7 +14,7 @@ published: true
 
 https://nextjs.org/blog/next-14#partial-prerendering-preview
 
-PPR は前述の通り開発中の機能で、v15 の RC 版にて experimental フラグを有効にすることで利用することができます。`ppr: true`とすれば全部のページが対象となり、`ppr: "incremental"`とすれば`export const experimental_ppr = true`を設定した Route Segment のみが PPR の対象となります。
+PPR は前述の通り開発中の機能で、v15 の RC 版にて experimental フラグを有効にすることで利用することができます。`ppr: true`とすれば全部のページが対象となり、`ppr: "incremental"`とすれば`export const experimental_ppr = true`を設定した Routeのみが PPR の対象となります。
 
 https://rc.nextjs.org/docs/app/api-reference/next-config-js/ppr
 
@@ -125,11 +125,11 @@ https://zenn.dev/uhyo/books/rsc-without-nextjs/viewer/streaming-ssr
 
 ## SSG/SSRにおける静的・動的データの混在
 
-ページを構成するのに必要なデータが、静的なデータ(キャッシュ可能)と動的データ(キャッシュ不可能)で混在することがあります。ECサイトにおいて商品情報自体はbuild時やrevalidateごとに取得・キャッシュしても問題ないですが、ログイン情報はキャッシュできないので動的に取得する必要があります。
+ページを構成するのに必要なデータが、静的なデータ(キャッシュ可能)と動的データ(キャッシュ不可能)で混在することがあります。例えばECサイトにおいて、商品情報自体はbuild時やrevalidateごとに取得・キャッシュできる場合もありますが、ログイン情報はキャッシュできないので動的に取得する必要があります。
 
 このように静的データと動的データが混在する場合、App Routerでは大きく以下2つの実装パターンがありました。
 
-- **SSG + Client fetch**: ページ自体は SSG にしておいて動的な部分だけを Client fetch で動的にする
+- **SSG + Client fetch**: ページ自体は SSG にしてクライアントサイドで動的データを fetch する
 - **Streaming SSR**: 静的データはキャッシュ([Data Cache](https://nextjs.org/docs/app/building-your-application/caching))を利用して高速化しつつ、ページの一部を`<Suspense>`で遅延レンダリングにする
 
 しかしこれらは互いにいくつかの点でメリット・デメリットが相反する関係にあり、状況によって最適解が異なります。そのため、これらの選択の議論や説明時にはSSGやStreaming SSRについての高度な理解が必要になります。
@@ -151,11 +151,11 @@ App RouterはVercelやセルフホスティングサーバーを用意するこ�
 
 一方実装観点ではClient fetchの場合クライアントサイド処理とサーバー側のエンドポイントを繋ぐ処理(API Routes、tRPC、GraphQLなど)が必要になるので、Streaming SSRの方がシンプルと筆者は考えます。また、Streaming SSRではhttpのラウンドトリップが1回で済む分動的要素が表示されるまでの時間は短くなると考えられる点も、パフォーマンス観点から評価できます。
 
-このようにStreaming SSRは多くのメリットを持っている一方、SSGが持つTTFBの速度や安定性は得られないことがトレードオフでした。これを解消する手段として登場したのが、本稿の主題である**PPR**です。
+このようにStreaming SSRは多くのメリットを持っている一方、SSGが持つTTFBの速度は得られないことがトレードオフでした。これを解消する手段として登場したのが、本稿の主題である**PPR**です。
 
 ## PPR とは
 
-PPR は Streaming SSR をさらに進化させた技術で、**ページを static rendering しつつ、部分的に dynamic rendering にする**ことが可能なレンダリングモデルです。SSG・ISR のページの一部に SSR な部分を組み合わせられるようなイメージ、あるいは Streaming SSR のスケルトン部分を SSG/ISR にするイメージです。[公式の説明](https://rc.nextjs.org/learn/dashboard-app/partial-prerendering#what-is-partial-prerendering)より EC サイトの商品ページの例を拝借すると、以下のような構成が可能になります。
+PPR は Streaming SSR をさらに進化させた技術で、**ページを static rendering としつつ、部分的に dynamic rendering にする**ことが可能なレンダリングモデルです。SSG・ISR のページの一部に SSR な部分を組み合わせられるようなイメージ、あるいは Streaming SSR のスケルトン部分を SSG/ISR にするイメージです。[公式の説明](https://rc.nextjs.org/learn/dashboard-app/partial-prerendering#what-is-partial-prerendering)より EC サイトの商品ページの例を拝借すると、以下のような構成が可能になります。
 
 ![ppr shell](/images/nextjs-partial-pre-rendering/ppr-shell.png)
 
@@ -163,16 +163,18 @@ PPR は Streaming SSR をさらに進化させた技術で、**ページを stat
 
 ### 静的化とStreamingレンダリングの恩恵
 
-Streaming SSRでは`<Suspense>`の外側について、リクエストごとに以下のような処理がされてました。Componentsの実行を多段計算と称してることについてはuhyoさんの記事をご参照ください。
+Streaming SSRでは`<Suspense>`の外側について、リクエストごとに以下のような処理がされてました。
 
 1. Server Components(多段階計算の1段目)を実行
 2. Client Components(多段階計算の2段目)を実行
 3. 1と2の結果(Reactツリー)からHTMLを生成
 4. 3の結果をレスポンスに流す
 
+Componentsの実行を多段計算と称してることについてはuhyoさんの記事をご参照ください。
+
 https://zenn.dev/uhyo/articles/react-server-components-multi-stage#%E4%B8%80%E8%A8%80%E3%81%A7react-server-components%E3%82%92%E7%90%86%E8%A7%A3%E3%81%99%E3%82%8B
 
-PPRではこの1~3をbuild時に実行し静的化するため、Next.jsサーバーは初期表示に使うHTMLの送信を**より高速で安定したレスポンス**にすることができます。
+PPRではこの1~3をbuild時に実行し静的化するため、Next.jsサーバーは初期表示に使うHTMLの送信を**より高速なレスポンス**にすることができます。
 
 ### PPR の挙動観察
 
@@ -246,7 +248,7 @@ _約 3 秒後_
 
 初期表示の時点では`<Suspense>`の`fallback`に指定した`loading...`が表示されており、その後`<RandomTodo>`のレンダリング結果が送信されてくると`loading...`が置き換えられている様子が確認できます。
 
-DevToolsを確認すると、レスポンスも初期表示用のHTMLが送信された時点でで一度止まっていることがわかります。初期表示時点で送信されてきた`<body>`配下のHTMLは以下です。
+DevToolsを確認すると、レスポンスも初期表示用のHTMLが送信された時点で一度止まっていることがわかります。初期表示時点で送信されてきた`<body>`配下のHTMLは以下です。
 
 ```html
 <main>
@@ -262,7 +264,7 @@ DevToolsを確認すると、レスポンスも初期表示用のHTMLが送信�
 ></script>
 ```
 
-Streaming SSRだと`<Home>`はリクエストの度に毎回計算する必要がありましたが、PPRでは静的化されているので`<Home>`がレンダリングされるのはbuild時やrevalidate後のみで、リクエストの度に計算されるのは`<RandomTodo>`のみとなります。そのためNext.jsサーバーは上記のDOMを含む静的ファイルを即座にクライアントへ送信することができます。
+Streaming SSRだと`<Home>`はリクエストの度に毎回計算する必要がありましたが、PPRでは静的化されているので`<Home>`がレンダリングされるのはbuild時やrevalidate後のみで、リクエストの度に計算されるのは`<RandomTodo>`のみとなります。そのためNext.jsサーバーは上記のHTMLを含む静的ファイルを即座にクライアントへ送信することができます。
 
 dynamic renderingな`<RandomTodo>`以降のHTMLはStreaming SSR 同様、レンダリングが完了次第送信されます。
 
@@ -354,7 +356,7 @@ dynamic renderingな`<RandomTodo>`以降のHTMLはStreaming SSR 同様、レン�
 </script>
 ```
 
-注目すべきは script の`$RC`周辺です。最初に送られてきたDOMにある `<template>` の id が`B:0`、後半送られてきた `<RandomTodo>` の DOM が`S:0`、これらを`$RC("B:0", "S:0")`で置換しているのがわかります。また、script が直接記述されてることからも前述の通りこれらが**1 つの http レスポンスで完結**していることもわかります。
+注目すべきは `<script>` の`$RC`周辺です。最初に送られてきたHTMLにある `<template>` の id が`B:0`、後半送られてきた `<RandomTodo>` の HTML が`S:0`、これらを`$RC("B:0", "S:0")`で置換しているのがわかります。また、script が直接記述されてることからも前述の通りこれらが**1 つの http レスポンスで完結**していることもわかります。
 
 ## PPR考察
 
@@ -403,7 +405,7 @@ https://twitter.com/sumiren_t/status/1793620259586666643
 
 > 一部を静的化できる＝ SSR でも SG と同じだけ速い、みたいな勘違いがされてないといいなという話でした（自分も前はそういう勘違いをしていたので）
 
-確かに、dynamic rendering を含むページでもPPR なら TTFBを SSG に近づけることが可能です。しかし、パフォーマンスというのはTTFBだけで測るものではありません。例えばTime to InteractiveにおいてはPPRでもSSRでも大きくは変わらないため、ページ全体をSSGにできるならその方が理論上早くなります。
+確かに、dynamic rendering を含むページでもPPR なら TTFBを SSG に近づけることが可能です。しかし、パフォーマンスというのはTTFBだけで測るものではありません。例えばTime to InteractiveにおいてはPPRでもSSRでも大きくは変わらないため、ページ全体をSSGにできるならその方が有利でしょう。
 
 PPRはパフォーマンスにおける銀の弾丸ではないものの一部パフォーマンスが改善されることは確かで、混乱しやすいところかもしれません。PPR においても、パフォーマンスの話はどの速度指標についての話なのか注意する必要があるでしょう。
 
