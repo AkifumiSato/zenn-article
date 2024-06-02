@@ -7,14 +7,14 @@ published: true
 ---
 
 :::message alert
-本稿は Next.js v15.0.0-rc.0 時点の情報を元に執筆しており、PPR はさらに experimental な機能です。v15.0.0 のリリース時や、PPR が stable な機能として提供される際には機能の一部が変更されてる可能性がありますので、ご注意下さい。
+本稿はNext.js v15.0.0-rc.0時点の情報を元に執筆しており、PPRはさらにexperimentalな機能です。v15.0.0のリリース時や、PPRがstableな機能として提供される際には機能の一部が変更されてる可能性がありますので、ご注意下さい。
 :::
 
-**Partial Pre-Rendering**(以降 PPR)は Next.js v14.0 で発表された、SSR や SSG にならぶ**新たなレンダリングモデル**です。
+**Partial Pre-Rendering**(以降PPR)はNext.js v14.0で発表された、SSRやSSGにならぶ**新たなレンダリングモデル**です。
 
 https://nextjs.org/blog/next-14#partial-prerendering-preview
 
-PPR は前述の通り開発中の機能で、v15 の RC 版にて experimental フラグを有効にすることで利用することができます。`ppr: true`とすれば全部のページが対象となり、`ppr: "incremental"`とすれば`export const experimental_ppr = true`を設定した Routeのみが PPR の対象となります。
+PPRは前述の通り開発中の機能で、v15のRC版にてexperimentalフラグを有効にすることで利用することができます。`ppr: true`とすれば全部のページが対象となり、`ppr: "incremental"`とすれば`export const experimental_ppr = true`を設定したRouteのみがPPRの対象となります。
 
 https://rc.nextjs.org/docs/app/api-reference/next-config-js/ppr
 
@@ -39,13 +39,13 @@ export default function Page() {
 }
 ```
 
-PPR は Next.js コアチームにとっても重大な機能開発であり、個人的にはとても注目度の高いトピックなのですが、筆者の観測範囲では話題になってるのは一部でそこまで盛り上がってないように感じます。
+PPRはNext.jsコアチームにとっても重大な機能開発であり、個人的にはとても注目度の高いトピックなのですが、筆者の観測範囲では話題になってるのは一部でそこまで盛り上がってないように感じます。
 
-筆者は PPR によってレンダリングモデルにおける時代がまた 1 つ新しいものになると考えています。本稿では PPR とは何か、何を解決しようとしているのか、そして PPR 時代の到来によって何が変わるのか考察したいと思います。
+筆者はPPRによってレンダリングモデルにおける時代がまた1つ新しいものになると考えています。本稿ではPPRとは何か、何を解決しようとしているのか、そしてPPR時代の到来によって何が変わるのか考察したいと思います。
 
 ## レンダリングモデルの歴史を振り返る
 
-PPR の話をする前に、これまでの Next.js のレンダリングモデルについて振り返ってみましょう。これまで、Next.js がサポートしているレンダリングモデルは 3 つありました。
+PPRの話をする前に、これまでのNext.jsのレンダリングモデルについて振り返ってみましょう。これまで、Next.jsがサポートしているレンダリングモデルは3つありました。
 
 - **SSR**: server-side rendering
 - **SSG**: static-site generation
@@ -53,51 +53,51 @@ PPR の話をする前に、これまでの Next.js のレンダリングモデ�
 
 これらがサポートされた歴史的経緯を筆者なりに振り返ってみます。
 
-### Pages Router 時代
+### Pages Router時代
 
-Next.js は元々、SSR ができる React フレームワークとして 2016/10 に登場しました。以下は当時の Vercel（旧 Zeit）のアナウンス記事です。
+Next.jsは元々、SSRができるReactフレームワークとして2016/10に登場しました。以下は当時のVercel（旧Zeit）のアナウンス記事です。
 
 https://vercel.com/blog/next
 
-上記 v1 のアナウンスから長い間 Next.js は SSR をするためのフレームワークでしたが、約 3 年半後の 2019 年に登場する[v9.3](https://nextjs.org/blog/next-9-3)で SSG、[v9.5](https://nextjs.org/blog/next-9-5)で ISR が導入されたことで Next.js は複数のレンダリングモデルをサポートするフレームワークとなりました。
+上記v1のアナウンスから長い間Next.jsはSSRをするためのフレームワークでしたが、約3年半後の2019年に登場する[v9.3](https://nextjs.org/blog/next-9-3)でSSG、[v9.5](https://nextjs.org/blog/next-9-5)でISRが導入されたことでNext.jsは複数のレンダリングモデルをサポートするフレームワークとなりました。
 
-当時は[Gatsby](https://www.gatsbyjs.com/)の台頭もあり SSG 人気が根強く、SSR しかできなかった Next.js のユーザーは Gatsby に流れることも多かったように思います。npm trends で確認すると、少々見づらいですが 2019 年頃は Gatsby の方が上回っています。
+当時は[Gatsby](https://www.gatsbyjs.com/)の台頭もありSSG人気が根強く、SSRしかできなかったNext.jsのユーザーはGatsbyに流れることも多かったように思います。npm trendsで確認すると、少々見づらいですが2019年頃はGatsbyの方が上回っています。
 
 _npm trends(Gatsby vs Next.js)_
 ![npm trends](/images/nextjs-partial-pre-rendering/npm-trends.png)
 
-実際、当時の筆者は好んで Gatsby を使っていました。しかし Next.js v9 系で需要の多かった dynamic ルーティングや Gatsby が弱かった TypeScript 対応などの実装、そして上記 SSG や ISR のサポートにより Next.js は一気に注目を集めるようになりました。筆者にはこの v9 系で実装された機能群が、 今日の Next.js の人気に繋がったように思えます。
+実際、当時の筆者は好んでGatsbyを使っていました。しかしNext.js v9系で需要の多かったdynamicルーティングやGatsbyが弱かったTypeScript対応などの実装、そして上記SSGやISRのサポートによりNext.jsは一気に注目を集めるようになりました。筆者にはこのv9系で実装された機能群が、今日のNext.jsの人気に繋がったように思えます。
 
-SSR か SSG かというレンダリングモデルの議論は多くのユーザーの関心を集め、これらをどちらもサポートした Next.js の選択が、今日の人気を支える重要な要素となっているのです。
+SSRかSSGかというレンダリングモデルの議論は多くのユーザーの関心を集め、これらをどちらもサポートしたNext.jsの選択が、今日の人気を支える重要な要素となっているのです。
 
-### App Router 登場以降
+### App Router登場以降
 
-上記 v9 時点では、Next.js はいわゆる Pages Router しか存在しませんでした。その後[v13](https://nextjs.org/blog/next-13)で発表された App Router では、RSC(React Server Components)や Server Actions・多層のキャッシュなど多くのパラダイムシフトが必要となりました。App Router では、レンダリングモデルに関してはどのような変化があったのでしょうか？
+上記v9時点では、Next.jsはいわゆるPages Routerしか存在しませんでした。その後[v13](https://nextjs.org/blog/next-13)で発表されたApp Routerでは、RSC(React Server Components)やServer Actions・多層のキャッシュなど多くのパラダイムシフトが必要となりました。App Routerでは、レンダリングモデルに関してはどのような変化があったのでしょうか？
 
-結論から言うと App Router は従来同様**SSR/SSG/ISR 相当の機能をサポート**していますが、App Router のドキュメントでは基本的に SSR/SSG/ISR などの**用語は使用されていません**。
+結論から言うとApp Routerは従来同様**SSR/SSG/ISR相当の機能をサポート**していますが、App Routerのドキュメントでは基本的にSSR/SSG/ISRなどの**用語は使用されていません**。
 
-現在 App Router は SSR/SSG/ISR ではなく、[static rendering](https://rc.nextjs.org/docs/app/building-your-application/rendering/server-components#static-rendering-default)と[dynamic rendering](https://rc.nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)という 2 つの概念を使って多くの機能を説明しています。
+現在App RouterはSSR/SSG/ISRではなく、[static rendering](https://rc.nextjs.org/docs/app/building-your-application/rendering/server-components#static-rendering-default)と[dynamic rendering](https://rc.nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)という2つの概念を使って多くの機能を説明しています。
 
 - **static rendering**: 従来の SSG や ISR 相当で、build 時や revalidate 実行後にレンダリング
   - revalidate なし: SSG 相当
   - revalidate あり: ISR 相当
 - **dynamic rendering**: 従来の SSR 相当で、リクエストごとにレンダリング
 
-Pages Router では SSG か ISR かは build 時に実行する関数で設定する必要があったため静的に決定されていましたが、App Router における revalidate は`revalidatePath`や`revalidateTag`で動的に行うことができるので、SSG か ISR かは静的に決定されません。そのため Next.js からすると SSG と ISR を区別することに意味がなくなってしまったことが、これらの用語を使わなくなった理由かもしれません。
+Pages RouterではSSGかISRかはbuild時に実行する関数で設定する必要があったため静的に決定されていましたが、App Routerにおけるrevalidateは`revalidatePath`や`revalidateTag`で動的に行うことができるので、SSGかISRかは静的に決定されません。そのためNext.jsからするとSSGとISRを区別することに意味がなくなってしまったことが、これらの用語を使わなくなった理由かもしれません。
 
-もう 1 つ理由として考えられるのは、ISR は Vercel 以外での運用が難しいと評される機能でネガティブなイメージがついてしまっていたことです。今日では**Cache Handler**によってキャッシュの永続化先を選択できるようになったため、ISR 登場時よりはセルフホスティング環境などでも運用しやすくなったはずです。詳しくは筆者の過去記事をご参照ください。
+もう1つ理由として考えられるのは、ISRはVercel以外での運用が難しいと評される機能でネガティブなイメージがついてしまっていたことです。今日では**Cache Handler**によってキャッシュの永続化先を選択できるようになったため、ISR登場時よりはセルフホスティング環境などでも運用しやすくなったはずです。詳しくは筆者の過去記事をご参照ください。
 
 https://zenn.dev/akfm/articles/nextjs-cache-handler-redis
 
 ### Streaming SSR
 
-App Router登場時、SSR の中でも技術的な進化がありました。現在 App Router の SSR は**Streaming SSR**をサポートしています。
+App Router登場時、SSRの中でも技術的な進化がありました。現在App RouterのSSRは**Streaming SSR**をサポートしています。
 
 :::message
-Pages Router については[v12 のアルファ機能](https://nextjs.org/blog/next-12#react-server-components)として実装されましたが現在は削除され、Streaming SSR をサポートしていません。
+Pages Routerについては[v12 のアルファ機能](https://nextjs.org/blog/next-12#react-server-components)として実装されましたが現在は削除され、Streaming SSRをサポートしていません。
 :::
 
-Streaming SSR はページのレンダリングの一部を`<Suspense>`で遅延レンダリングにすることが可能で、レンダリングが完了するごとに徐々に結果がクライアントへと送信されます。
+Streaming SSRはページのレンダリングの一部を`<Suspense>`で遅延レンダリングにすることが可能で、レンダリングが完了するごとに徐々に結果がクライアントへと送信されます。
 
 ```tsx
 import { Suspense } from "react";
@@ -117,9 +117,9 @@ export default function Posts() {
 }
 ```
 
-上記の実装例においては、最初に`fallback`(`Loading feed...`や`Loading weather...`)が表示され、サーバー側で`<PostFeed>`や`<Weather>`のレンダリングが完了すると順々にクライアントにレンダリング結果が送信されて`fallback`が置き換えられます。また、これらが**1 つの HTTP レスポンスで完結**し、レスポンスのHTMLに`<PostFeed>`や`<Weather>`のHTMLが含まれるのでSEO観点もフォローしていることが大きな特徴です。
+上記の実装例においては、最初に`fallback`(`Loading feed...`や`Loading weather...`)が表示され、サーバー側で`<PostFeed>`や`<Weather>`のレンダリングが完了すると順々にクライアントにレンダリング結果が送信されて`fallback`が置き換えられます。また、これらが**1つのHTTPレスポンスで完結**し、レスポンスのHTMLに`<PostFeed>`や`<Weather>`のHTMLが含まれるのでSEO観点もフォローしていることが大きな特徴です。
 
-より詳細にStreaming SSR の仕組みが知りたい方は、uhyo さんの記事が参考になると思います。
+より詳細にStreaming SSRの仕組みが知りたい方は、uhyoさんの記事が参考になると思います。
 
 https://zenn.dev/uhyo/books/rsc-without-nextjs/viewer/streaming-ssr
 
@@ -129,7 +129,7 @@ https://zenn.dev/uhyo/books/rsc-without-nextjs/viewer/streaming-ssr
 
 このように静的データと動的データが混在する場合、App Routerでは大きく以下2つの実装パターンがありました。
 
-- **SSG + Client fetch**: ページ自体は SSG にしてクライアントサイドで動的データを fetch する
+- **SSG+Client fetch**: ページ自体はSSGにしてクライアントサイドで動的データをfetchする
 - **Streaming SSR**: 静的データはキャッシュ([Data Cache](https://nextjs.org/docs/app/building-your-application/caching))を利用して高速化しつつ、ページの一部を`<Suspense>`で遅延レンダリングにする
 
 しかしこれらは互いにいくつかの点でメリット・デメリットが相反する関係にあり、状況によって最適解が異なります。そのため、これらの選択の議論や説明時にはSSGやStreaming SSRについての高度な理解が必要になります。
@@ -153,13 +153,13 @@ App RouterはVercelやセルフホスティングサーバーを用意するこ�
 
 このようにStreaming SSRは多くのメリットを持っている一方、SSGが持つTTFBの速度は得られないことがトレードオフでした。これを解消する手段として登場したのが、本稿の主題である**PPR**です。
 
-## PPR とは
+## PPRとは
 
-PPR は Streaming SSR をさらに進化させた技術で、**ページを static rendering としつつ、部分的に dynamic rendering にする**ことが可能なレンダリングモデルです。SSG・ISR のページの一部に SSR な部分を組み合わせられるようなイメージ、あるいは Streaming SSR のスケルトン部分を SSG/ISR にするイメージです。[公式の説明](https://rc.nextjs.org/learn/dashboard-app/partial-prerendering#what-is-partial-prerendering)より EC サイトの商品ページの例を拝借すると、以下のような構成が可能になります。
+PPRはStreaming SSRをさらに進化させた技術で、**ページをstatic renderingとしつつ、部分的にdynamic renderingにする**ことが可能なレンダリングモデルです。SSG・ISRのページの一部にSSRな部分を組み合わせられるようなイメージ、あるいはStreaming SSRのスケルトン部分をSSG/ISRにするイメージです。[公式の説明](https://rc.nextjs.org/learn/dashboard-app/partial-prerendering#what-is-partial-prerendering)よりECサイトの商品ページの例を拝借すると、以下のような構成が可能になります。
 
 ![ppr shell](/images/nextjs-partial-pre-rendering/ppr-shell.png)
 
-商品ページ全体やナビゲーションは static rendering で静的化され、一方カートやレコメンド情報といったユーザーごとに異なる UI 部分は dynamic rendering にすることができます。もちろん商品情報自体が更新されることもあるでしょうが、この例では必要に応じて revalidate することを想定しています。
+商品ページ全体やナビゲーションはstatic renderingで静的化され、一方カートやレコメンド情報といったユーザーごとに異なるUI部分はdynamic renderingにすることができます。もちろん商品情報自体が更新されることもあるでしょうが、この例では必要に応じてrevalidateすることを想定しています。
 
 ### 静的化とStreamingレンダリングの恩恵
 
@@ -176,9 +176,9 @@ https://zenn.dev/uhyo/articles/react-server-components-multi-stage#%E4%B8%80%E8%
 
 PPRではこの1~3をbuild時に実行し静的化するため、Next.jsサーバーは初期表示に使うHTMLの送信を**より高速なレスポンス**にすることができます。
 
-### PPR の挙動観察
+### PPRの挙動観察
 
-PPR においてdynamic renderingされる部分を遅延させる場合、それらは**dynamic hole**、もしくは async hole やただの hole と呼ばれます。PPR を有効化して実際に dynamic hole が置き換わる様子を観察してみましょう。
+PPRにおいてdynamic renderingされる部分を遅延させる場合、それらは**dynamic hole**、もしくはasync holeやただのholeと呼ばれます。PPRを有効化して実際にdynamic holeが置き換わる様子を観察してみましょう。
 
 以下のサンプルコードを元に挙動を観察してみます。
 
@@ -229,13 +229,13 @@ type TodoDto = {
 };
 ```
 
-`<RandomTodo>`はリクエストの度にランダムな TODO 情報を取得するコンポーネントです。
-ページ自体である`<Home>`は static renderingですが、API への fetch に`no-store`を指定しているので、`<RandomTodo>`はdynamic rendering となります。また、今回は Stream の様子を観察したいのでリクエスト後にあえて 3 秒遅延させています。
+`<RandomTodo>`はリクエストの度にランダムなTODO情報を取得するコンポーネントです。
+ページ自体である`<Home>`はstatic renderingですが、APIへのfetchに`no-store`を指定しているので、`<RandomTodo>`はdynamic renderingとなります。また、今回はStreamの様子を観察したいのでリクエスト後にあえて3秒遅延させています。
 
 :::message
-今回の主題ではないのですが、v15.0.0-rc.0 時点ではデフォルトで fetch は`no-store`ですが、**明示的に指定しないと dynamic rendering にならない**という仕様になっているのでサンプルコードでは明示的に指定しています。同様の対策として[`unstable_noStore`](https://nextjs.org/docs/app/api-reference/functions/unstable_noStore)などの[dynamic functions](https://nextjs.org/docs/app/building-your-application/routing/route-handlers#dynamic-functions)を使って dynamic rendering にすることも可能です。
+今回の主題ではないのですが、v15.0.0-rc.0時点ではデフォルトでfetchは`no-store`ですが、**明示的に指定しないとdynamic renderingにならない**という仕様になっているのでサンプルコードでは明示的に指定しています。同様の対策として[`unstable_noStore`](https://nextjs.org/docs/app/api-reference/functions/unstable_noStore)などの[dynamic functions](https://nextjs.org/docs/app/building-your-application/routing/route-handlers#dynamic-functions)を使ってdynamic renderingにすることも可能です。
 
-デフォルトの仕様については[RC 中に変更される可能性](https://x.com/feedthejim/status/1794778189354705190)が示唆されています。
+デフォルトの仕様については[RC中に変更される可能性](https://x.com/feedthejim/status/1794778189354705190)が示唆されています。
 :::
 
 実際に画面を表示した時の様子が以下です。
@@ -266,7 +266,7 @@ DevToolsを確認すると、レスポンスも初期表示用のHTMLが送信�
 
 Streaming SSRだと`<Home>`はリクエストの度に毎回計算する必要がありましたが、PPRでは静的化されているので`<Home>`がレンダリングされるのはbuild時やrevalidate後のみで、リクエストの度に計算されるのは`<RandomTodo>`のみとなります。そのためNext.jsサーバーは上記のHTMLを含む静的ファイルを即座にクライアントへ送信することができます。
 
-dynamic renderingな`<RandomTodo>`以降のHTMLはStreaming SSR 同様、レンダリングが完了次第送信されます。
+dynamic renderingな`<RandomTodo>`以降のHTMLはStreaming SSR同様、レンダリングが完了次第送信されます。
 
 ```html
 <div hidden id="S:0">
@@ -356,7 +356,7 @@ dynamic renderingな`<RandomTodo>`以降のHTMLはStreaming SSR 同様、レン�
 </script>
 ```
 
-注目すべきは `<script>` の`$RC`周辺です。最初に送られてきたHTMLにある `<template>` の id が`B:0`、後半送られてきた `<RandomTodo>` の HTML が`S:0`、これらを`$RC("B:0", "S:0")`で置換しているのがわかります。また、 `<script>` が直接記述されてることからも前述の通りこれらが**1 つの HTTP レスポンスで完結**していることもわかります。
+注目すべきは`<script>`の`$RC`周辺です。最初に送られてきたHTMLにある`<template>`のidが`B:0`、後半送られてきた`<RandomTodo>`のHTMLが`S:0`、これらを`$RC("B:0", "S:0")`で置換しているのがわかります。また、`<script>`が直接記述されてることからも前述の通りこれらが**1つのHTTPレスポンスで完結**していることもわかります。
 
 ## PPR考察
 
@@ -369,7 +369,7 @@ PPRの動作についてはおおよそ理解いただけたかと思います�
 | 観点                 | PPR          | SSG+Client fetch | Streaming SSR |
 | -------------------- | ------------ | ---------------- | ------------- |
 | TTFB                 | **有利**     | 有利             | 若干不利      |
-| HTTPラウンドトリップ | **1回**          | 複数回           | 1回           |
+| HTTPラウンドトリップ | **1回**      | 複数回           | 1回           |
 | CDNキャッシュ        | **不可**     | 可能             | 不可          |
 | 実装                 | **シンプル** | 冗長になりがち   | シンプル      |
 
@@ -377,9 +377,9 @@ PPRではSSG+Client fetch相当のTTFBと実装のシンプルさを同時に得
 
 ### PPRによるReactらしい設計責務
 
-RSC 以降の React では、データフェッチをはじめとしたサーバー側処理もコンポーネント責務にするなど、「必要なことは全てコンポーネントにカプセル化する」という方向性が強まっているように感じます。そしてレンダリングに境界を設け並行性を高めるのが`<Suspense>`です。
+RSC以降のReactでは、データフェッチをはじめとしたサーバー側処理もコンポーネント責務にするなど、「必要なことは全てコンポーネントにカプセル化する」という方向性が強まっているように感じます。そしてレンダリングに境界を設け並行性を高めるのが`<Suspense>`です。
 
-そのため、`<Supense>`境界をもってdynamic renderingとstatic renderingが切り替えることが可能になるPPRは、非常に昨今の **React らしい設計**ではないかと筆者は考えています。実際、PPRを利用するには冒頭述べたexperimental設定を除き**新たなAPIを学習する必要がない**こともReact らしい設計に則ってることの裏付けと言えるでしょう。
+そのため、`<Supense>`境界をもってdynamic renderingとstatic renderingが切り替えることが可能になるPPRは、非常に昨今の**Reactらしい設計**ではないかと筆者は考えています。実際、PPRを利用するには冒頭述べたexperimental設定を除き**新たなAPIを学習する必要がない**こともReactらしい設計に則ってることの裏付けと言えるでしょう。
 
 ### SSR/SSG論争の終焉
 
@@ -387,30 +387,30 @@ RSC 以降の React では、データフェッチをはじめとしたサーバ
 
 しかし、ことレンダリングモデルについては必ずしもページという概念が必須ではありません。従来はSSR/SSG/ISRどれをとってもページ単位で考える必要がありましたが、PPR以降はより細粒度な`<Suspense>`境界を元にしたUI単位で考えることが可能になります。これにより「SSRにすべきかSSGにすべきか」といった論争は過去のものとなり、PPR以降はより細粒度な「**どこまでをstaticに、どこからをdynamicにするか**」という議論へとシフトすることになります。
 
-## PPR のデメリット考察
+## PPRのデメリット考察
 
-ここまで PPR を銀の弾丸のように述べてきましたが、PPR にも当然注意点があります。筆者が思う注意点をいくつか紹介したいと思います。
+ここまでPPRを銀の弾丸のように述べてきましたが、PPRにも当然注意点があります。筆者が思う注意点をいくつか紹介したいと思います。
 
-### ページは必ず 200 になる
+### ページは必ず200になる
 
-PPR は画面の静的化された部分については返してしまうため、**ページの HTTP Status は必ず 200**になってしまいます
+PPRは画面の静的化された部分については返してしまうため、**ページのHTTP Statusは必ず200**になってしまいます
 
-これが実害になってくるのは監視周りでしょう。そもそも App Router を利用してる場合には Stream によるレスポンスがベースとなるため、HTTP Status で監視するだけでは不完全です。なので PPR に限らない話ではありますが、App Router で実装したアプリケーションの監視は HTTP Status ではなく個別のエラー発生率などを元に行う必要があるでしょう。
+これが実害になってくるのは監視周りでしょう。そもそもApp Routerを利用してる場合にはStreamによるレスポンスがベースとなるため、HTTP Statusで監視するだけでは不完全です。なのでPPRに限らない話ではありますが、App Routerで実装したアプリケーションの監視はHTTP Statusではなく個別のエラー発生率などを元に行う必要があるでしょう。
 
-### static rendering で完結できるならその方が良い
+### static renderingで完結できるならその方が良い
 
-PPR はあくまで dynamic rendering を必要とするケースにおける最適化である、ということを念頭におく必要があります。X でやりとりしてて以下のようなコメントをいただきました。
+PPRはあくまでdynamic renderingを必要とするケースにおける最適化である、ということを念頭におく必要があります。Xでやりとりしてて以下のようなコメントをいただきました。
 
 https://twitter.com/sumiren_t/status/1793620259586666643
 
-> 一部を静的化できる＝ SSR でも SG と同じだけ速い、みたいな勘違いがされてないといいなという話でした（自分も前はそういう勘違いをしていたので）
+> 一部を静的化できる＝SSRでもSGと同じだけ速い、みたいな勘違いがされてないといいなという話でした（自分も前はそういう勘違いをしていたので）
 
-確かに、dynamic rendering を含むページでもPPR なら TTFBを SSG に近づけることが可能です。しかし、パフォーマンスというのはTTFBだけで測るものではありません。例えばTime to InteractiveにおいてはPPRでもSSRでも大きくは変わらないため、ページ全体をSSGにできるならその方が有利でしょう。
+確かに、dynamic renderingを含むページでもPPRならTTFBをSSGに近づけることが可能です。しかし、パフォーマンスというのはTTFBだけで測るものではありません。例えばTime to InteractiveにおいてはPPRでもSSRでも大きくは変わらないため、ページ全体をSSGにできるならその方が有利でしょう。
 
-PPRはパフォーマンスにおける銀の弾丸ではないものの一部パフォーマンスが改善されることは確かで、混乱しやすいところかもしれません。PPR においても、パフォーマンスの話はどの速度指標についての話なのか注意する必要があるでしょう。
+PPRはパフォーマンスにおける銀の弾丸ではないものの一部パフォーマンスが改善されることは確かで、混乱しやすいところかもしれません。PPRにおいても、パフォーマンスの話はどの速度指標についての話なのか注意する必要があるでしょう。
 
 ## 感想
 
-PPR は現存するレンダリングモデルにおいて最も理想的ではないかと筆者は感じています。もちろん裏側では非常に複雑なことをやっているわけですが、我々 Next.js ユーザーからすれば「基本は static rendering、一部を dynamic rendering」というルールに従うのみなのも、シンプルで良い点です。そしてその境界を`<Suspense>`で定義するという使い方も、筆者としてはとても好印象です。
+PPRは現存するレンダリングモデルにおいて最も理想的ではないかと筆者は感じています。もちろん裏側では非常に複雑なことをやっているわけですが、我々Next.jsユーザーからすれば「基本はstatic rendering、一部をdynamic rendering」というルールに従うのみなのも、シンプルで良い点です。そしてその境界を`<Suspense>`で定義するという使い方も、筆者としてはとても好印象です。
 
 v15のGA時に[PPRのロードマップ](https://nextjs.org/blog/next-15-rc#incremental-adoption-of-partial-prerendering-experimental)が発表されるとのことです。PPRが今後どういった進化を遂げるのか、非常に楽しみです。
