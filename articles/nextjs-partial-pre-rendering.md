@@ -100,9 +100,9 @@ Pages Router については[v12 のアルファ機能](https://nextjs.org/blog/
 Streaming SSR はページのレンダリングの一部を`<Suspense>`で遅延レンダリングにすることが可能で、レンダリングが完了するごとに徐々に結果がクライアントへと送信されます。
 
 ```tsx
-import { Suspense } from 'react'
-import { PostFeed, Weather } from './Components'
- 
+import { Suspense } from "react";
+import { PostFeed, Weather } from "./Components";
+
 export default function Posts() {
   return (
     <section>
@@ -113,7 +113,7 @@ export default function Posts() {
         <Weather />
       </Suspense>
     </section>
-  )
+  );
 }
 ```
 
@@ -136,12 +136,12 @@ https://zenn.dev/uhyo/books/rsc-without-nextjs/viewer/streaming-ssr
 
 これらのメリデメについて簡単に整理してみます。なおTTFBはTime to First Bytesの略です。
 
-| 観点           | SSG+Client fetch | Streaming SSR |
-|--------------|------------------|---------------|
-| TTFB         | 有利               | 若干不利          |
-| httpラウンドトリップ | 複数回              | 1回            |
-| CDNキャッシュ     | 可能               | 不可            |
-| 実装           | 冗長になりがち          | シンプル          |
+| 観点                 | SSG+Client fetch | Streaming SSR |
+| -------------------- | ---------------- | ------------- |
+| TTFB                 | 有利             | 若干不利      |
+| httpラウンドトリップ | 複数回           | 1回           |
+| CDNキャッシュ        | 可能             | 不可          |
+| 実装                 | 冗長になりがち   | シンプル      |
 
 :::message
 App RouterはVercelやセルフホスティングサーバーを用意することが最も基本的な運用パターンとなっているので、「サーバーが必要・不要」と言った観点は省略しています。
@@ -366,12 +366,12 @@ PPRの動作についてはおおよそ理解いただけたかと思います�
 
 [SSG/SSRにおける静的・動的データの混在](#ssgssrにおける静的動的データの混在)で示した表に、PPRを追加して比較してみます。
 
-| 観点           | PPR      | SSG+Client fetch | Streaming SSR | 
-|--------------|----------|------------------|---------------|
-| TTFB         | **有利**   | 有利               | 若干不利          |
-| httpラウンドトリップ | 1回       | 複数回              | 1回            | 
-| CDNキャッシュ     | **不可**   | 可能               | 不可            | 
-| 実装           | **シンプル** | 冗長になりがち          | シンプル          |
+| 観点                 | PPR          | SSG+Client fetch | Streaming SSR |
+| -------------------- | ------------ | ---------------- | ------------- |
+| TTFB                 | **有利**     | 有利             | 若干不利      |
+| httpラウンドトリップ | 1回          | 複数回           | 1回           |
+| CDNキャッシュ        | **不可**     | 可能             | 不可          |
+| 実装                 | **シンプル** | 冗長になりがち   | シンプル      |
 
 PPRではSSG+Client fetch相当のTTFBと実装のシンプルさを同時に得られます。HTML内に動的な要素が含まれるためCDNキャッシュこそできませんが、他の点においてはSSG+Client fetchとStreaming SSR両方のメリットを併せ持っています。
 
