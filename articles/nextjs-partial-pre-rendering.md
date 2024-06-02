@@ -55,7 +55,7 @@ PPRの話をする前に、これまでのNext.jsのレンダリングモデル�
 
 ### Pages Router時代
 
-Next.jsは元々、SSRができるReactフレームワークとして2016/10に登場しました。以下は当時のVercel（旧Zeit）のアナウンス記事です。
+Next.jsは元々、SSRができるReactフレームワークとして2016/10に登場しました。以下は当時のVercel(旧Zeit)のアナウンス記事です。
 
 https://vercel.com/blog/next
 
