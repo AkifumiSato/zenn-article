@@ -61,7 +61,7 @@ https://vercel.com/blog/next
 
 上記 v1 のアナウンスから長い間 Next.js は SSR をするためのフレームワークでしたが、約 3 年半後の 2019 年に登場する[v9.3](https://nextjs.org/blog/next-9-3)で SSG、[v9.5](https://nextjs.org/blog/next-9-5)で ISR が導入されたことで Next.js は複数のレンダリングモデルをサポートするフレームワークとなりました。
 
-当時は[Gatsby](https://www.gatsbyjs.com/)の台頭もあり SSG 人気が根強く、SSR しかできなかった Next.js のユーザーは Gatsby に流れることも多かったように思います。npm trends で確認すると 2019 年頃は Gatsby の方が上回っています(見づらくてすいません)。
+当時は[Gatsby](https://www.gatsbyjs.com/)の台頭もあり SSG 人気が根強く、SSR しかできなかった Next.js のユーザーは Gatsby に流れることも多かったように思います。npm trends で確認すると、少々見づらいですが 2019 年頃は Gatsby の方が上回っています。
 
 _npm trends(Gatsby vs Next.js)_
 ![npm trends](/images/nextjs-partial-pre-rendering/npm-trends.png)
