@@ -85,7 +85,23 @@ PPRで静的と表現されるのはstatic renderingです。一方アイラン�
 
 ここまでの説明を経てすでにお気づきの方もいるかもしれませんが、アイランドアーキテクチャにおけるアイランド相当な概念が、ReactやNext.jsの世界でも存在します。**Client Components**です。Server ComponentsにClient Componentsを埋め込んでいく様子は、まさしく静的HTMLの海に、アイランドを埋め込んでいく様子に近しいものです。
 
-このような比較はDan Abramov氏も言及しています。
+つまり、アイランドアーキテクチャはPPRではなく、Server/Client Componentsアーキテクチャと近いしいものと言えます。
+
+### Astroにおけるレンダリングモデル
+
+Client Componentsに対応するのがアイランドなら、Server Componentsに対応するのはなんでしょう？Astroで言うとこれはAstroテンプレートです。そしてPPRと比較すべきはAstroテンプレートやアイランドに対するレンダリングモデルです。
+
+Freshについては未調査ですが、現在AstroにおいてはSSRとSSGがサポートされているようです。そしてちょうど今日(!)、PPR相当の**Server islands**の実装が検討され始めたようです。
+
+https://github.com/withastro/roadmap/issues/945
+
+これらをまとめると、Next.js視点でAstroとの関係を比較すると以下のようになります。
+
+- PPR: Server islands
+- Server/Client Components: アイランドアーキテクチャ
+## 2層アーキテクチャの螺旋
+
+さて、前述のようなNext.jsとAstroの比較はDan Abramov氏も言及しています。
 
 https://x.com/dan_abramov2/status/1757986886390264291
 
