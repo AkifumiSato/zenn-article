@@ -91,13 +91,13 @@ PPRで静的と表現されるのはstatic renderingです。一方アイラン�
 
 Client Componentsに対応するのがアイランドなら、Server Componentsに対応するのはなんでしょう？Astroで言うとこれはAstroテンプレートです。そしてPPRと比較すべきはAstroテンプレートやアイランドに対するレンダリングモデルです。
 
-Freshについては未調査ですが、現在AstroにおいてはSSRとSSGがサポートされているようです。そしてちょうど今日(!)、PPR相当の**Server islands**の実装が検討され始めたようです。
+Freshについては未調査ですが、現在Astroにおいてはページ単位でのSSRとSSGがサポートされているようです。そしてちょうど先日、PPR相当の**Server islands**の実装が検討され始めたようです。
 
 https://github.com/withastro/roadmap/issues/945
 
 これらをまとめると、Next.js視点でAstroとの関係を比較すると以下のようになります。
 
-- PPR: Server islands
+- PPR: Server islandsサポート
 - Server/Client Components: アイランドアーキテクチャ
 ## 2層アーキテクチャの螺旋
 
