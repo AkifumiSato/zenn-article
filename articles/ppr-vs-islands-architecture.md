@@ -69,7 +69,7 @@ https://docs.astro.build/ja/concepts/islands/
 
 ## PPRとアイランドアーキテクチャの違い
 
-PPRとアイランドアーキテクチャはどちらも「静的」な部分をベースに一部を分離するという点で似ているようにも見えます。前述の図も見比べると画面全体を静的とし、一部を分離している様子なども似ているかもしれません。
+PPRとアイランドアーキテクチャはどちらも「静的」な部分をベースに一部を分離するという点で似ているようにも見えます。前述の図も見比べると画面全体を「静的」とし、一部を分離している様子なども似ているかもしれません。
 
 しかし、**PPRの主眼はサーバーサイドでのレンダリング、アイランドアーキテクチャの主眼はクライアントサイドでのレンダリングです**。同じく「静的」という言葉を用いていますが、これらは「何が静的か」という点で全く異なる意味を持っています。
 
@@ -79,13 +79,13 @@ PPRとアイランドアーキテクチャはどちらも「静的」な部分�
 | 主な最適化対象   | TTFB             | JavaScriptサイズ         |
 | 「静的」が指すもの | static rendering | JavaScriptを必要としないHMTL |
 
-PPRで静的と表現されるのはstatic renderingです。一方アイランドアーキテクチャで静的と表現されるのはJavaScriptを必要としない非インタラクティブなHTMLです。
+PPRで「静的」と表現されるのはstatic renderingです。一方アイランドアーキテクチャで「静的」と表現されるのはJavaScriptを必要としない非インタラクティブなHTMLです。
 
 ### Client Componentsとislandの比較
 
 ここまでの説明を経てすでにお気づきの方もいるかもしれませんが、アイランドアーキテクチャにおけるアイランド相当な概念が、ReactやNext.jsの世界でも存在します。**Client Components**です。Server ComponentsにClient Componentsを埋め込んでいく様子は、まさしく静的HTMLの海に、アイランドを埋め込んでいく様子に近しいものです。
 
-つまり、アイランドアーキテクチャはPPRではなく、Server/Client Componentsアーキテクチャと近いしいものと言えます。
+つまり、アイランドアーキテクチャはPPRではなく、**RSC(React Server Components)アーキテクチャと近いしいもの**と言えます。
 
 ### Astroにおけるレンダリングモデル
 
@@ -95,10 +95,6 @@ Freshについては未調査ですが、現在Astroにおいてはページ単�
 
 https://github.com/withastro/roadmap/issues/945
 
-これらをまとめると、Next.js視点でAstroとの関係を比較すると以下のようになります。
-
-- PPR: Server islandsサポート
-- Server/Client Components: アイランドアーキテクチャ
 ## 2層アーキテクチャの螺旋
 
 さて、前述のようなNext.jsとAstroの比較はDan Abramov氏も言及しています。
@@ -115,17 +111,39 @@ Server ComponentsとClient Components、Astro TemplatesとAstro Islands、PHP �
 
 アイディア自体は新しいものではなく、多くで使われている古きものです。しかしこれらは同一ではありません。それぞれに小さな進化が含まれ、時代と共に技術の螺旋を歩んでいます。
 
+:::details 技術選定の螺旋
 https://speakerdeck.com/twada/understanding-the-spiral-of-technologies-2023-edition?slide=10
 
 > - 技術の変化の歴史は一見すると**振り子**に見える
 > - でも実は**螺旋**構造。同じところには戻ってこない
 > - **差分**と、それを**可能にした技術**が重要
 
-古くはPHPとjQuery pluginsで実装していたアイディアが今ではNext.jsやAstroで採用されている訳ですが、これらはそれぞれ異なる螺旋的進化を経ています。似ているからこそ違いを理解することが重要です。
+古くはPHPとjQuery pluginsで実装していたアイディアが今ではNext.jsやAstroで採用されている訳ですが、これらはユニバーサルなJavaScriptで実装できるというメリットと、さらにそれぞれ異なる螺旋的進化を経ています。
+:::
+
+## まとめ
+
+ここまでの内容を元にPHP+jQuery、Next.js、Astroのそれぞれのレンダリングモデルやアーキテクチャについて整理してみましょう。
+
+| 観点            | PHP+jQuery | Next.js           | Astro        |
+|---------------|------------|-------------------|--------------|
+| レンダリングモデル     | クラシックSSR   | SSG,ISR,SSR,PPR   | SSG,SSR      |
+| 2層アーキテクチャ     | (名称なし)     | RSCアーキテクチャ        | アイランドアーキテクチャ |
+| 2層アーキテクチャ(外側) | PHPテンプレート  | Server Components | Astroテンプレート  |
+| 2層アーキテクチャ(内側) | jQuery     | Client Components | アイランド        |
+
+:::message
+クラシックSSRは以下資料より出典
+https://speakerdeck.com/recruitengineers/react-2023?slide=7
+:::
+
+前述のServer islandsがサポートされるということは、AstroのレンダリングモデルにPPR相当が追加されることになります。
+
+PPRとアイランドアーキテクチャがそれぞれ何と比較すべきか、これで明確になったかと思います。
 
 ## 感想
 
-PPRではサーバー側のstatic/dynamicな境界を設計する必要があります。一方Server/Client Componentsではクライアント側でのインタラクティブ/非インタラクティブな境界を設計する必要があります。これら2層のレイヤーごとに設計を行う必要があることを意識すると、アイランドアーキテクチャとPPRは全く異なり、むしろServer/Client Componentsと類似した技術であることが理解いただけるかと思います。そしてこの2層のレイヤーに分けて考える必要があることは、前回の記事でも言及しましたuhyoさんの言う**多段階計算**そのものです。
+PPRではサーバー側のstatic/dynamicな境界を設計する必要があります。一方RSCアーキテクチャではクライアント側でのインタラクティブ/非インタラクティブな境界を設計する必要があります。これら2層のレイヤーごとに設計を行う必要があることを意識すると、アイランドアーキテクチャとPPRは全く異なり、むしろRSCアーキテクチャと類似した技術であることが理解いただけるかと思います。そしてこの2層のレイヤーに分けて考える必要があることは、前回の記事でも言及しましたuhyoさんの言う**多段階計算**そのものです。
 
 https://zenn.dev/uhyo/articles/react-server-components-multi-stage#%E4%B8%80%E8%A8%80%E3%81%A7react-server-components%E3%82%92%E7%90%86%E8%A7%A3%E3%81%99%E3%82%8B
 
