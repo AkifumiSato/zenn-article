@@ -95,6 +95,11 @@ Freshについては未調査ですが、現在Astroにおいてはページ単�
 
 https://github.com/withastro/roadmap/issues/945
 
+これらをまとめると、Next.js視点でAstroとの関係を比較すると以下のようになります。
+
+- PPR: Server islandsサポート
+- Server/Client Components: アイランドアーキテクチャ
+
 ## 2層アーキテクチャの螺旋
 
 さて、前述のようなNext.jsとAstroの比較はDan Abramov氏も言及しています。
@@ -120,26 +125,6 @@ https://speakerdeck.com/twada/understanding-the-spiral-of-technologies-2023-edit
 
 古くはPHPとjQuery pluginsで実装していたアイディアが今ではNext.jsやAstroで採用されている訳ですが、これらはユニバーサルなJavaScriptで実装できるというメリットと、さらにそれぞれ異なる螺旋的進化を経ています。
 :::
-
-## まとめ
-
-ここまでの内容を元にPHP+jQuery、Next.js、Astroのそれぞれのレンダリングモデルやアーキテクチャについて整理してみましょう。
-
-| 観点            | PHP+jQuery | Next.js           | Astro        |
-|---------------|------------|-------------------|--------------|
-| レンダリングモデル     | クラシックSSR   | SSG,ISR,SSR,PPR   | SSG,SSR      |
-| 2層アーキテクチャ     | (名称なし)     | RSCアーキテクチャ        | アイランドアーキテクチャ |
-| 2層アーキテクチャ(外側) | PHPテンプレート  | Server Components | Astroテンプレート  |
-| 2層アーキテクチャ(内側) | jQuery     | Client Components | アイランド        |
-
-:::message
-クラシックSSRは以下資料より出典
-https://speakerdeck.com/recruitengineers/react-2023?slide=7
-:::
-
-前述のServer islandsがサポートされるということは、AstroのレンダリングモデルにPPR相当が追加されることになります。
-
-PPRとアイランドアーキテクチャがそれぞれ何と比較すべきか、これで明確になったかと思います。
 
 ## 感想
 
