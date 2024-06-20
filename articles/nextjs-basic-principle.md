@@ -30,33 +30,52 @@ https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fet
 
 ### 必要なデータを必要な場所で
 
-従来のPages Routerのアーキテクチャではまずデータ取得を行い、ページにpropsで渡すという構成がとられていました。これはデータの**バケツリレー**を生み出し冗長な実装の原因となりえました。一方App Routerにおいては、Server Componentsによりデータを参照するComponentの近くでデータ取得の実装を行うことができるようになりました。
+従来のPages Routerのアーキテクチャではまずデータ取得を行い、ページにpropsで渡すという構成がとられていました。これはデータの**バケツリレー**を生み出し冗長な実装の原因となりえました。一方App Routerにおいては、Server Componentsにより**データを参照するComponentの近くでデータ取得の実装を行うことができる**ようになりました。
 
-しかし、末端のComponentでデータ取得を実装するとN+1 fetchを生み出すのではないかと懸念される方もいらっしゃると思います。App RouterではこのようなN+1 fetchを避ける手段として、[Request Memoization](https://nextjs.org/docs/app/building-your-application/caching#request-memoization)が実装されています。この機能を活かすためには、`fetch`に同じURLとオプションを指定することが必要です。容易にMemoizationを活かすためにも、多くの場合データアクセス層を分離しておくことが望ましいでしょう。
+しかし、末端のComponentでデータ取得を実装するとN+1 fetchを生み出すのではないかと懸念される方もいらっしゃると思います。App RouterではこのようなN+1 fetchを避ける手段として、[Request Memoization](https://nextjs.org/docs/app/building-your-application/caching#request-memoization)が実装されています。この機能を活かすためには、`fetch`に同じURLとオプションを指定することが必要です。複数のComponentで参照するデータ取得は容易にMemoizationを活かすためにも、多くの場合データアクセス層を分離しておくことが望ましいでしょう。
 
-```ts
-// ❌
-const data = await fetch(DUMMY_API_URL, {
-  method: "GET",
-  headers: {
-    "ORIGINAL_HEADER": "hoge", // fetchする際にここが一致してないとキャッシュされない！
-  },
-}).then((res) => res.json())
-
-// ✅
-export async function dummyApiFetchData() {
-  return fetch(DUMMY_API_URL, {
-    method: "GET",
+```tsx
+// app/lib/api/product.ts(データアクセス層)
+export async function getProduct(id: string) {
+  return fetch(`https://dummyjson.com/products/${id}`, {
     headers: {
-      "ORIGINAL_HEADER": "hoge", // データアクセス層があれば1回で済むし指定漏れのミスも防げる
+      "ORIGINAL_HEADER": "ORIGINAL_VALUE",
     },
-  }).then((res) => res.json())
+  })
+    .then(res => res.json())
 }
 
-const data = await dummyApiFetchData()
+// app/_components/header.tsx
+export default async function Header() {
+  const product = await getProducts("1")
+  return <HeaderPresentational data={ product } />
+}
+
+// app/_components/product-detail.tsx
+export default async function ProductDetail() {
+  const product = await getProducts("1")
+  return <ProductDetailPresentational data={ product } />
+}
 ```
 
 ### Parallel Data Fetchingを意識する
+
+依存関係のない複数のデータ取得を行う場合、データ取得がウォーターフォールにならないように気をつけましょう。`fetch`で作成されるPromiseを`Promise.all()`に渡せば、データ取得のPromiseをParallel(並列)で実行することが可能です、これにより不要なデータ取得のウォーターフォールを防げます。
+
+https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#parallel-data-fetching
+
+```tsx
+// ❌
+const artist = await getArtist(username)
+const albums = await getArtistAlbums(username)
+```
+
+```tsx
+// ✅
+const artistData = getArtist(username)
+const albumsData = getArtistAlbums(username)
+const [artist, albums] = await Promise.all([artistData, albumsData])
+```
 
 ## Server ComponentsとRendering
 
