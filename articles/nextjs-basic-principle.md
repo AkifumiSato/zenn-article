@@ -8,19 +8,19 @@ published: false
 
 Next.jsにおける設計哲学は、Pages RouterとApp Routerで大きく異なります。Next.jsはApp Routerへの移行を推奨していますが、プロダクションでApp Routerを採用してる事例は日本ではまだまだ少ないため、設計思想や基本パターンが普及してないように感じます。
 
-そこで本稿では、筆者なりにNext.jsにおける設計思想と基本パターンをまとめてみました。本稿では大きく3つのセクションに分けてこれらを解説します。
+本稿は筆者なりにNext.jsにおける設計思想と基本パターンをまとめたものです。大きく3つのセクションに分けてこれらを解説します。
 
 - [Server Componentsとfetch](#Server-Componentsとfetch)
 - [Server ComponentsとRendering](#Server-ComponentsとRendering)
 - [Client Components](#Client-Components)
 
-本稿がまだApp Routerに不慣れで勘所が掴めない、という方の参考になれば幸いです。
+この記事がまだApp Routerに不慣れで勘所が掴めない、という方の参考になれば幸いです。
 
 ## Server Componentsとfetch
 
-React Server Componentsアーキテクチャにおいて、データ取得・操作をどう考えるかは最も重要なポイントの1つです。これを誤ってしまうと、アーキテクチャのメリットを教授できない可能性があります。
+React Server Componentsアーキテクチャにおいて、データ取得・操作をどう考えるかは最も重要なポイントの1つです。これを誤ってしまうと、アーキテクチャのメリットを享受できない可能性があります。
 
-### データ取得はServer Components、データ操作はServer Actions
+### 1. データ取得はServer Components、データ操作はServer Actions
 
 React Server Componentsアーキテクチャにおいては、データ取得は可能な限りServer側で行うこと、そしてデータ操作に関してはServer Actionsを利用することが推奨されています。Server側なら高速で安全、そしてシンプルな実装が可能なためです。これらは以下で言及されています。
 
@@ -28,7 +28,7 @@ https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fet
 
 公式にも「可能な限り」と書いてはありますが、筆者が考える限りのUIパターンにおいてこれらの設計が成り立たない=Client側でデータ取得や操作を行わないといけない事情というのは、ほとんどないように思われます。Client側でのデータ取得・操作はアンチパターンだと思ってServer側で実装するように心がけましょう。
 
-### 必要なデータを必要な場所で
+### 2. 必要なデータを必要な場所で
 
 従来のPages Routerのアーキテクチャではまずデータ取得を行い、ページにpropsで渡すという構成がとられていました。これはデータの**バケツリレー**を生み出し冗長な実装の原因となりえました。一方App Routerにおいては、Server Componentsにより**データを参照するComponentの近くでデータ取得の実装を行うことができる**ようになりました。
 
@@ -58,7 +58,7 @@ export default async function ProductDetail() {
 }
 ```
 
-### Parallel Data Fetchingを意識する
+### 3. Parallel Data Fetchingを意識する
 
 依存関係のない複数のデータ取得を行う場合、データ取得がウォーターフォールにならないように気をつけましょう。`fetch`で作成されるPromiseを`Promise.all()`に渡せば、データ取得のPromiseをParallel(並列)で実行することが可能です、これにより不要なデータ取得のウォーターフォールを防げます。
 
