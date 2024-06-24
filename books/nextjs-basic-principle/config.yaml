@@ -1,0 +1,8 @@
+title: "Next.jsの設計思想と基本パターン"
+summary: "筆者なりに、Next.jsにおける設計思想と基本パターンをまとめました。"
+topics: ["nextjs", "react"]
+published: false
+price: 0 # 有料の場合200〜5000
+# 本に含めるチャプターを順番に並べましょう
+chapters:
+  - 0_intro
