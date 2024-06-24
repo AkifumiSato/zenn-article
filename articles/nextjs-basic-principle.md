@@ -43,7 +43,7 @@ React Server Componentsでは可能な限り、**データ取得はServer Compon
 
 従来Pages Routerでは[getServerSideProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)/[getStaticProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)でまずデータ取得を行い、ページにpropsで渡すという構成がとられていました。これは実際に利用する末端のコンポーネントまでデータの**バケツリレー**を生み出し、冗長な実装の原因となりえました。一方App Routerにおいては、Server Componentsにより**データを参照する末端のコンポーネントでデータ取得を行うことができる**ようになりました。
 
-しかし、末端のコンポーネントでデータ取得を実装するとN+1 fetchを生み出すのではないかと懸念される方もいらっしゃると思います。App RouterではこのようなN+1 fetchを避ける手段として、[Request Memoization](https://nextjs.org/docs/app/building-your-application/caching#request-memoization)が実装されています。
+しかし、末端のコンポーネントでデータ取得を実装すると重複するリクエストが多発するのではないかと懸念される方もいらっしゃると思います。App Routerではこのような重複リクエストを避けるため、[Request Memoization](https://nextjs.org/docs/app/building-your-application/caching#request-memoization)が実装されています。
 
 ```ts
 async function getItem() {
@@ -90,6 +90,8 @@ const artistData = getArtist(username)
 const albumsData = getArtistAlbums(username)
 const [artist, albums] = await Promise.all([artistData, albumsData])
 ```
+
+TBW: 非同期Componentが兄弟要素で並ぶ場合は、Reactが並列化してくれる
 
 ## Server Componentsとレンダリング
 
