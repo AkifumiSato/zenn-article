@@ -33,12 +33,6 @@ Next.jsにおける設計思想は、Pages RouterとApp Routerで大きく異な
 
 ### 1. データ取得はServer Components、データ操作はServer Actions
 
-React Server Componentsでは可能な限り、**データ取得はServer Components・データ操作はServer Actionsを利用することが推奨**されています。サーバー側なら高速で安全、そしてシンプルな実装が可能なためです。
-
-これはNext.jsの[Patterns and Best Practices](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-on-the-server)でも示されています。「可能な限り」と書いてはありますが、筆者が考える限りのUIパターンにおいてこれらの設計が成り立たない=クライアント側でデータ取得や操作を行わないといけない事情というのは利用してる外部SDK都合などならあるかもしれませんが、内省システムの場合はほとんどないように思われます。
-
-データ取得・データ操作の処理は極力サーバー側に実装することを心がけましょう。
-
 ### 2. 必要なデータを必要な場所で
 
 従来Pages Routerでは[getServerSideProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)/[getStaticProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)でまずデータ取得を行い、ページにpropsで渡すという構成がとられていました。これは実際に利用する末端のコンポーネントまでデータの**バケツリレー**を生み出し、冗長な実装の原因となりえました。一方App Routerにおいては、Server Componentsにより**データを参照する末端のコンポーネントでデータ取得を行うことができる**ようになりました。
