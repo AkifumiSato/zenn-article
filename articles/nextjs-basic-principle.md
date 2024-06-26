@@ -25,9 +25,10 @@ Next.jsにおける設計思想は、Pages RouterとApp Routerで大きく異な
 まだApp Routerに不慣れで勘所が掴めないという方の参考になれば幸いです。
 
 :::message
+
 - App Routerの基本的な機能や用語については前提知識としており、本稿では解説しないのでご注意ください。
 - 本稿では**React Server Components**の定義を「Server ComponentsとClient ComponentsからなるReactの新しいアーキテクチャ」として扱います。React Server Components＝Server Componentsではないのでご注意ください。
-:::
+  :::
 
 ## Server Componentsとfetch
 
@@ -41,8 +42,8 @@ Next.jsにおける設計思想は、Pages RouterとApp Routerで大きく異な
 
 ```ts
 async function getItem() {
-  const res = await fetch('https://.../item/1')
-  return res.json()
+  const res = await fetch("https://.../item/1");
+  return res.json();
 }
 
 // <Component1 />
@@ -50,12 +51,12 @@ async function getItem() {
 // の順で呼び出された場合
 
 async function Component1() {
-  const item = await getItem() // cache MISS
+  const item = await getItem(); // cache MISS
   // ...
 }
 
 async function Component2() {
-  const item = await getItem() // cache HIT
+  const item = await getItem(); // cache HIT
   // ...
 }
 ```
@@ -74,15 +75,15 @@ Request Memoizationはメモ化なので、当然ながら`fetch()`の引数に�
 
 ```tsx
 // ❌ `artist`の取得が終わらないと`albums`の取得が始まらない
-const artist = await getArtist(username)
-const albums = await getArtistAlbums(username)
+const artist = await getArtist(username);
+const albums = await getArtistAlbums(username);
 ```
 
 ```tsx
 // ✅ `artist`と`albums`の取得が並列で行われる
-const artistData = getArtist(username)
-const albumsData = getArtistAlbums(username)
-const [artist, albums] = await Promise.all([artistData, albumsData])
+const artistData = getArtist(username);
+const albumsData = getArtistAlbums(username);
+const [artist, albums] = await Promise.all([artistData, albumsData]);
 ```
 
 TBW: 非同期Componentが兄弟要素で並ぶ場合は、Reactが並列化してくれる
@@ -107,19 +108,19 @@ App Routerではデフォルトはstatic renderingになっており、dynamic r
 ```tsx
 // static renderingだとこのComponentは`next build`時にしか実行されない
 export function CurrentServerDate() {
-  return <p>{ new Date().toLocaleString() }</p>
+  return <p>{new Date().toLocaleString()}</p>;
 }
 
 export async function Page() {
   // この行があるかどうかで、static renderingかどうか変わる
-  const data = await fetch('...', { cache: 'no-store' })
+  const data = await fetch("...", { cache: "no-store" });
 
   return (
     <>
       ...
       <CurrentServerDate />
     </>
-  )
+  );
 }
 ```
 
@@ -136,6 +137,12 @@ export async function Page() {
 ### 8. Presentational/Containerパターンを意識する
 
 https://quramy.medium.com/react-server-component-%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8-container-presentation-separation-7da455d66576
+
+### その他TBW
+
+- 細粒度のAPI設計
+- DataLoaderを利用するパターン
+- tagの設計
 
 ## その他参考
 

@@ -1,5 +1,5 @@
-title: "Next.jsの設計思想と基本パターン"
-summary: "筆者なりに、Next.jsにおける設計思想と基本パターンをまとめました。"
+title: "Next.jsの設計思想とベストプラクティス"
+summary: "筆者なりに、Next.jsにおける設計思想とベストプラクティスをまとめました。"
 topics: ["nextjs", "react"]
 published: false
 price: 0 # 有料の場合200〜5000
