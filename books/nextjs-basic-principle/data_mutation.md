@@ -36,13 +36,18 @@ export async function createTodo(formData: FormData) {
 import { createTodo } from "./actions";
 
 export default function CreateTodo() {
-  return <form action={updateItem}>{/* ... */}</form>;
+  return (
+    <form action={createTodo}>
+      {/* ... */}
+      <button>create todo</button>
+    </form>
+  );
 }
 ```
 
-サーバー側で実行される関数`createTodo`をClient Componentsの`<form>`の`action`propsに指定しています。このように非常にシンプルな実装でサーバー側関数を呼び出せることにより、開発者はデータ操作の実装に集中できます。
+サーバー側で実行される関数`createTodo`をClient Componentsの`<form>`の`action`propsに直接渡しているのがわかります。実際にsubmit時にはサーバー側で`createTodo`が実行されます。このように非常にシンプルな実装でクライアントサイドからサーバー側関数を呼び出せることにより、開発者はデータ操作の実装に集中できます。
 
-Server ActionsはApp Routerがサポートしており3rd partyな実装ではないため、他にも以下のようなメリットが得られます。
+Server Actions自体はReactの仕様ですが、App Router上で実装されているため他にも以下のようなメリットが得られます。
 
 ### キャッシュのrevalidate
 
@@ -60,7 +65,7 @@ export async function updateTodo() {
 
 ### redirect時の通信効率
 
-App Routerではサーバーサイドで呼び出せる[`redirect`](https://nextjs.org/docs/app/building-your-application/routing/redirecting#redirect-function)という関数があります。データ操作後にページをリダレイクとしたいことはよくあるケースですが、これをServer Actions内で呼び出すとレスポンスにリダイレクト先ページの[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)が含まれるため、従来データ操作リクエストとリダイレクト先情報のリクエストで2往復は必要だったhttp通信が、1度で済みます。
+App Routerではサーバーサイドで呼び出せる[`redirect`](https://nextjs.org/docs/app/building-your-application/routing/redirecting#redirect-function)という関数があります。データ操作後にページをリダレイクトしたいことはよくあるケースですが、これをServer Actions内で呼び出すとレスポンスにリダイレクト先ページの[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)が含まれるため、従来データ操作リクエストとリダイレクト後のリクエストで2往復は必要だったhttp通信が、1度で済みます。
 
 ```tsx
 // app/actions.ts
@@ -90,14 +95,16 @@ export async function createTodo(formData: FormData) {
 App RouterのServer Actionsでは、ユーザーがJavaScriptをOFFにしてたり未ロードであっても動作するよう実装されています。
 
 :::message
-[公式](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations#behavior)では「Progressive Enhancementのサポート」と称されていますが、厳密にはJavaScript非動作環境のサポートとProgressive Enhancementは異なると筆者は理解しています。詳しくは以下をご参照ください。
+[公式ドキュメント](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations#behavior)では「Progressive Enhancementのサポート」と称されていますが、厳密にはJavaScript非動作環境のサポートとProgressive Enhancementは異なると筆者は理解しています。詳しくは以下をご参照ください。
 
 - https://developer.mozilla.org/ja/docs/Glossary/Progressive_Enhancement
 - https://developer.mozilla.org/ja/docs/Glossary/Graceful_degradation
 
 :::
 
-これにより、[FID](https://web.dev/articles/fid?hl=ja)の向上も見込めます。実際にはFormライブラリを利用しつつServer Actionsを利用することが多いでしょうから、筆者はJavaScript非動作時もサポートしてる[Conform](https://conform.guide/)をおすすめします。
+これにより、[FID](https://web.dev/articles/fid?hl=ja)の向上も見込めます。実際にはFormライブラリを利用しつつServer Actionsを利用するケースが多いと想定されます。筆者はJavaScript非動作時もサポートしてるFormライブラリの[Conform](https://conform.guide/)をおすすめします。
+
+https://zenn.dev/akfm/articles/server-actions-with-conform
 
 ## 結論
 
