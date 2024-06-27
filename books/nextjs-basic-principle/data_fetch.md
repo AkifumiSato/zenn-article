@@ -63,9 +63,9 @@ function ComponentC({ data }) {
 
 ## 設計・プラクティス
 
-App Routerは[Server Components](https://nextjs.org/docs/app/building-your-application/rendering/server-components)をサポート・基本としています。Server Componentsはサーバー側でのみレンダリングされるため、より積極的なサーバー活用を可能にします。RFCの[Motivation](https://github.com/reactjs/rfcs/blob/main/text/0188-server-components.md#motivation)によると、バンドルサイズの低減、バックエンドへのフルアクセス、コード分割の自動化など複数の課題に対し、統一されたソリューションとして採用されたのが**React Server Components**アーキテクチャです。
+App Routerは[Server Components](https://nextjs.org/docs/app/building-your-application/rendering/server-components)をサポート・基本としています。Server Componentsはサーバー側で**のみ**レンダリングされるため、より積極的なサーバー活用を可能にします。RFCの[Motivation](https://github.com/reactjs/rfcs/blob/main/text/0188-server-components.md#motivation)によると、バンドルサイズの低減、バックエンドへのフルアクセス、コード分割の自動化など複数の課題に対し、統一されたソリューションとして採用されたのが**React Server Components**アーキテクチャです。
 
-Server Componentsは非同期関数をサポートしており、`fetch`を直接扱うことが可能です。前述の例で考えてみると、`<Page>`/`<ComponentA>`/`<ComponentB>`では`data`はバケツリレーするのみだったので、`<ComponentC>`を以下のように書き換えることができます。
+Server Componentsは非同期関数をサポートしており、`fetch`を直接的に扱うことが可能です。前述の例で考えてみると、`<Page>`/`<ComponentA>`/`<ComponentB>`では`data`はバケツリレーするのみだったので、`<ComponentC>`を以下のような非同期関数に書き換えることができます。
 
 ```tsx
 async function ComponentC() {
@@ -77,7 +77,7 @@ async function ComponentC() {
 }
 ```
 
-これにより従来ページの外側でしかできなかったデータ取得が、**データを参照したいコンポーネント、もしくはその近く**で行えるようになりました。従来のReactコンポーネントはhtml/css/jsをカプセル化していましたが、React Server Componentsにおいてはデータ取得まで含めてカプセル化できることになります。
+これにより従来ページの外側でしかできなかったデータ取得が、**データを参照したいコンポーネント、もしくはその近く**で行えるようになりました。従来のReactコンポーネントはhtml/css/jsをカプセル化していましたが、React Server Componentsアーキテクチャにおいてはデータ取得まで含めてカプセル化できることになります。
 
 ### Request Memoization
 
@@ -104,23 +104,24 @@ async function Component2() {
 }
 ```
 
-Request Memoizationはメモ化なので、当然ながら`fetch()`の引数に同じURLとオプション指定が必要です。上記例における`getItem()`のように、複数のコンポーネントで実行しうるデータ取得は関数などに抽出しておくことが望ましいでしょう。
+Request Memoizationはいわゆるメモ化なので、`fetch()`の引数に同じURLとオプション指定が必要です。上記例における`getItem()`のように、複数のコンポーネントで実行しうるデータ取得は関数などに抽出しておくことで、引数の一致ミスなど起こりづらくすることが望ましいでしょう。
 
 ## 結論
 
-このように、App RouterにおけるServer Componentsでのデータ取得は非常に優れた設計とメリットを併せ持っています。そのため、App Routerでは可能な限り**データ取得はServer Componentsで行うことを推奨**しています。これはNext.jsの[Patterns and Best Practices](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-on-the-server)でも示されています。
+Server Componentsでのデータ取得はシンプルで優れた設計と速度・安全性などのメリットを併せ持っています。そのため、App Routerでは可能な限り
 
-データ取得は、実際にデータを参照するコンポーネント自体・もしくは近くのServer Componentsで行うようにしましょう。
+- **データ取得はServer Componentsで行うこと**
+- **データ取得はデータを利用する場所で行うこと**
+
+を推奨しています。これはNext.jsの[Patterns and Best Practices](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-on-the-server)でも示されています。
+
+データ取得は必要とする場所で、Server Componentsで行うことを基本としましょう。
 
 ## 例外
 
-### サイト内で利用する外部SaaSのSDK都合
-
-サイト内で利用する外部SaaSのSDK都合で、クライアントサイドでデータ取得や操作を行わないことはあるかもしれません。しかし可能なら、Server Componentsで処理する方が良いでしょう。
-
 ### `useActionState`とServer Actionsを組み合わせて使う場合
 
-ユーザーの入力に基づいてサーバー側でデータ取得を行いたいケースにおいては、URLを変更してServer Componentsを再実行する手段もありますが、[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)と[`useActionState`](https://react.dev/reference/react/useActionState)(旧: `useFormState`)を利用して実装することも可能です。
+ユーザーの入力に基づいてデータ取得を行いたいケースにおいては、[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)と[useActionState](https://react.dev/reference/react/useActionState)(旧: `useFormState`)を利用して実装することが可能です。
 
 以下はユーザーの入力に基づいて商品を検索する実装例です。
 
@@ -132,17 +133,14 @@ export async function searchProducts(
   _prevState: Product[],
   formData: FormData,
 ) {
-  const name = formData.get("name") as string;
-  const res = await fetch(`https://dummyjson.com/products/search?q=${name}`);
+  const query = formData.get("query") as string;
+  const res = await fetch(`https://dummyjson.com/products/search?q=${query}`);
   const { products } = (await res.json()) as { products: Product[] };
 
   return products;
 }
 
-type Product = {
-  id: number;
-  title: string;
-};
+// ...
 ```
 
 ```tsx
@@ -158,9 +156,9 @@ export default function Form() {
   return (
     <>
       <form action={action}>
-        <label htmlFor="name">
+        <label htmlFor="query">
           Search Product:&nbsp;
-          <input type="text" id="name" name="name" />
+          <input type="text" id="query" name="query" />
         </label>
         <button type="submit">Submit</button>
       </form>
@@ -173,3 +171,9 @@ export default function Form() {
   );
 }
 ```
+
+検索したい文字列を入力し、Submitボタンを押すとヒットした商品の名前が表出するようになっています。単純なページであれば、以下公式チュートリアルの実装例のように`router.replace()`によってURLを更新・Server Componentsごと再実行する手段もあります。
+
+https://nextjs.org/learn/dashboard-app/adding-search-and-pagination
+
+しかしURLを変更したくない・他のコンテンツ部分を再レンダリングしたくないなどの場合、このようにServer Actionsと`useActionState`を利用することを検討すると良いでしょう。
