@@ -1,5 +1,5 @@
-title: "Next.jsの設計思想とベストプラクティス"
-summary: "筆者なりに、Next.jsにおける設計思想とベストプラクティスをまとめました。"
+title: "Next.jsの考え方"
+summary: "筆者なりに、Next.js(App Router)における設計思想やベストプラクティスをまとめました。"
 topics: ["nextjs", "react"]
 published: false
 price: 0 # 有料の場合200〜5000
@@ -8,8 +8,8 @@ chapters:
   - intro
   - data_fetch
   - data_mutation
-  - parallel_data_fetch
   - static_dynamic_rendering
+  - parallel_data_fetch
   - router_cache
   - composite_pattern
   - presentational_container_pattern

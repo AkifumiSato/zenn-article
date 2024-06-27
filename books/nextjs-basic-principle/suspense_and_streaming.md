@@ -4,7 +4,7 @@ title: "SuspenseとStreaming"
 
 ## 背景
 
-## ベストプラクティス
+## 設計・プラクティス
 
 ## 結論
 

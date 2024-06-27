@@ -4,7 +4,7 @@ title: "Partial Pre Rendering(PPR)"
 
 ## 背景
 
-## ベストプラクティス
+## 設計・プラクティス
 
 ## 結論
 

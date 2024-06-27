@@ -61,7 +61,7 @@ function ComponentC({ data }) {
 }
 ```
 
-## ベストプラクティス
+## 設計・プラクティス
 
 App Routerは[Server Components](https://nextjs.org/docs/app/building-your-application/rendering/server-components)をサポート・基本としています。Server Componentsはサーバー側でのみレンダリングされるため、より積極的なサーバー活用を可能にします。RFCの[Motivation](https://github.com/reactjs/rfcs/blob/main/text/0188-server-components.md#motivation)によると、バンドルサイズの低減、バックエンドへのフルアクセス、コード分割の自動化など複数の課題に対し、統一されたソリューションとして採用されたのが**React Server Components**アーキテクチャです。
 
