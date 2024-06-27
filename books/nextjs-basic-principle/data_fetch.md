@@ -1,5 +1,5 @@
 ---
-title: "データ取得はServer Componentsで、必要な場所で"
+title: "データ取得とServer Components"
 ---
 
 ## 背景

@@ -1,5 +1,5 @@
 ---
-title: "データ操作はServer Actionsで"
+title: "データ操作とServer Actions"
 ---
 
 ## 背景

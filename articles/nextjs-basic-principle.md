@@ -32,37 +32,6 @@ Next.jsにおける設計思想は、Pages RouterとApp Routerで大きく異な
 
 ## Server Componentsとfetch
 
-### 1. データ取得はServer Components、データ操作はServer Actions
-
-### 2. 必要なデータを必要な場所で
-
-従来Pages Routerでは[getServerSideProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)/[getStaticProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)でまずデータ取得を行い、ページにpropsで渡すという構成がとられていました。これは実際に利用する末端のコンポーネントまでデータの**バケツリレー**を生み出し、冗長な実装の原因となりえました。一方App Routerにおいては、Server Componentsにより**データを参照する末端のコンポーネントでデータ取得を行うことができる**ようになりました。
-
-しかし、末端のコンポーネントでデータ取得を実装すると重複するリクエストが多発するのではないかと懸念される方もいらっしゃると思います。App Routerではこのような重複リクエストを避けるため、[Request Memoization](https://nextjs.org/docs/app/building-your-application/caching#request-memoization)が実装されています。
-
-```ts
-async function getItem() {
-  const res = await fetch("https://.../item/1");
-  return res.json();
-}
-
-// <Component1 />
-// <Component2 />
-// の順で呼び出された場合
-
-async function Component1() {
-  const item = await getItem(); // cache MISS
-  // ...
-}
-
-async function Component2() {
-  const item = await getItem(); // cache HIT
-  // ...
-}
-```
-
-Request Memoizationはメモ化なので、当然ながら`fetch()`の引数に同じURLとオプション指定が必要です。複数のコンポーネントで実行しうるデータ取得は関数として抽出(上記例における`getItem()`)しておくことが望ましいでしょう。
-
 ### 3. Parallel Data Fetchingを意識する
 
 依存関係のない複数のデータ取得を行う場合、データ取得がSequential(直列)になってしまうとデータ取得が増えるだけパフォーマンスが劣化していきます。以下は[公式ドキュメント](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#parallel-and-sequential-data-fetching)にあるイメージです。

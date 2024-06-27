@@ -8,3 +8,14 @@ chapters:
   - intro
   - data_fetch
   - data_mutation
+  - parallel_data_fetch
+  - static_dynamic_rendering
+  - router_cache
+  - composite_pattern
+  - presentational_container_pattern
+  - suspense_and_streaming
+  - micro_api_design
+  - use_data_loader
+  - cache_tag_design
+  - partial_pre_rendering
+  - tips
