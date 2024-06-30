@@ -1,5 +1,5 @@
 ---
-title: "データ取得とServer Components"
+title: "データフェッチ on Server Components"
 ---
 
 ## 背景

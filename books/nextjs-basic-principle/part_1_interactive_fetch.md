@@ -1,5 +1,5 @@
 ---
-title: "Parallel Data Fetching"
+title: "ユーザー操作とデータフェッチ"
 ---
 
 ## 背景

@@ -1,5 +1,5 @@
 ---
-title: "DataLoaderの利用"
+title: "並行データフェッチ"
 ---
 
 ## 背景

@@ -6,16 +6,23 @@ price: 0 # 有料の場合200〜5000
 # 本に含めるチャプターを順番に並べましょう
 chapters:
   - intro
-  - data_fetch
-  - data_mutation
-  - static_dynamic_rendering
-  - parallel_data_fetch
-  - router_cache
-  - composite_pattern
-  - presentational_container_pattern
-  - suspense_and_streaming
-  - micro_api_design
-  - use_data_loader
-  - cache_tag_design
-  - partial_pre_rendering
-  - tips
+  - part_1
+  - part_1_server_components
+  - part_1_colocation
+  - part_1_request_memoization
+  - part_1_parallel_data_fetch
+  - part_1_data_loader
+  - part_1_micro_api_design
+  - part_1_interactive_fetch
+  - part_2
+  - part_2_static_dynamic_rendering
+  - part_2_server_cache
+  - part_2_router_cache
+  - part_2_data_mutation
+  - part_2_cache_tag_design
+  - part_3
+  - part_3_composite_pattern
+  - part_3_presentational_container_pattern
+  - part_3_suspense_and_streaming
+  - part_3_partial_pre_rendering
+  - part_4
