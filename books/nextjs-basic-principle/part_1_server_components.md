@@ -2,9 +2,13 @@
 title: "データフェッチ on Server Components"
 ---
 
+## 要約
+
+- データフェッチは基本的にServer Componentsで行いましょう
+
 ## 背景
 
-Reactは従来クライアントサイドでの処理を主体としていました。そのため、クライアントサイドにおけるデータ取得のためのライブラリや実装パターンが多く存在します。
+Reactは従来クライアントサイドでの処理を主体としていたため、クライアントサイドにおけるデータ取得のためのライブラリや実装パターンが多く存在します。
 
 - [SWR](https://swr.vercel.app/)
 - [React Query](https://react-query.tanstack.com/)
@@ -14,166 +18,59 @@ Reactは従来クライアントサイドでの処理を主体としていまし
 - [tRPC](https://trpc.io/)
 - etc...
 
-しかしクライアントサイドでデータ取得を行うことは、多くの点でデメリットを伴います。クライアントサイドでのデータ取得はサーバー側と比べると開始タイミングが遅くなってしまい、またデータソースとの物理的な距離も遠くネットワークの安定性も低いため、パフォーマンス的に不利です。セキュリティ的にもクライアントサイドから参照できるAPIを公開する必要があります。
+しかしクライアントサイドでデータ取得を行うことは、多くの点でデメリットを伴います。
 
-Pages Routerではこれらの課題を、[getServerSideProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)や[getStaticProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)といったサーバー側でのデータ取得アプローチを採用することで解消しました。しかし、ページのレンダリング開始前にすべてのデータ取得を終える必要のあるこの設計は、**データ取得後のProps バケツリレー**(Props Drilling)を生み出しました。
+### 低速な通信
 
-以下の実装例では`<Page>`から`<ComponentA>`、`<ComponentB>`、`<ComponentC>`と`data`をそのまま渡している様子が見て撮れます。これがいわゆるバケツリレーです。
+データフェッチが完了するまでの時間は、リクエスト元とリクエスト先との物理的距離とネットワークの速度に依存します。自身の管理下にあるBFFとAPIサーバー間の通信は多くの場合、同一ネットワーク内にあるため高速で安定しています。外部にあるAPIサーバーとの通信においても、日本国内の場合東京都内での通信になりがちなため、比較的高速で安定してることが多いと考えられます。一方クライアント・サーバー間の通信においては、ユーザーの位置や通信環境に大きく依存するため、低速になりがちです。
 
-```tsx
-export async function getServerSideProps() {
-  const data = await fetch("https://dummyjson.com/data").then((res) =>
-    res.json(),
-  );
+### 実装コスト
 
-  return { props: { data } };
-}
+クライアントサイドのデータフェッチでは[Reactが公式に推奨](https://ja.react.dev/reference/react/useEffect#what-are-good-alternatives-to-data-fetching-in-effects)してるように、多くの場合キャッシュ機能を搭載した3rd partyライブラリを利用します。一方リクエスト先に当たるAPIは、パブリックなネットワークに公開するためより堅牢なセキュリティが求められます。
 
-export default function Page({ data }) {
-  return (
-    <>
-      <ComponentA data={data} />
-      {/* ... */}
-    </>
-  );
-}
+これらの理由からクライアントサイドのデータフェッチには、ライブラリの学習・責務設計・セキュリティチェックの実装など様々なコストが発生します。
 
-function ComponentA({ data }) {
-  return (
-    <>
-      <ComponentB data={data} />
-      {/* ... */}
-    </>
-  );
-}
+### バンドルサイズ
 
-function ComponentB({ data }) {
-  return (
-    <>
-      <ComponentC data={data} />
-      {/* ... */}
-    </>
-  );
-}
-
-function ComponentC({ data }) {
-  return <p>data id: {data.id}</p>;
-}
-```
+データフェッチライブラリ、データフェッチの実装、バリデーションなど多岐にわたるコードがクライアントへ送信されるバンドルに含まれます。また、エラー時UIなどの通信の結果次第では利用されないコードもバンドルに含まれます。
 
 ## 設計・プラクティス
 
-App Routerは[Server Components](https://nextjs.org/docs/app/building-your-application/rendering/server-components)をサポート・基本としています。Server Componentsはサーバー側で**のみ**レンダリングされるため、より積極的なサーバー活用を可能にします。RFCの[Motivation](https://github.com/reactjs/rfcs/blob/main/text/0188-server-components.md#motivation)によると、バンドルサイズの低減、バックエンドへのフルアクセス、コード分割の自動化など複数の課題に対し、統一されたソリューションとして採用されたのが**React Server Components**アーキテクチャです。
+[Server Components](https://nextjs.org/docs/app/building-your-application/rendering/server-components)は前述の問題を解消するべくReactチームが取り組んだ結果生まれた概念であり、App Routerにおいて**データフェッチはServer Components上で行うことがベストプラクティス**とされています。
 
-Server Componentsは非同期関数をサポートしており、`fetch`を直接的に扱うことが可能です。前述の例で考えてみると、`<Page>`/`<ComponentA>`/`<ComponentB>`では`data`はバケツリレーするのみだったので、`<ComponentC>`を以下のような非同期関数に書き換えることができます。
+https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-on-the-server
 
-```tsx
-async function ComponentC() {
-  const data = await fetch("https://dummyjson.com/data").then((res) =>
-    res.json(),
-  );
+これにより、以下のようなメリットを得られます。
 
-  return <p>data id: {data.id}</p>;
-}
-```
+### 高速なバックエンドアクセス
 
-これにより従来ページの外側でしかできなかったデータ取得が、**データを参照したいコンポーネント、もしくはその近く**で行えるようになりました。従来のReactコンポーネントはhtml/css/jsをカプセル化していましたが、React Server Componentsアーキテクチャにおいてはデータ取得まで含めてカプセル化できることになります。
+前述の通りクライアント・サーバー間の通信と比べ、サーバー間の通信は多くの場合高速です。
 
-### Request Memoization
+### シンプルでセキュアな実装
 
-しかし、末端のコンポーネントでデータ取得を行うと重複するリクエストが多発するのではないかと懸念される方もいらっしゃると思います。App Routerではこのような重複リクエストを避けるため、[Request Memoization](https://nextjs.org/docs/app/building-your-application/caching#request-memoization)が実装されています。
-
-```ts
-async function getItem() {
-  const res = await fetch("https://.../item/1");
-  return res.json();
-}
-
-// <Component1 />
-// <Component2 />
-// の順で呼び出された場合
-
-async function Component1() {
-  const item = await getItem(); // cache MISS
-  // ...
-}
-
-async function Component2() {
-  const item = await getItem(); // cache HIT
-  // ...
-}
-```
-
-Request Memoizationはいわゆるメモ化なので、`fetch()`の引数に同じURLとオプション指定が必要です。上記例における`getItem()`のように、複数のコンポーネントで実行しうるデータ取得は関数などに抽出しておくことで、引数の一致ミスなど起こりづらくすることが望ましいでしょう。
-
-## 結論
-
-Server Componentsでのデータ取得はシンプルで優れた設計と速度・安全性などのメリットを併せ持っています。そのため、App Routerでは可能な限り
-
-- **データ取得はServer Componentsで行うこと**
-- **データ取得はデータを利用する場所で行うこと**
-
-を推奨しています。これはNext.jsの[Patterns and Best Practices](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-on-the-server)でも示されています。
-
-データ取得は必要とする場所で、Server Componentsで行うことを基本としましょう。
-
-## 例外
-
-### `useActionState`とServer Actionsを組み合わせて使う場合
-
-ユーザーの入力に基づいてデータ取得を行いたいケースにおいては、[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)と[useActionState](https://react.dev/reference/react/useActionState)(旧: `useFormState`)を利用して実装することが可能です。
-
-以下はユーザーの入力に基づいて商品を検索する実装例です。
-
-```ts
-// app/actions.ts
-"use server";
-
-export async function searchProducts(
-  _prevState: Product[],
-  formData: FormData,
-) {
-  const query = formData.get("query") as string;
-  const res = await fetch(`https://dummyjson.com/products/search?q=${query}`);
-  const { products } = (await res.json()) as { products: Product[] };
-
-  return products;
-}
-
-// ...
-```
+Server Componentsは非同期関数をサポートしており、3rd partyライブラリなしでデータフェッチをシンプルに実装できます。
 
 ```tsx
-// app/form.tsx
-"use client";
+export async function UserName({ id }) {
+  const res = await fetch(`https://api.example.com/profiles/${id}`);
+  const profile = await res.json();
 
-import { useActionState } from "react-dom";
-import { searchProducts } from "./actions";
-
-export default function Form() {
-  const [products, action] = useActionState(searchProducts, []);
-
-  return (
-    <>
-      <form action={action}>
-        <label htmlFor="query">
-          Search Product:&nbsp;
-          <input type="text" id="query" name="query" />
-        </label>
-        <button type="submit">Submit</button>
-      </form>
-      <ul>
-        {products.map((product) => (
-          <li key={product.id}>{product.title}</li>
-        ))}
-      </ul>
-    </>
-  );
+  return <div>{profile.name}</div>;
 }
 ```
 
-検索したい文字列を入力し、Submitボタンを押すとヒットした商品の名前が表出するようになっています。単純なページであれば、以下公式チュートリアルの実装例のように`router.replace()`によってURLを更新・Server Componentsごと再実行する手段もあります。
+また、データフェッチはサーバー側でのみ実行されるためAPIのパブリックなネットワーク公開は必須ではありません。
 
-https://nextjs.org/learn/dashboard-app/adding-search-and-pagination
+### バンドルサイズの軽減
 
-しかしURLを変更したくない・他のコンテンツ部分を再レンダリングしたくないなどの場合、このようにServer Actionsと`useActionState`を利用することを検討すると良いでしょう。
+Server Componentsの実行結果はhtmlやRSC Payloadとしてクライアントへ送信されます。そのため、前述のような
+
+> データフェッチライブラリ、データフェッチの実装、バリデーションなど多岐にわたるコード
+> ...
+> エラー時UIなどの通信の結果次第では利用されないコード
+
+は一切バンドルには含まれません。
+
+## トレードオフ
+
+ユーザー操作に基づくデータフェッチはServer Componentsで行うことが困難な場合があります。後述の[ユーザー操作とデータフェッチ](part_1_interactive_fetch)を参照してください。
