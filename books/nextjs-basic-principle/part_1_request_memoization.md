@@ -4,7 +4,7 @@ title: "Request Memoization"
 
 ## 要約
 
-Request Memoizationを意識したデータフェッチ層を設計しましょう。
+Request Memoizationによってリクエストの重複が排除されることを生かしたデータフェッチ層を設計しましょう。
 
 ## 背景
 
