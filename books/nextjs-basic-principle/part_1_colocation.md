@@ -110,4 +110,4 @@ async function fetchProduct() {
 
 ## トレードオフ
 
-データフェッチのコロケーションを実現する要は**Request Memoization**や**React Cache**です。特にRequest MemoizationについてはNext.jsが自動で行っているため、開発者の理解と設計が重要になってきます。この点については後述の[「Request Memoization」の章](part_1_request_memoization)で改めて考え方を示します。
+データフェッチのコロケーションを実現する要は**Request Memoization**や**React Cache**です。特にRequest MemoizationについてはNext.jsが自動で行っているため、開発者の理解と設計が重要になってきます。この点については後述の[「Request Memoization」のチャプター](part_1_request_memoization)で改めて考え方を示します。
