@@ -2,18 +2,18 @@
 title: "データフェッチ コロケーション"
 ---
 
+## 要約
+
+データフェッチはデータを必要とするコンポーネントにコロケーションしましょう。
+
 :::message
 コロケーションとは、「コードをできるだけ関連性のある場所に配置すること」を意味します。
 参考: https://kentcdodds.com/blog/colocation
 :::
 
-## 要約
-
-データフェッチはデータを必要とするコンポーネントにコロケーションしましょう。
-
 ## 背景
 
-Pages Routerにおけるサーバーサイドでのデータフェッチは、[getServerSideProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)や[getStaticProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)など、**ページの外側**で非同期関数を実行し、結果をpropsとしてページコンポーネントに渡すという設計がなされてました。これはいわゆる**バケツリレー**(Props Drilling)と呼ばれるpropsを親から子・孫へと渡していくような実装を必要とし、冗長で依存関係が広がりやすいというデメリットがありました。
+Pages Routerにおけるサーバーサイドでのデータフェッチは、[getServerSideProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)や[getStaticProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)など、ページの外側で非同期関数を実行し、結果をpropsとしてページコンポーネントに渡すという設計がなされてました。これはいわゆる**バケツリレー**(Props Drilling)と呼ばれるpropsを親から子・孫へと渡していくような実装を必要とし、冗長で依存関係が広がりやすいというデメリットがありました。
 
 ### 実装例
 
@@ -53,7 +53,7 @@ function ProductContents({ product }: ProductProps) {
 // ...
 ```
 
-例なので少々簡略化していますが、こういったバケツリレー実装はPages Routerだと発生しがちな問題です。
+例なので少々簡略化していますが、こういったバケツリレー実装はPages Routerだと発生しがちな問題です。常に最上位で必要なデータを意識し、末端まで流すのでコンポーネントのネストが深くなるほど認知負荷が高くなっていく構図です。
 
 ## 設計・プラクティス
 
@@ -106,8 +106,8 @@ async function fetchProduct() {
 }
 ```
 
-データフェッチが各コンポーネントにコロケーションされたことで、バケツリレーがなくなりました。
+データフェッチが各コンポーネントにコロケーションされたことで、バケツリレーがなくなりました。`<ProductHeader>`と`<ProductDetail>`の利用者はそれぞれの責務のみを気にしてればよく、ページ単位で必要なデータフェッチを気にする必要がなくなりました。
 
 ## トレードオフ
 
-データフェッチのコロケーションを実現する要は**Request Memoization**や**React Cache**です。特にRequest MemoizationについてはNext.jsが自動で行っているため、開発者の理解と設計が重要になってきます。この点については後述の[「Request Memoization」のチャプター](part_1_request_memoization)で改めて考え方を示します。
+データフェッチのコロケーションを実現する要は**Request Memoization**や**React Cache**です。特にRequest MemoizationについてはNext.jsが自動で行っているため、開発者の理解と設計が重要になってきます。この点については次の[Request Memoization](part_1_request_memoization)のチャプターで改めて考え方を示します。

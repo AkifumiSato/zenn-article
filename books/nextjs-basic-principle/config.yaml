@@ -10,7 +10,6 @@ chapters:
   - part_1_server_components
   - part_1_colocation
   - part_1_request_memoization
-  - part_1_parallel_data_fetch
   - part_1_data_loader
   - part_1_micro_api_design
   - part_1_interactive_fetch

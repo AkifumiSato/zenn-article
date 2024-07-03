@@ -20,19 +20,19 @@ Reactは従来クライアントサイドでの処理を主体としていたた
 
 しかしクライアントサイドでデータ取得を行うことは、多くの点でデメリットを伴います。
 
-### デメリット1: パフォーマンスと設計のトレードオフ
+### デメリット1 パフォーマンスと設計のトレードオフ
 
 クライアント・サーバー間の通信は物理的距離や不安定なネットワーク環境の影響で低速になりがちです。そのためパフォーマンス観点では通信回数が少ないことが望ましいですが、通信回数を減らすことは設計観点とトレードオフになりがちです。
 
-Restful APIにおいて通信回数を優先すると、God APIと呼ばれる責務が「大きなAPI」になりがちです。「大きなAPI」は影響範囲が広く、変更容易性が低くなりがちです。一方「小さなAPI」では、データフェッチをコロケーション(コードをできるだけ関連性のある場所に配置すること)してコンポーネントが必要とする情報をカプセル化することなどのメリットを得られますが、通信回数が増えたりデータフェッチのウォーターフォールが発生しやすいなど、パフォーマンス劣化の要因になりえます。
+Restful APIにおいて通信回数を優先するとGod APIと呼ばれる責務が**大きなAPI**になりがちで、変更容易性やAPIのパフォーマンス問題が起きやすい傾向にあります。一方**小さなAPI**では、データフェッチをコロケーション(コードをできるだけ関連性のある場所に配置すること)してコンポーネントが必要とする情報をカプセル化することなどのメリットを得られますが、通信回数が増えたりデータフェッチのウォーターフォールが発生しやすいなど、クライアントサイドでのパフォーマンス劣化の要因になりえます。
 
-### デメリット2: 様々な実装コスト
+### デメリット2 様々な実装コスト
 
 クライアントサイドのデータフェッチでは[Reactが公式に推奨](https://ja.react.dev/reference/react/useEffect#what-are-good-alternatives-to-data-fetching-in-effects)してるように、多くの場合キャッシュ機能を搭載した3rd partyライブラリを利用します。一方リクエスト先に当たるAPIは、パブリックなネットワークに公開するためより堅牢なセキュリティが求められます。
 
 これらの理由からクライアントサイドのデータフェッチには、ライブラリの学習・責務設計・セキュリティチェックの実装など様々なコストが発生します。
 
-### デメリット3: バンドルサイズの増加
+### デメリット3 バンドルサイズの増加
 
 クライアントサイドでデータフェッチを行うために、データフェッチライブラリ・データフェッチの実装・バリデーションなど多岐にわたるコードがクライアントへ送信されるバンドルに含まれます。また、エラー時UIなどの通信の結果次第では利用されないコードもバンドルに含まれます。
 
@@ -46,7 +46,7 @@ https://quramy.medium.com/render-as-you-fetch-incremental-graphql-fragments-70e6
 
 ## 設計・プラクティス
 
-Reactチームは前述の問題を個別の問題と捉えず、根本的には「サーバーリソースをうまく活用できてないこと」が問題であると捉えて解決を目指しました。その結果生まれたのが[Server Components](https://nextjs.org/docs/app/building-your-application/rendering/server-components)であり、Server ComponentsがデフォルトのApp Routerにおいては**データフェッチはServer Components上で行うことがベストプラクティス**とされています。
+Reactチームは前述の問題を個別の問題と捉えず、根本的には「Reactがサーバーをうまく活用できてないこと」が問題であると捉えて解決を目指しました。その結果生まれたのが[Server Components](https://nextjs.org/docs/app/building-your-application/rendering/server-components)であり、Server ComponentsがデフォルトのApp Routerにおいては**データフェッチはServer Components上で行うことがベストプラクティス**とされています。
 
 https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-on-the-server
 
@@ -61,15 +61,15 @@ https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fet
 Server Componentsは非同期関数をサポートしており、3rd partyライブラリなしでデータフェッチをシンプルに実装できます。
 
 ```tsx
-export async function UserName({ id }) {
-  const res = await fetch(`https://api.example.com/profiles/${id}`);
-  const profile = await res.json();
+export async function ProductTitle({ id }) {
+  const res = await fetch(`https://dummyjson.com/products/${id}`);
+  const product = await res.json();
 
-  return <div>{profile.name}</div>;
+  return <div>{product.title}</div>;
 }
 ```
 
-また、データフェッチはサーバー側でのみ実行されるためAPIのパブリックなネットワーク公開は必須ではありません。
+これはServer Componentsがサーバー側でリクエスト時のみレンダリングされ、従来のようにクライアントサイドで何度もレンダリングされることを想定しなくて良いからこそできる設計です。また、データフェッチはサーバー側でのみ実行されるためAPIのパブリックなネットワーク公開は必須ではありません。
 
 ### バンドルサイズの軽減
 
