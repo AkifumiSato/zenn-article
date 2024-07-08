@@ -73,16 +73,18 @@ Server Componentsの実行結果はhtmlやRSC Payloadとしてクライアント
 
 は一切バンドルには含まれません。
 
----
-
-### 考察: RSCとGraphQLのアナロジー
-
-以下の記事を読んだことがある人、もしくはGraphQLでコロケーションを実装した経験があれば、前述のクライアントサイドでのデータフェッチにおけるデメリットの[パフォーマンスと設計のトレードオフ](#パフォーマンスと設計のトレードオフ)はGraphQL+[Render-as-you-fetch](https://17.reactjs.org/docs/concurrent-mode-suspense.html#approach-3-render-as-you-fetch-using-suspense)で解決できるということに気づくでしょう。
-
-https://quramy.medium.com/render-as-you-fetch-incremental-graphql-fragments-70e643edd61e
-
-React Server Componentsの最初の[RFC](https://github.com/reactjs/rfcs/commits/main/text/0188-server-components.md)は、GraphQLライブラリ[Relay](https://relay.dev/)の初期開発者の1人[Joe Savona氏](https://twitter.com/en_js)によって提案されました。Joe Savona氏はRelayやGraphQLを通じてReactにおけるデータフェッチのベストプラクティスを追求してきた方であり、この方が提案したReact Server Componentsが多くの類似性を持ってることからも「RSCはGraphQLの精神的後継」と捉えることもできるでしょう。
-
 ## トレードオフ
 
+### ユーザー操作とデータフェッチ
+
 ユーザー操作に基づくデータフェッチはServer Componentsで行うことが困難な場合があります。これについては後述の[ユーザー操作とデータフェッチ](part_1_interactive_fetch)を参照してください。
+
+### GraphQLとの相性の悪さ
+
+React Server Components(RSC)にGraphQLを組み合わせることは**メリットよりデメリットの方が多くなる**可能性があります。
+
+GraphQLは大きなAPIと小さなAPIのトレードオフがないので[パフォーマンスと設計のトレードオフ](#パフォーマンスと設計のトレードオフ)が発生しませんが、RSCも同様にこの問題を解消するため、これをメリットとして享受できません。一方RSCとGraphQLの組み合わせは協調させるための知見やライブラリが一般に不足してるため実装コストが高く、GraphQLライブラリなどを含むことでバンドルサイズも増加するなど、デメリットが含まれます。
+
+:::message
+RSCの最初のRFCは、Relayの初期開発者の1人でGraphQLを通じてReactにおけるデータフェッチのベストプラクティスを追求してきた[Joe Savona氏](https://twitter.com/en_js)によって提案されました。そのため、RSCはGraphQLの持っているメリットや課題を踏まえて設計されているという**GraphQLの精神的後継**の側面を持ち合わせていると考えることができます。
+:::
