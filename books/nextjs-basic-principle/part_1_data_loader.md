@@ -94,7 +94,7 @@ type User = {
 
 ## 設計・プラクティス
 
-上記のようなN+1フェッチを避けるため、API側では多くの場合`https://dummyjson.com/users/?id=1,2,3...`のようにidを複数指定してUser情報を一括で取得できるよう設計することが一般的です。Next.jsにおいてはこのエンドポイントと、[DataLoader](https://github.com/graphql/dataloader)を利用することでN+1フェッチを解消できます。
+上記のようなN+1フェッチを避けるため、API側では`https://dummyjson.com/users/?id=1,2,3...`のように、idを複数指定してUser情報を一括で取得できるよう設計することが一般的です。Next.jsにおいてはこのようなエンドポイントと、[DataLoader](https://github.com/graphql/dataloader)を利用することでN+1フェッチを解消できます。
 
 ### DataLoader
 
@@ -151,7 +151,7 @@ async function batchGetUser(keys: readonly number[]) {
 // ...
 ```
 
-ポイントは`getUserLoader`が`cache()`を利用していることです。DataLoaderはキャッシュ機能があるため、**リクエスト単位でDataLoaderのインスタンスを生成**する必要があります。これを実現するために、[React Cache](https://nextjs.org/docs/app/building-your-application/caching#react-cache-function)を利用しています。
+ポイントは`getUserLoader`が`cache()`を利用していることです。DataLoaderはキャッシュ機能があるため、リクエストを跨いで共有してしまうと予期せぬデータ参照や障害につながります。そのため、実装上**リクエスト単位でDataLoaderのインスタンスを生成**する必要があります。これを実現するために、[React Cache](https://nextjs.org/docs/app/building-your-application/caching#react-cache-function)を利用しています。
 
 上記のように実装することで、`<PostItem>`にUserデータ取得の責務を閉じたままN+1フェッチを解消することができます。
 
