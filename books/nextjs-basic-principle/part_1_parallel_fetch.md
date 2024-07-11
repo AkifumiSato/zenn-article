@@ -94,4 +94,4 @@ export async function ParentComponent({ id }: { id: string }) {
 
 ## トレードオフ
 
-データフェッチ単位を小さくコンポーネントに分割していくと**N+1リクエスト**が発生しがちになります。この点については次の[N+1とDataLoader](part_1_data_loader)で詳しく解説します。
+データフェッチ単位を小さくコンポーネントに分割していくと**N+1フェッチ**が発生しがちになります。この点については次の[N+1とDataLoader](part_1_data_loader)で詳しく解説します。
