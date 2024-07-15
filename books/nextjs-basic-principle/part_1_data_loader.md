@@ -93,7 +93,7 @@ type User = {
 
 ## 設計・プラクティス
 
-上記のようなN+1データフェッチを避けるため、API側では`https://dummyjson.com/users/?id=1,2,3...`のように、idを複数指定してUser情報を一括で取得できるよう設計するパターンがよく知られています。このようなバックエンドAPIと、Next.js側で[DataLoader](https://github.com/graphql/dataloader)を利用することでN+1データフェッチを解消できます。
+上記のようなN+1データフェッチを避けるため、API側では`https://dummyjson.com/users/?id=1&id=2&id=3...`のように、idを複数指定してUser情報を一括で取得できるよう設計するパターンがよく知られています。このようなバックエンドAPIと、Next.js側で[DataLoader](https://github.com/graphql/dataloader)を利用することでN+1データフェッチを解消できます。
 
 ### DataLoader
 
@@ -158,6 +158,6 @@ async function batchGetUser(keys: readonly number[]) {
 
 ### Eager Loadingパターン
 
-ここで紹介した設計パターンはいわゆる**Lazy Loading**パターンの一種です。バックエンドAPI側の実装・パフォーマンス観点からLazy Loadingが適さない場合は**Eager Loading**パターン、つまりN+1の最初の1回のリクエストで関連する必要な情報を全て取得するパターンになります。
+ここで紹介した設計パターンはいわゆる**Lazy Loading**パターンの一種です。バックエンドAPI側の実装・パフォーマンス観点からLazy Loadingが適さない場合は**Eager Loading**パターン、つまりN+1の最初の1回のリクエストで関連する必要な情報を全て取得することを検討しましょう。
 
 Eager Loadingパターンはやりすぎると、密結合で責務が大きすぎるいわゆる神APIになってしまう傾向にあります。これらの詳細については次項の[細粒度のREST API設計](part_1_micro_api_design)で解説します。
