@@ -4,7 +4,7 @@ title: "N+1とDataLoader"
 
 ## 要約
 
-データフェッチを分割して発生するN+1フェッチは、DataLoaderで解消しましょう。
+データフェッチを分割して発生するN+1データフェッチは、DataLoaderで解消しましょう。
 
 ## 背景
 
@@ -12,7 +12,7 @@ title: "N+1とDataLoader"
 
 1つは重複したデータフェッチです。これについてはNext.jsの機能である[Request Memoization](https://nextjs.org/docs/app/building-your-application/caching#request-memoization)によって解消されるため、我々開発者が気にする必要はありません。
 
-もう1つは、いわゆる**N+1なデータフェッチ**です。末端のコンポーネントでデータフェッチするよう設計すると、どうしてもN+1フェッチに繋がりがちです。以下の例では投稿の一覧を取得後、子コンポーネントで著者情報を取得しています。
+もう1つは、いわゆる**N+1なデータフェッチ**です。末端のコンポーネントでデータフェッチするよう設計すると、どうしてもN+1データフェッチに繋がりがちです。以下の例では投稿の一覧を取得後、子コンポーネントで著者情報を取得しています。
 
 ```tsx
 // page.tsx
@@ -25,8 +25,7 @@ export default async function Page() {
 
   return (
     <>
-      <h1>N+1とDataLoader</h1>
-      <h2>Posts</h2>
+      <h1>Posts</h1>
       <ul>
         {posts.map((post) => (
           <li key={post.id}>
@@ -94,7 +93,7 @@ type User = {
 
 ## 設計・プラクティス
 
-上記のようなN+1フェッチを避けるため、API側では`https://dummyjson.com/users/?id=1,2,3...`のように、idを複数指定してUser情報を一括で取得できるよう設計することが一般的です。Next.jsにおいてはこのようなエンドポイントと、[DataLoader](https://github.com/graphql/dataloader)を利用することでN+1フェッチを解消できます。
+上記のようなN+1データフェッチを避けるため、API側では`https://dummyjson.com/users/?id=1,2,3...`のように、idを複数指定してUser情報を一括で取得できるよう設計するパターンがよく知られています。このようなバックエンドAPIと、Next.js側で[DataLoader](https://github.com/graphql/dataloader)を利用することでN+1データフェッチを解消できます。
 
 ### DataLoader
 
@@ -128,11 +127,11 @@ DataLoaderを用いて、前述の実装例の`getUser()`を書き直してみ�
 ```ts
 // fetcher.ts
 import DataLoader from "dataloader";
-import { cache } from "react";
+import * as React from "react";
 
 // ...
 
-const getUserLoader = cache(
+const getUserLoader = React.cache(
   () => new DataLoader((keys: readonly number[]) => batchGetUser(keys)),
 );
 
@@ -151,9 +150,9 @@ async function batchGetUser(keys: readonly number[]) {
 // ...
 ```
 
-ポイントは`getUserLoader`が`cache()`を利用していることです。DataLoaderはキャッシュ機能があるため、リクエストを跨いで共有してしまうと予期せぬデータ参照や障害につながります。そのため、実装上**リクエスト単位でDataLoaderのインスタンスを生成**する必要があります。これを実現するために、[React Cache](https://nextjs.org/docs/app/building-your-application/caching#react-cache-function)を利用しています。
+ポイントは`getUserLoader`が`React.cache()`を利用していることです。DataLoaderはキャッシュ機能があるため、ユーザーからのリクエストを跨いでインスタンスを共有してしまうと予期せぬデータ共有障害につながります。そのため、実装上**リクエスト単位でDataLoaderのインスタンスを生成**する必要があります。これを実現するために、[React Cache](https://nextjs.org/docs/app/building-your-application/caching#react-cache-function)を利用しています。
 
-上記のように実装することで、`<PostItem>`にUserデータ取得の責務を閉じたままN+1フェッチを解消することができます。
+上記のように実装することで、`getUser`のインターフェースは変えずにN+1データフェッチを解消することができます。
 
 ## トレードオフ
 
