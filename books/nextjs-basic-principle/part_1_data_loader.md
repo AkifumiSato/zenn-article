@@ -156,4 +156,8 @@ async function batchGetUser(keys: readonly number[]) {
 
 ## トレードオフ
 
-特になし
+### Eager Loadingパターン
+
+ここで紹介した設計パターンはいわゆる**Lazy Loading**パターンの一種です。バックエンドAPI側の実装・パフォーマンス観点からLazy Loadingが適さない場合は**Eager Loading**パターン、つまりN+1の最初の1回のリクエストで関連する必要な情報を全て取得するパターンになります。
+
+Eager Loadingパターンはやりすぎると、密結合で責務が大きすぎるいわゆる神APIになってしまう傾向にあります。これらの詳細については次項の[細粒度のREST API設計](part_1_micro_api_design)で解説します。
