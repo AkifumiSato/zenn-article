@@ -8,7 +8,7 @@ title: "N+1とDataLoader"
 
 ## 背景
 
-前述の[データフェッチ コロケーション](part_1_colocation)や[並列データフェッチ](part_1_parallel_fetch)を実践し、データフェッチやコンポーネントを細かく分割していくと、ページ全体で発生するデータフェッチの管理が難しくなり2つの問題を引き起こします。
+前述の[データフェッチ コロケーション](part_1_colocation)や[並行データフェッチ](part_1_parallel_fetch)を実践し、データフェッチやコンポーネントを細かく分割していくと、ページ全体で発生するデータフェッチの管理が難しくなり2つの問題を引き起こします。
 
 1つは重複したデータフェッチです。これについてはNext.jsの機能である[Request Memoization](https://nextjs.org/docs/app/building-your-application/caching#request-memoization)によって解消されるため、我々開発者が気にする必要はありません。
 
