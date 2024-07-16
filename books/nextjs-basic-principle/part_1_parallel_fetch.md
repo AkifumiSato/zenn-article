@@ -100,7 +100,7 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
 }
 ```
 
-上記実装例では`<Product>`や`<Comments>`の子孫でUser情報を利用するため、ページレベルで`preloadCurrentUser()`することで、`<Product>`と`<Comments>`のレンダリングと並行してUser情報のデータフェッチを実行されます。
+上記実装例では`<Product>`や`<Comments>`の子孫でUser情報を利用するため、ページレベルで`preloadCurrentUser()`することで、`<Product>`と`<Comments>`のレンダリングと並行してUser情報のデータフェッチが実行されます。
 
 ただし機能改修で`<Product>`や`<Comments>`からUser情報が参照されなくなった場合、`preloadCurrentUser()`は不要となります。このパターンを利用する際には、無駄なpreloadが残ってしまうことのないよう注意しましょう。
 
