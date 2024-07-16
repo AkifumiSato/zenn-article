@@ -82,3 +82,9 @@ https://nextjs.org/learn/dashboard-app/adding-search-and-pagination
 この場合、Server Actionsと`useActionState`では実現できないリロード復元やURLシェアが実現できます。
 
 上記のような検索が最も主であるページにおいては状態をURLに保存することを検討すべきでしょう。一方サイドナビゲーションやcmd+kで開く検索モーダルのようにリロード復元やURLシェアをすべきでないケースでは、Server Actionsと`useActionState`の実装が非常に役立つことでしょう。
+
+### データ操作に伴う再レンダリング
+
+ここで紹介したのはユーザー操作に伴うデータフェッチ、つまりデータ操作を伴わない場合の設計パターンです。ユーザー操作にともなってデータ操作・操作後の結果を再取得したいこともあります。これはServer Actionsと`revalidatePath`/`revalidateTag`を組み合わせ実行することで実現できます。
+
+これについては、後述の[データ操作とServer Actions](part_2_data_mutation)にて詳細を解説します。
