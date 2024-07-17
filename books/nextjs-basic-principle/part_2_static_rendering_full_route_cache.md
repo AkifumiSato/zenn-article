@@ -103,21 +103,6 @@ static renderingは耐障害性・パフォーマンスに優れています。�
 
 static renderingのレンダリング結果のキャッシュは[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache)と呼ばれ、定期的なrevalidateもしくはオンデマンドなrevalidateが可能です。これらを駆使して可能な限りstatic renderingにするよう心がけましょう。
 
-### 定期的なrevalidate
-
-Route Segment Configの[revalidate](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#revalidate)を指定することでFull Route Cacheを定期的にrevalidateすることができます。
-
-```tsx
-// layout.tsx | page.tsx
-export const revalidate = 10; // 10s
-```
-
-:::message
-重複になりますが、`layout.tsx`に`revalidate`を設定するとLayoutが利用される下層ページにも適用されるため、注意しましょう。
-:::
-
-非常に短い時間例えば1秒設定するだけでも、秒間数百のリクエストが発生しても1つにまとめることができるので、バックエンドAPIへの負荷軽減・安定したパフォーマンスを実現できます。
-
 ### オンデマンドrevalidate
 
 [`revalidatePath()`](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)や[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)で呼び出すことで、Full Route Cacheを任意のタイミングでrevalidateすることができます。
@@ -138,6 +123,21 @@ export async function action() {
 
 これらの詳細は[データ操作とServer Actions](part_2_data_mutation_inner)や[外部で発生したデータ操作](part_2_data_mutation_outer)の章でより詳細に解説します。
 
+### 定期的なrevalidate
+
+Route Segment Configの[revalidate](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#revalidate)を指定することでFull Route Cacheを定期的にrevalidateすることができます。
+
+```tsx
+// layout.tsx | page.tsx
+export const revalidate = 10; // 10s
+```
+
+:::message
+重複になりますが、`layout.tsx`に`revalidate`を設定するとLayoutが利用される下層ページにも適用されるため、注意しましょう。
+:::
+
+非常に短い時間例えば1秒設定するだけでも、秒間数百のリクエストが発生しても1つにまとめることができるので、バックエンドAPIへの負荷軽減・安定したパフォーマンスを実現できます。
+
 ### データの更新頻度から見た使い分け
 
 revalidateは参照するデータの更新頻度に応じて使い分ける必要があります。アプリケーション特性によって様々なケースが考えられますが、大まかに筆者なりの使い分けを以下に示します。
@@ -154,7 +154,7 @@ revalidateは参照するデータの更新頻度に応じて使い分ける必�
 
 Route Segment Configや`unstable_noStore()`によってdynamic renderingを利用する場合、開発者は明らかにdynamic renderingを意識して使うのでこれらが及ぼす影響を見誤ることは少ないと考えられます。一方、dynamic functionsや`cache: "no-store"`な`fetch`は主たる目的が別にあり、副次的にdynamic renderingに切り替わるため、これらを利用する際の影響範囲を開発者が注意する必要があります。
 
-特に、Data Cacheなどを適切に設定できていないとdynamic renderingに切り替わった際にページ全体のパフォーマンス劣化につながる可能性があります。こちらについての詳細は後述の[dynamic renderingとData Cache](part_2_data_cache)をご参照ください。
+特に、Data Cacheなどを適切に設定できていないとdynamic renderingに切り替わった際にページ全体のパフォーマンス劣化につながる可能性があります。こちらについての詳細は後述の[dynamic renderingとData Cache](part_2_dynamic_rendering_data_cache)をご参照ください。
 
 ### static/dynamic rendering境界とPPR
 
