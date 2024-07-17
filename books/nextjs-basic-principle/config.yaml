@@ -16,7 +16,7 @@ chapters:
   - part_1_interactive_fetch
   - part_2
   - part_2_static_dynamic_rendering
-  - part_2_server_cache
+  - part_2_data_cache
   - part_2_router_cache
   - part_2_data_mutation
   - part_2_cache_tag_design
