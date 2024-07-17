@@ -16,7 +16,7 @@ revalidateを駆使して可能な限りstatic renderingにし、Full Route Cach
 | [dynamic rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)       | ユーザーリクエスト時  | SSR相当              |
 
 :::message
-Server Componentsは[Soft Navigation](https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#5-soft-navigation)時も実行されるので必ずしもSSR・SSG・ISRと比較できるものではないですが、ここでは簡略化して表現しています。
+Server Componentsは[Soft Navigation](https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#5-soft-navigation)時も実行されるので必ずしもSSR・SSG・ISRと比較できるものではないですが、ここでは簡略化して「相当」と表現しています。
 :::
 
 App Routerは**デフォルトでstatic rendering**となっており、**dynamic renderingはオプトイン**になっています。dynamic renderingにオプトインする方法は以下の通りです。
@@ -99,13 +99,13 @@ export function LeafComponent() {
 
 ## 設計・プラクティス
 
-static renderingは耐障害性・パフォーマンスに優れています。完全にユーザーリクエスト毎にレンダリングが必要なら上記いずれかの方法でdynamic renderingにオプトインする必要がありますが、それ以外のケースについてApp Routerでは**可能な限りstatic renderingにする**ことが推奨されています。
+static renderingは耐障害性・パフォーマンスに優れています。ユーザーリクエスト毎にレンダリングが必要なら上記いずれかの方法でdynamic renderingにオプトインする必要がありますが、それ以外のケースについてApp Routerでは**可能な限りstatic renderingにする**ことが推奨されています。
 
-static renderingのレンダリング結果のキャッシュは[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache)と呼ばれ、定期的なrevalidateもしくはオンデマンドなrevalidateが可能です。これらを駆使して可能な限りstatic renderingにするよう心がけましょう。
+static renderingのレンダリング結果のキャッシュは[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache)と呼ばれ、オンデマンドなrevalidateもしくは定期的なrevalidateが可能です。これらを駆使して可能な限りstatic renderingにするよう心がけましょう。
 
 ### オンデマンドrevalidate
 
-[`revalidatePath()`](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)や[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)で呼び出すことで、Full Route Cacheを任意のタイミングでrevalidateすることができます。
+[`revalidatePath()`](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)や[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)で呼び出すことで、関連する[Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)やFull Route Cacheをrevalidateすることができます。
 
 ```ts
 "use server";
@@ -120,8 +120,6 @@ export async function action() {
 ```
 
 コメント投稿のようなサイト内からの更新に伴うrevalidateはServer Actionsを、CMS管理画面でのブログ更新のようなサイト外からの更新に伴うrevalidateにはRoute Handlerを組み合わせて利用すると良いでしょう。
-
-これらの詳細は[データ操作とServer Actions](part_2_data_mutation_inner)や[外部で発生したデータ操作](part_2_data_mutation_outer)の章でより詳細に解説します。
 
 ### 定期的なrevalidate
 
@@ -142,11 +140,11 @@ export const revalidate = 10; // 10s
 
 revalidateは参照するデータの更新頻度に応じて使い分ける必要があります。アプリケーション特性によって様々なケースが考えられますが、大まかに筆者なりの使い分けを以下に示します。
 
-| 更新頻度 | revalidate   | 例                   |
-| -------- | ------------ | -------------------- |
-| 無       | 無           | LP、規約ページ       |
-| 低       | オンデマンド | ブログ記事ページ     |
-| 高       | 定期的       | ブログ記事コメント欄 |
+| 更新頻度 | revalidate   | 例                 |
+| -------- | ------------ | ------------------ |
+| 無       | 無           | LP、規約ページ     |
+| 低       | オンデマンド | ブログ記事ページ   |
+| 高       | 定期的       | 商品レビューページ |
 
 ## トレードオフ
 

@@ -8,37 +8,99 @@ Data Cacheを活用して、dynamic rendering時のパフォーマンスを最�
 
 ## 背景
 
-- [static renderingとFull Route Cache](part_2_static_rendering_full_route_cache)で述べた通り、App Routerではstatic renderingが推奨されています。
-- しかし、ユーザー情報を含むページなどdynamic renderingが必要な場合もあります。
-- dynamic renderingではできるだけ早くレンダリングを完了する必要があり、最もボトルネックになるのはデータフェッチ処理です。
+[static renderingとFull Route Cache](part_2_static_rendering_full_route_cache)で述べた通り、App Routerでは可能な限りstatic renderingにすることが推奨されています。しかし、アプリケーションによってはユーザー情報を含むページなどdynamic renderingが必要な場合もあります。
+
+dynamic renderingではできるだけ早くレンダリングを完了する必要があり、最もボトルネックになりやすいのは**データフェッチ処理**であることが知られています。
 
 ## 設計・プラクティス
 
-- dynamic renderingにおいてはData Cacheによってデータの再取得頻度をコントロールすることができます。
-- Data Cacheはデフォルトでは永続化され、オプトインでFull Route Cache同様定期的なrevalidateもしくはオンデマンドなrevalidateが可能です。
-- これらを適切に設定してData Cacheができるだけヒットするようにすることで、dynamic renderingのパフォーマンスを向上できることがあります。
+[Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)はデータフェッチ処理の結果をキャッシュするもので、サーバー側に永続化されリクエストやユーザーを超えて共有されます。これを活用することでdynamic renderingの高速化やAPI負荷軽減などが見込めます。
+
+Data Cacheができるだけキャッシュヒットするよう適切な設定を心がけましょう。
+
+### Next.jsサーバー上の`fetch()`
+
+サーバー上で実行される`fetch()`は[Next.jsによって拡張](https://nextjs.org/docs/app/api-reference/functions/fetch#fetchurl-options)されておりData Cacheが組み込まれています。デフォルトではキャッシュは永続化されますが、第2引数のオプション指定によってキャッシュ挙動を変更することが可能です。
+
+```ts
+fetch(`https://...`, {
+  cache: "force-cache", // or "no-store",
+});
+```
+
+`cache`に`force-cache`か`no-store`を指定でき、これによりキャッシュを有効・無効にすることができます。
+
+```ts
+fetch(`https://...`, {
+  next: {
+    revalidate: false, // or number,
+  },
+});
+```
+
+`next.revalidate`は文字通りrevalidateされるまでの時間を設定できます。
+
+```ts
+fetch(`https://...`, {
+  next: {
+    tags: [tagName], // string[]
+  },
+});
+```
+
+`next.tags`には配列でタグを複数指定することができます。これは後述の`revalidateTag()`によって指定したタグに関連するData Cacheをrevalidateする際に利用されます。
+
+### `unstable_cache()`
+
+[`unstable_cache()`](https://nextjs.org/docs/app/api-reference/functions/unstable_cache)を使うことで、DBアクセスやGraphQLでもData Cacheを利用することが可能です。
+
+```tsx
+import { getUser } from "./fetcher";
+import { unstable_cache } from "next/cache";
+
+const getCachedUser = unstable_cache(
+  getUser,
+  ["my-app-user"], // key array
+);
+
+export default async function Component({ userID }) {
+  const user = await getCachedUser(userID);
+  // ...
+}
+```
+
+:::message alert
+`unstable_cache()`はAPI名の通り安定版ではなく、今後変更される可能性があります。
+:::
 
 ### オンデマンドrevalidate
 
-- Data Cacheも`revalidatePath()`や`revalidateTag()`でrevalidateできる
+[static renderingとFull Route Cache](part_2_static_rendering_full_route_cache)でも述べた通り、[`revalidatePath()`](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)や[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)で呼び出すことで、関連するData CacheやFull Route Cacheをrevalidateすることができます。
 
-1. `revalidatePath()`や`revalidateTag()`
-2. 関連するData Cacheをrevalidate
-3. 次回訪問時に、Data Cacheが古くなってれば再レンダリング
+```ts
+"use server";
 
-- これは内部的にData Cacheに関連するRoute情報が付与することによって実現できてる
-  - Next.jsの内部的なrevalidateの実装が知りたい方は、下記をご参照ください。
-  - https://zenn.dev/akfm/articles/nextjs-revalidate
+import { revalidatePath } from "next/cache";
 
-### 定期的なrevalidate
+export async function action() {
+  // ...
 
-- `revalidate`を設定することで定期的なrevalidateが可能です
-- 前述の理由から、Full Route Cacheも同時にrevalidateされる
+  revalidatePath("/products");
+}
+```
 
-### DBアクセスなどのカスタムData Cache
+コメント投稿のようなサイト内からの更新に伴うrevalidateはServer Actionsを、CMS管理画面でのブログ更新のようなサイト外からの更新に伴うrevalidateにはRoute Handlerを組み合わせて利用すると良いでしょう。
 
-- `unstable_cache()`を使うことで、DBアクセスやGraphQLについてもData Cacheを活用することが可能です。
+#### Data Cacheと`revalidatePath()`
+
+Data CacheにはデフォルトのタグとしてRoute情報を元にしたタグがNext.js内部より設定されており、これにより`revalidatePath()`で関連するData Cacheのrevalidateを実現しています。より詳細なNext.jsの内部実装が知りたい方は、下記の記事をご参照ください。
+
+https://zenn.dev/akfm/articles/nextjs-revalidate
 
 ## トレードオフ
 
 ### Data Cacheのオプトアウトとdynamic rendering
+
+`fetch()`のオプションで`cahce: "no-store"`か`next.revalidate: 0`を設定することでData Cacheをオプトアウトすることができますが、これは同時にRouteが**dynamic renderingに切り替わる**ことにもなります。
+
+これらを設定する時は本当にdynamic renderingにしなければいけないのか、よく考えて設定しましょう。
