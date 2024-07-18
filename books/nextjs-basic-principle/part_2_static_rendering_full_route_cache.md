@@ -99,9 +99,9 @@ export function LeafComponent() {
 
 ## 設計・プラクティス
 
-static renderingは耐障害性・パフォーマンスに優れています。ユーザーリクエスト毎にレンダリングが必要なら上記いずれかの方法でdynamic renderingにオプトインする必要がありますが、それ以外のケースについてApp Routerでは**可能な限りstatic renderingにする**ことが推奨されています。
+static renderingは耐障害性・パフォーマンスに優れています。ユーザーリクエスト毎にレンダリングが必要なら前述の方法でdynamic renderingにオプトインする必要がありますが、それ以外のケースについてApp Routerでは**可能な限りstatic renderingにする**ことが推奨されています。
 
-static renderingのレンダリング結果のキャッシュは[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache)と呼ばれ、オンデマンドなrevalidateもしくは定期的なrevalidateが可能です。これらを駆使して可能な限りstatic renderingにするよう心がけましょう。
+static renderingのレンダリング結果のキャッシュは[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache)と呼ばれ、オンデマンドなrevalidateもしくは定期的なrevalidateが可能です。revalidate機能を駆使して可能な限りstatic renderingにすることを心がけましょう。
 
 ### オンデマンドrevalidate
 
@@ -119,13 +119,11 @@ export async function action() {
 }
 ```
 
-コメント投稿のようなサイト内からの更新に伴うrevalidateはServer Actionsを、CMS管理画面でのブログ更新のようなサイト外からの更新に伴うrevalidateにはRoute Handlerを組み合わせて利用すると良いでしょう。
-
-これらについては[データ操作とServer Actions](part_2_data_mutation_inner)と[外部で発生したデータ操作](part_2_data_mutation_outer)でより詳細に解説します。
+これらは特に何かしらのデータ操作が発生した際に利用されることを想定したrevalidateです。App Routerでのデータ操作に関する詳細は[データ操作とServer Actions](part_2_data_mutation_inner)と[外部で発生したデータ操作](part_2_data_mutation_outer)にて解説します。
 
 ### 定期的なrevalidate
 
-Route Segment Configの[revalidate](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#revalidate)を指定することでFull Route Cacheを定期的にrevalidateすることができます。
+Route Segment Configの[revalidate](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#revalidate)を指定することでFull Route Cacheや関連するData Cacheを定期的にrevalidateすることができます。
 
 ```tsx
 // layout.tsx | page.tsx
@@ -136,17 +134,7 @@ export const revalidate = 10; // 10s
 重複になりますが、`layout.tsx`に`revalidate`を設定するとLayoutが利用される下層ページにも適用されるため、注意しましょう。
 :::
 
-非常に短い時間、例えば1秒設定するだけでも秒間数百のリクエストが発生しても1つにまとめることができるので、バックエンドAPIへの負荷軽減・安定したパフォーマンスを実現できます。
-
-### データの更新頻度から見た使い分け
-
-revalidateは参照するデータの更新頻度に応じて使い分ける必要があります。アプリケーション特性によって様々なケースが考えられますが、大まかに筆者なりの使い分けを以下に示します。
-
-| 更新頻度 | revalidate   | 例                 |
-| -------- | ------------ | ------------------ |
-| 無       | 無           | LP                 |
-| 少       | オンデマンド | ブログ記事ページ   |
-| 多       | 定期的       | 商品レビューページ |
+非常に短い時間、例えば1秒設定するだけで秒間数百のリクエストが発生しても1つにまとめることができるので、バックエンドAPIへの負荷軽減・安定したパフォーマンスを実現できます。
 
 ## トレードオフ
 
