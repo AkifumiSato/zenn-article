@@ -8,7 +8,7 @@ title: "N+1とDataLoader"
 
 ## 背景
 
-前述の[データフェッチ コロケーション](part_1_colocation)や[並行データフェッチ](part_1_parallel_fetch)を実践し、データフェッチやコンポーネントを細かく分割していくと、ページ全体で発生するデータフェッチの管理が難しくなり2つの問題を引き起こします。
+前述の[データフェッチ コロケーション](part_1_colocation)や[並行データフェッチ](part_1_concurrent_fetch)を実践し、データフェッチやコンポーネントを細かく分割していくと、ページ全体で発生するデータフェッチの管理が難しくなり2つの問題を引き起こします。
 
 1つは重複したデータフェッチです。これについてはNext.jsの機能である[Request Memoization](https://nextjs.org/docs/app/building-your-application/caching#request-memoization)によって解消されるため、我々開発者が気にする必要はありません。
 
@@ -160,4 +160,4 @@ async function batchGetUser(keys: readonly number[]) {
 
 ここで紹介した設計パターンはいわゆる**Lazy Loading**パターンの一種です。バックエンドAPI側の実装・パフォーマンス観点からLazy Loadingが適さない場合は**Eager Loading**パターン、つまりN+1の最初の1回のリクエストで関連する必要な情報を全て取得することを検討しましょう。
 
-Eager Loadingパターンはやりすぎると、密結合で責務が大きすぎるいわゆる神APIになってしまう傾向にあります。これらの詳細については次項の[細粒度のREST API設計](part_1_micro_api_design)で解説します。
+Eager Loadingパターンはやりすぎると、密結合で責務が大きすぎるいわゆる神APIになってしまう傾向にあります。これらの詳細については次項の[細粒度のREST API設計](part_1_fine_grained_api_design)で解説します。
