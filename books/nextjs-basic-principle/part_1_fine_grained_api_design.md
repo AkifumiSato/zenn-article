@@ -42,7 +42,7 @@ App RouterにおいてはServer Componentsによってデータフェッチの�
 
 前述の通り、サーバー間通信は多くの場合高速で安定しています。そのため通信回数が多いことはデメリットになりづらいと言えますが、アプリケーション特性にもよるので実際には注意が必要です。
 
-[並行データフェッチ](part_1_parallel_fetch)や[N+1とDataLoader](part_1_data_loader)で述べたプラクティスや、データフェッチ単位のキャッシュである[Data Cache](https://nextjs.org/docs/app/building-your-application/caching)を活用して、通信頻度やパフォーマンスを最適化しましょう。
+[並行データフェッチ](part_1_concurrent_fetch)や[N+1とDataLoader](part_1_data_loader)で述べたプラクティスや、データフェッチ単位のキャッシュである[Data Cache](https://nextjs.org/docs/app/building-your-application/caching)を活用して、通信頻度やパフォーマンスを最適化しましょう。
 
 ### バックエンドAPI開発チームの理解
 
