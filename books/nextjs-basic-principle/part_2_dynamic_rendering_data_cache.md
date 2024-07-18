@@ -8,9 +8,11 @@ Data Cacheを活用して、dynamic rendering時のパフォーマンスを最�
 
 ## 背景
 
-[static renderingとFull Route Cache](part_2_static_rendering_full_route_cache)で述べた通り、App Routerでは可能な限りstatic renderingにすることが推奨されています。しかし、アプリケーションによってはユーザー情報を含むページなどdynamic renderingが必要な場合もあります。
+[static renderingとFull Route Cache](part_2_static_rendering_full_route_cache)で述べた通り、App Routerでは可能な限りstatic renderingにすることが推奨されています。しかし、アプリケーションによってはユーザー情報を含むページなどdynamic renderingが必要な場合もあります。dynamic renderingはリクエストごとにレンダリングされるのでできるだけ早くレンダリングを完了する必要があり、中でもボトルネックになりやすいのは**データフェッチ処理**であることが知られています。
 
-dynamic renderingではできるだけ早くレンダリングを完了する必要があり、最もボトルネックになりやすいのは**データフェッチ処理**であることが知られています。
+### dynamic renderingへのオプトイン
+
+Routeをdynamic renderingに切り替える方法は前の章の[static renderingとFull Route Cache](part_2_static_rendering_full_route_cache#背景)で解説していますので、そちらをご参照ください。
 
 ## 設計・プラクティス
 
@@ -91,9 +93,11 @@ export async function action() {
 
 コメント投稿のようなサイト内からの更新に伴うrevalidateはServer Actionsを、CMS管理画面でのブログ更新のようなサイト外からの更新に伴うrevalidateにはRoute Handlerを組み合わせて利用すると良いでしょう。
 
+これらについては[データ操作とServer Actions](part_2_data_mutation_inner)と[外部で発生したデータ操作](part_2_data_mutation_outer)でより詳細に解説します。
+
 #### Data Cacheと`revalidatePath()`
 
-Data CacheにはデフォルトのタグとしてRoute情報を元にしたタグがNext.js内部より設定されており、これにより`revalidatePath()`で関連するData Cacheのrevalidateを実現しています。より詳細なNext.jsの内部実装が知りたい方は、下記の記事をご参照ください。
+Data CacheにはデフォルトのタグとしてRoute情報を元にしたタグがNext.js内部より設定されており、`revalidatePath()`はこの特殊なタグを元に関連するData Cacheのrevalidateを実現しています。より詳細なNext.jsの内部実装が知りたい方は、下記の記事をご参照ください。
 
 https://zenn.dev/akfm/articles/nextjs-revalidate
 

@@ -10,13 +10,13 @@ revalidateを駆使して可能な限りstatic renderingにし、Full Route Cach
 
 従来Pages Routerではサーバー側のレンダリングについて、[SSR](https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering)・[SSG](https://nextjs.org/docs/pages/building-your-application/rendering/static-site-generation)・[ISR](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)という3つのレンダリングモデルをサポートしてきました。App Routerでは上記同等のレンダリングをサポートしつつ、オンデマンドなrevalidateがより整理されてSSGとISRを大きく区別する意味がなくなったため、これらをまとめて**static rendering**・従来のSSR相当を**dynamic rendering**と呼称する形で再定義されました。
 
-| 種別                                                                                                                           | タイミング            | Pages Routerとの比較 |
+| レンダリング                                                                                                                   | タイミング            | Pages Routerとの比較 |
 | ------------------------------------------------------------------------------------------------------------------------------ | --------------------- | -------------------- |
 | [static rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#static-rendering-default) | build時やrevalidate後 | SSG・ISR相当         |
 | [dynamic rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)       | ユーザーリクエスト時  | SSR相当              |
 
 :::message
-Server Componentsは[Soft Navigation](https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#5-soft-navigation)時も実行されるので必ずしもSSR・SSG・ISRと比較できるものではないですが、ここでは簡略化して「相当」と表現しています。
+Server Componentsは[Soft Navigation](https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#5-soft-navigation)時も実行されるので必ずしもSSR・SSG・ISRと比較できるものではないですが、ここでは簡略化して比較しています。
 :::
 
 App Routerは**デフォルトでstatic rendering**となっており、**dynamic renderingはオプトイン**になっています。dynamic renderingにオプトインする方法は以下の通りです。
@@ -121,6 +121,8 @@ export async function action() {
 
 コメント投稿のようなサイト内からの更新に伴うrevalidateはServer Actionsを、CMS管理画面でのブログ更新のようなサイト外からの更新に伴うrevalidateにはRoute Handlerを組み合わせて利用すると良いでしょう。
 
+これらについては[データ操作とServer Actions](part_2_data_mutation_inner)と[外部で発生したデータ操作](part_2_data_mutation_outer)でより詳細に解説します。
+
 ### 定期的なrevalidate
 
 Route Segment Configの[revalidate](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#revalidate)を指定することでFull Route Cacheを定期的にrevalidateすることができます。
@@ -134,7 +136,7 @@ export const revalidate = 10; // 10s
 重複になりますが、`layout.tsx`に`revalidate`を設定するとLayoutが利用される下層ページにも適用されるため、注意しましょう。
 :::
 
-非常に短い時間例えば1秒設定するだけでも、秒間数百のリクエストが発生しても1つにまとめることができるので、バックエンドAPIへの負荷軽減・安定したパフォーマンスを実現できます。
+非常に短い時間、例えば1秒設定するだけでも秒間数百のリクエストが発生しても1つにまとめることができるので、バックエンドAPIへの負荷軽減・安定したパフォーマンスを実現できます。
 
 ### データの更新頻度から見た使い分け
 
@@ -142,23 +144,23 @@ revalidateは参照するデータの更新頻度に応じて使い分ける必�
 
 | 更新頻度 | revalidate   | 例                 |
 | -------- | ------------ | ------------------ |
-| 無       | 無           | LP、規約ページ     |
-| 低       | オンデマンド | ブログ記事ページ   |
-| 高       | 定期的       | 商品レビューページ |
+| 無       | 無           | LP                 |
+| 少       | オンデマンド | ブログ記事ページ   |
+| 多       | 定期的       | 商品レビューページ |
 
 ## トレードオフ
 
 ### 予期せぬdynamic renderingとパフォーマンス劣化
 
-Route Segment Configや`unstable_noStore()`によってdynamic renderingを利用する場合、開発者は明らかにdynamic renderingを意識して使うのでこれらが及ぼす影響を見誤ることは少ないと考えられます。一方、dynamic functionsや`cache: "no-store"`な`fetch`は主たる目的が別にあり、副次的にdynamic renderingに切り替わるため、これらを利用する際の影響範囲を開発者が注意する必要があります。
+Route Segment Configや`unstable_noStore()`によってdynamic renderingを利用する場合、開発者は明らかにdynamic renderingを意識して使うのでこれらが及ぼす影響を見誤ることは少ないと考えられます。一方、dynamic functionsは「cookieを利用したい」、`cache: "no-store"`な`fetch`は「Data Cacheを使いたくない」などの主目的が別にあり、これに伴って副次的にdynamic renderingに切り替わるため、開発者は影響範囲に注意する必要があります。
 
 特に、Data Cacheなどを適切に設定できていないとdynamic renderingに切り替わった際にページ全体のパフォーマンス劣化につながる可能性があります。こちらについての詳細は後述の[dynamic renderingとData Cache](part_2_dynamic_rendering_data_cache)をご参照ください。
 
 ### static/dynamic rendering境界とPPR
 
-Next.jsのv14時点では、static/dynamic renderingはRoute単位(`page.tsx`や`layout.tsx`)でしか切り替えられません。
+Next.jsのv14時点では、dynamic renderingはRoute単位(`page.tsx`や`layout.tsx`)でしか切り替えられません。
 
-Next.jsのv15(RC.0)では、experimentalですが**PPR**(Partial Pre-Rendering)を利用することができます。従来、Route単位でしかdynamic renderingへ切り替えられなかったのが、PPRでは文字通りPartial(部分的)に切り替えが可能になります。static/dynamic renderingの境界は、`<Suspense>`によって定義できます。
+Next.jsのv15(RC.0)では、experimentalですが**PPR**(Partial Pre-Rendering)を利用することができます。PPRでは文字通りPartial(部分的)にdynamic renderingへの切り替えが可能になります。static/dynamic renderingの境界は、`<Suspense>`によって定義できます。
 
 PPRについては後述の[PPRの章](part_3_partial_pre_rendering)や筆者の過去記事である以下をご参照ください。
 
