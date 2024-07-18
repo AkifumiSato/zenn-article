@@ -97,9 +97,11 @@ export async function action() {
 
 #### Data Cacheと`revalidatePath()`
 
-Data CacheにはデフォルトのタグとしてRoute情報を元にしたタグがNext.js内部より設定されており、`revalidatePath()`はこの特殊なタグを元に関連するData Cacheのrevalidateを実現しています。より詳細なNext.jsの内部実装が知りたい方は、下記の記事をご参照ください。
+Data CacheにはデフォルトのタグとしてRoute情報を元にしたタグがNext.js内部より設定されており、`revalidatePath()`はこの特殊なタグを元に関連するData Cacheのrevalidateを実現しています。
 
-https://zenn.dev/akfm/articles/nextjs-revalidate
+:::message
+より詳細にrevalidateの仕組みを知りたい方は、過去に筆者が調査した際にまとめた[こちらの記事](https://zenn.dev/akfm/articles/nextjs-revalidate)をぜひご参照ください。
+:::
 
 ## トレードオフ
 
