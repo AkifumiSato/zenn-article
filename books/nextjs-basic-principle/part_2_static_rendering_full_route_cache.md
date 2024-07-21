@@ -102,7 +102,7 @@ export function LeafComponent() {
 
 static renderingは耐障害性・パフォーマンスに優れています。ユーザーリクエスト毎にレンダリングが必要なら前述の方法でdynamic renderingにオプトインする必要がありますが、それ以外のケースについてApp Routerでは**可能な限りstatic renderingにする**ことが推奨されています。
 
-static renderingのレンダリング結果のキャッシュは[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache)と呼ばれ、オンデマンドなrevalidateもしくは定期的なrevalidateが可能です。revalidate機能を駆使して可能な限りstatic renderingにすることを心がけましょう。
+static renderingのレンダリング結果のキャッシュは[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache)と呼ばれています。App Routerではstatic renderingを活用するために、Full Route Cacheのオンデマンドrevalidateや時間ベースでのrevalidateといったよくあるユースケースをフォローし、従来のSSGのように変更があるたびにデプロイが必要といったことがないように設計されています。
 
 ### オンデマンドrevalidate
 
@@ -122,9 +122,9 @@ export async function action() {
 
 これらは特に何かしらのデータ操作が発生した際に利用されることを想定したrevalidateです。App Routerでのデータ操作に関する詳細は[データ操作とServer Actions](part_2_data_mutation_inner)と[外部で発生したデータ操作](part_2_data_mutation_outer)にて解説します。
 
-### 定期的なrevalidate
+### 時間ベースrevalidate
 
-Route Segment Configの[revalidate](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#revalidate)を指定することでFull Route Cacheや関連するData Cacheを定期的にrevalidateすることができます。
+Route Segment Configの[revalidate](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#revalidate)を指定することでFull Route Cacheや関連するData Cacheを時間ベースでrevalidateすることができます。
 
 ```tsx
 // layout.tsx | page.tsx
@@ -135,7 +135,7 @@ export const revalidate = 10; // 10s
 重複になりますが、`layout.tsx`に`revalidate`を設定するとLayoutが利用される下層ページにも適用されるため、注意しましょう。
 :::
 
-非常に短い時間、例えば1秒設定するだけで秒間数百のリクエストが発生しても1つにまとめることができるので、バックエンドAPIへの負荷軽減・安定したパフォーマンスを実現できます。
+非常に短い時間、例えば1秒設定するだけで秒間数百のリクエストが発生してもレンダリングを1つにまとめることができるので、バックエンドAPIへの負荷軽減・安定したパフォーマンスを実現できます。
 
 ## トレードオフ
 
