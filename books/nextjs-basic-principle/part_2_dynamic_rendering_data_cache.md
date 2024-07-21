@@ -34,6 +34,10 @@ fetch(`https://...`, {
 
 `cache`に`force-cache`か`no-store`を指定でき、これによりキャッシュを有効・無効にすることができます。
 
+:::message
+Next.jsの`v15.0.0-rc.0`では`fetch`の[デフォルトが`no-store`](https://nextjs.org/blog/next-15-rc#caching-updates)に変更されました。
+:::
+
 ```ts
 fetch(`https://...`, {
   next: {
