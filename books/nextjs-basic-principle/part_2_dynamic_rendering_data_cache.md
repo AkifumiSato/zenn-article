@@ -8,7 +8,9 @@ Data Cacheを活用して、dynamic rendering時のパフォーマンスを最�
 
 ## 背景
 
-[static renderingとFull Route Cache](part_2_static_rendering_full_route_cache)で述べた通り、App Routerでは可能な限りstatic renderingにすることが推奨されています。しかし、アプリケーションによってはユーザー情報を含むページなどdynamic renderingが必要な場合もあります。dynamic renderingはリクエストごとにレンダリングされるのでできるだけ早く完了する必要があり、中でもボトルネックになりやすいのは**データフェッチ処理**であることが知られています。
+[static renderingとFull Route Cache](part_2_static_rendering_full_route_cache)で述べた通り、App Routerでは可能な限りstatic renderingにすることが推奨されています。しかし、アプリケーションによってはユーザー情報を含むページなどdynamic renderingが必要な場合もあります。
+
+dynamic renderingはリクエストごとにレンダリングされるのでできるだけ早く完了する必要があります。この際最もパフォーマンスボトルネックになりやすいのが**データフェッチ処理**です。
 
 :::message
 Routeをdynamic renderingに切り替える方法は前の章の[static renderingとFull Route Cache](part_2_static_rendering_full_route_cache#背景)で解説していますので、そちらをご参照ください。
