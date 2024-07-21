@@ -60,7 +60,7 @@ fetch(`https://...`, {
 
 ### `unstable_cache()`
 
-[`unstable_cache()`](https://nextjs.org/docs/app/api-reference/functions/unstable_cache)を使うことで、DBアクセスやGraphQLでもData Cacheを利用することが可能です。
+[`unstable_cache()`](https://nextjs.org/docs/app/api-reference/functions/unstable_cache)を使うことで、DBアクセスなどでData Cacheを利用することが可能です。
 
 ```tsx
 import { getUser } from "./fetcher";
