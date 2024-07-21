@@ -59,6 +59,12 @@ Router Cacheを任意のタイミングで破棄したい多くのユースケ�
 
 特に`revalidatePath()`/`revalidateTag()`はサーバー側キャッシュだけでなくRouter Cacheにも影響を及ぼすことは直感的ではないので、よく覚えておきましょう。
 
+:::message
+Router Cacheはクライアントサイドのキャッシュのため、上記によるキャッシュ破棄はあくまでユーザー端末内で起こります。**全ユーザーのRouter Cacheを破棄する方法はありません**。
+
+例えばあるユーザーがServer Actions経由で`revalidatePath()`を呼び出しても、他のユーザーのRouter Cacheに影響するのは`staleTimes.dynamic`(デフォルト: 5分)ほどかかることになります。
+:::
+
 ## トレードオフ
 
 ### ドキュメントにはないRouter Cacheの挙動
