@@ -37,9 +37,10 @@ export default function Page() {
 }
 ```
 
-### `cache: "no-store"`な`fetch()`
+### `fetch()` Data Cacheオプトアウト
 
-`fetch()`のオプションに`cache: "no-store"`を指定した場合、dynamic renderingとなります。
+`fetch()`のオプションで[Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)をオプトアウトした場合、dynamic renderingとなります。キャッシュをオプトアウトするには
+`cache: "no-store"`か`next: { revalidate: 0 }`を指定する必要があります。
 
 ```ts
 // page.tsx
@@ -105,7 +106,7 @@ static renderingのレンダリング結果のキャッシュは[Full Route Cach
 
 ### オンデマンドrevalidate
 
-[`revalidatePath()`](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)や[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)で呼び出すことで、関連する[Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)やFull Route Cacheをrevalidateすることができます。
+[`revalidatePath()`](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)や[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)で呼び出すことで、関連するData CacheやFull Route Cacheをrevalidateすることができます。
 
 ```ts
 "use server";
