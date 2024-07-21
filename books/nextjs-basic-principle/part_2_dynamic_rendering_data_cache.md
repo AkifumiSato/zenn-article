@@ -69,6 +69,10 @@ import { unstable_cache } from "next/cache";
 const getCachedUser = unstable_cache(
   getUser, // DBアクセス
   ["my-app-user"], // key array
+  {
+    tags: ["users"], // cache revalidate tags
+    revalidate: 60, // revalidate time(s)
+  },
 );
 
 export default async function Component({ userID }) {
