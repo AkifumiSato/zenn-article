@@ -18,9 +18,9 @@ Routeをdynamic renderingに切り替える方法は前の章の[static renderin
 
 ## 設計・プラクティス
 
-[Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)はデータフェッチ処理の結果をキャッシュするもので、サーバー側に永続化されリクエストやユーザーを超えて共有されます。これを活用することでdynamic renderingの高速化やAPI負荷軽減などが見込めます。
+[Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)はデータフェッチ処理の結果をキャッシュするもので、サーバー側に永続化されリクエストやユーザーを超えて共有されます。dynamic renderingはリクエストごとにレンダリングを行いますが、必ずしも全てのデータフェッチを実行しなければならないとは限りません。Data Cacheを活用してデータフェッチを最適化することで、dynamic renderingの高速化やAPI負荷軽減などが見込めます。
 
-Data Cacheができるだけキャッシュヒットするよう適切な設定を心がけましょう。
+Data Cacheができるだけキャッシュヒットするようデータフェッチごとに適切な設定を心がけましょう。
 
 ### Next.jsサーバー上の`fetch()`
 
