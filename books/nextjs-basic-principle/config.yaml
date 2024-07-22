@@ -15,10 +15,11 @@ chapters:
   - part_1_fine_grained_api_design
   - part_1_interactive_fetch
   - part_2
-  - part_2_static_dynamic_rendering
-  - part_2_server_cache
+  - part_2_static_rendering_full_route_cache
+  - part_2_dynamic_rendering_data_cache
   - part_2_router_cache
-  - part_2_data_mutation
+  - part_2_data_mutation_inner
+  - part_2_data_mutation_outer
   - part_2_cache_tag_design
   - part_3
   - part_3_composite_pattern
