@@ -65,7 +65,7 @@ export async function updateTodo() {
 
 ### redirect時の通信効率
 
-App Routerではサーバーサイドで呼び出せる[`redirect`](https://nextjs.org/docs/app/building-your-application/routing/redirecting#redirect-function)という関数があります。データ操作後にページをリダレイクトしたいことはよくあるケースですが、これをServer Actions内で呼び出すとレスポンスにリダイレクト先ページの[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)が含まれるため、HTTPリダイレクトをせずに画面遷移できます。
+App Routerではサーバーサイドで呼び出せる[`redirect`](https://nextjs.org/docs/app/building-your-application/routing/redirecting#redirect-function)という関数があります。データ操作後にページをリダレイクトしたいことはよくあるユースケースですが、`redirect`をServer Actions内で呼び出すとレスポンスにリダイレクト先ページの[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)が含まれるため、HTTPリダイレクトをせずに画面遷移できます。これにより、従来データ操作リクエストとリダイレクト後ページ情報のリクエストで2往復は必要だったhttp通信が、1度で済みます。
 
 ```tsx
 // app/actions.ts
