@@ -10,9 +10,9 @@ Compositionパターンを駆使して、Client Boundaryを制御しましょう
 
 [第1部](part_1)ではデータフェッチ観点を中心にServer Componentsの設計パターンについて解説してきました。そこにClient Componentsをどう組み合わせていくかを考えることが、React Server Componentsにおけるコンポーネント設計の基礎となります。
 
-Client Componentsは当然ながらクライアントサイドでも実行されるので、Client Componentsが多いほどJavaScriptバンドルサイズは増加します。一方Server Componentsは[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)として転送されるため、レンダリングされるReact treeが多いほど転送量が多くなります。これらはトレードオフの関係にあるため、**Client Componentsは少なければ少ない方がいいと言うものではありません**。
+Client Componentsは当然ながらクライアントサイドでも実行されるので、Client Componentsが多いほどJavaScriptバンドルサイズは増加します。一方Server Componentsは[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)として転送されるため、Server Componentsがレンダリングする`ReactElement`が多いほど転送量が多くなります。Client Componentsは最初の1回しかJavaScriptのロードをしないためこれらはトレードオフの関係にあります。そのため、パフォーマンスを鑑みると**Client** Componentsは少なければ少ない方がいいと言うほど単純ではなく、これらのトレードオフを比較した上で判断しなければ最適な設計が難しいと言えます。
 
-クライアントサイドでの実行必要有無以外にも、JavaScriptバンドルサイズとRSC Payload転送量のトレードオフも加味してClient Componentsにする・しないを判断していく必要があります。重要なのは**Client Componentsにする範囲をコントロールできる**ことです。
+クライアントサイドでの実行必要有無以外にもJavaScriptバンドルサイズとRSC Payload転送量のトレードオフも加味して、コンポーネント分割やClient Componentsにする・しないを判断していく必要があります。重要なのは**Client Componentsにする範囲をコントロールできる**ことです。
 
 Client Componentsにする範囲をコントロールするには、特に以下の2つに注意する必要があります。
 
@@ -47,7 +47,7 @@ Client Componentsはクライアントでもサーバーサイドでも実行さ
 
 ### Client Boundary
 
-もう1つ注意すべきなのは、`"use client";`が記述されたファイル以降のモジュール依存関係treeツリーは**全てClient Componentsとして扱われる**ということです。Client Componentsはサーバーモジュールを`import`できない以上、すべての依存関係をクライアントモジュールとして扱います。
+もう1つ注意すべきなのは、`"use client";`が記述されたファイル以降のモジュール依存関係は全てクライアントサイドモジュールとして扱われ、コンポーネントは**全てClient Componentsになる**ということです。Client Componentsはサーバーモジュールを`import`できない以上、これも当然の帰結です。
 
 `"use client":`はこのように依存関係において境界(Boundary)を定義するものであり、この境界はよく**Client Boundary**と表現されます。
 
@@ -77,9 +77,9 @@ React Server ComponentsにおいてはClient Boundaryを制御すること、特
 
 これには大きく以下2つの方法があります。
 
-### React treeの下層に移動する
+### コンポーネントツリーの下層に移動する
 
-1つは**Client ComponentsをReact treeの下層に移動する**というシンプルな方法です。例えば検索バーを持つヘッダーを実装する際に、ヘッダーごとClient Componentsにするのではなく検索バーの部分だけClient Componentsとして切り出し、ヘッダー自体はServer Componentsに保つといった方法です。
+1つは**Client Componentsをコンポーネントツリーの下層に移動する**というシンプルな方法です。例えば検索バーを持つヘッダーを実装する際に、ヘッダーごとClient Componentsにするのではなく検索バーの部分だけClient Componentsとして切り出し、ヘッダー自体はServer Componentsに保つといった方法です。
 
 ```tsx
 // header.tsx(Server Components)
@@ -101,7 +101,7 @@ export function Header() {
 
 上記の方法はシンプルな解決策ですが、どうしても上位のコンポーネントで`useState`や`useEffect`などが必要になるケースもあります。この場合には**Compositionパターン**を活用して、Client Componentsを分離することが有効です。
 
-前述の通り、Client ComponentsはServer Componentsを`import`することができません。しかしこれは依存関係上の制約であって、React treeとしてはClient Componentsの`children`などのpropsにServer Componentsを渡すことで、レンダリングが可能です。
+前述の通り、Client ComponentsはServer Componentsを`import`することができません。しかしこれは依存関係上の制約であって、コンポーネントツリーとしてはClient Componentsの`children`などのpropsにServer Componentsを渡すことで、レンダリングが可能です。
 
 前述の`<SideMenu>`の例を書き換えてみます。
 
@@ -142,13 +142,13 @@ Server ComponentsもClient Componentsも等しく`React.ReactNode`として表�
 export async function Product() {
   const product = await fetchProduct();
 
-  return <>{/* `product`を参照するとても大きなReact tree */}</>;
+  return <>{/* `product`を参照するとても大きな`ReactElement` */}</>;
 }
 ```
 
-hooksなども特になく、ただ`product`を取得・参照して大きなReact treeを作るだけのコンポーネントです。しかしこのデータを参照してるReact tree部分が大きいと、RSC Payloadの転送コストが大きくなりパフォーマンス劣化を引き起こす可能性があります。特に低速なネットワーク環境においてページ遷移を繰り返す際などには影響が顕著になりがちです。
+hooksなども特になく、ただ`product`を取得・参照して大きなReactElementを作るだけのコンポーネントです。しかしこのデータを参照してるReactElement部分が大きいと、RSC Payloadの転送コストが大きくなりパフォーマンス劣化を引き起こす可能性があります。特に低速なネットワーク環境においてページ遷移を繰り返す際などには影響が顕著になりがちです。
 
-このようなケースにおいてはServer Componentsでデータフェッチのみを行い、React tree部分はClient Componentsに分離することでRSC Payloadの転送量を削減することができます。
+このようなケースにおいてはServer Componentsでデータフェッチのみを行い、ReactElement部分はClient Componentsに分離することでRSC Payloadの転送量を削減することができます。
 
 ```tsx
 export async function Product() {
@@ -162,6 +162,6 @@ export async function Product() {
 "use client";
 
 export function ProductPresentaional({ product }: { product: Product }) {
-  return <>{/* `product`を参照するとても大きなReact tree */}</>;
+  return <>{/* `product`を参照するとても大きな`ReactElement` */}</>;
 }
 ```
