@@ -149,6 +149,6 @@ Route Segment Configや`unstable_noStore()`によってdynamic renderingを利�
 
 Next.jsのv14時点ではdynamic renderingはRoute単位(`page.tsx`や`layout.tsx`)でしか切り替えられませんが、experimentalフラグで**PPR**(Partial Pre-Rendering)を有効にするにより、文字通りPartial(部分的)にdynamic renderingへの切り替えが可能になります。PPRではstatic/dynamic renderingの境界を`<Suspense>`によって定義します。
 
-PPRについては後述の[PPRの章](part_2_partial_pre_rendering)や筆者の過去記事である以下をご参照ください。
+PPRについては後述の[PPRの章](part_4_partial_pre_rendering)や筆者の過去記事である以下をご参照ください。
 
 https://zenn.dev/akfm/articles/nextjs-partial-pre-rendering
