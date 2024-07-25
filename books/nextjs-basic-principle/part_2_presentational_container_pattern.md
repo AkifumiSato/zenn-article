@@ -18,30 +18,28 @@ ReactコンポーネントのテストといえばReact Testing Library(RTL)やS
 
 RTLは現状[Server Componentsに未対応](https://github.com/testing-library/react-testing-library/issues/1209)で、将来的にサポートするようなコメントも見られますが時期については不明です。
 
-具体的には非同期なコンポーネントを`render()`することができないため、以下のように「データフェッチした結果がレンダリングされたかどうか」といった検証はできません。
+具体的には非同期なコンポーネントを`render()`することができないため、以下のようにServer Componentsのデータフェッチに依存した検証はできません。
 
 ```tsx
-describe("todos/random APIよりデータ取得成功時", () => {
-  test("TodoPresentationalにAPIより取得した`todo`がタイトルとして表示される", () => {
-    // mswの設定
-    server.use(
-      http.get("https://dummyjson.com/todos/random", () => {
-        return HttpResponse.json(dummyTodo);
-      }),
-    );
+test("TodoPresentationalにAPIより取得した`dummyTodo`がタイトルとして表示される", () => {
+  // mswの設定
+  server.use(
+    http.get("https://dummyjson.com/todos/random", () => {
+      return HttpResponse.json(dummyTodo);
+    }),
+  );
 
-    render(<TodoPage />); // `<TodoPage>`はServer Components
+  render(<TodoPage />); // `<TodoPage>`はServer Components
 
-    expect(
-      screen.getByRole("heading", { name: todo.title }),
-    ).toBeInTheDocument();
-  });
+  expect(
+    screen.getByRole("heading", { name: dummyTodo.title }),
+  ).toBeInTheDocument();
 });
 ```
 
 ### Storybook
 
-一方Storybookは公式に[Server Components対応](https://storybook.js.org/blog/storybook-react-server-components/)をexperimentalながら実装したとしているものの、実際にはasyncなClient Componentsをレンダリングしてるにすぎず大量のmockを必要とするため、筆者はあまり実用的とは考えていません。
+一方Storybookはexperimentalながら[Server Components対応](https://storybook.js.org/blog/storybook-react-server-components/)を実装したとしているものの、実際にはasyncなClient Componentsをレンダリングしてるにすぎず、大量のmockを必要とするため筆者はあまり実用的とは考えていません。
 
 ```tsx
 export default { component: DbCard };
@@ -50,7 +48,7 @@ export const Success = {
   args: { id: 1 },
   parameters: {
     moduleMock: {
-      // サーバーサイド処理の分だけここが冗長になる
+      // サーバーサイド処理の分`mock`が冗長になる
       mock: () => {
         const mock = createMock(db, "findById");
         mock.mockReturnValue(
@@ -84,7 +82,7 @@ https://medium.com/@dan_abramov/smart-and-dumb-components-7ca2f9a7c7d0
 
 ### React Server ComponentsにおけるPresentational/Containerパターン
 
-React Server ComponentsにおけるPresentational Componentsは、データフェッチを含まないShared ComponentsもしくはClient Componentsを指します。これらはRTLやStorybookで扱うことができるので、テスト容易性が向上します。
+React Server ComponentsにおけるPresentational Componentsは、データフェッチを含まないShared Components(定義は[Compositionパターン](part_2_composite_pattern)を参照)もしくはClient Componentsを指します。これらはRTLやStorybookで扱うことができるので、テスト容易性が向上します。
 
 一方でContainer Componentsはデータフェッチなどのサーバーサイド処理が主な責務となります。Container Componentsはレンダリングしてテストすることが現状難しいので、単なる関数として実行することでテストを行います。
 
@@ -93,7 +91,6 @@ React Server ComponentsにおけるPresentational Componentsは、データフ�
 例としてランダムなTodoを取得・表示するページをPresentational/Containerパターンで実装してみます。
 
 ```tsx
-// Presentational Components
 export function TodoPagePresentation({ todo }: { todo: Todo }) {
   return (
     <>
@@ -109,7 +106,6 @@ export function TodoPagePresentation({ todo }: { todo: Todo }) {
 上記のように、Presentationalなコンポーネントはデータを受け取って表示するだけのシンプルなコンポーネントです。場合によってはClient Componentsにすることもあるでしょう。このようなコンポーネントのテストは従来同様RTLを使ってテストできます。
 
 ```tsx
-// test
 test("`todo`として渡された値がタイトルとして表示される", () => {
   render(<TodoPagePresentation todo={dummyTodo} />);
 
@@ -119,7 +115,7 @@ test("`todo`として渡された値がタイトルとして表示される", ()
 });
 ```
 
-一方Container Componentsについては以下のようになります。React treeの表現は`<TodoPagePresentation>`に責務を移譲しているため、データ取得を主な処理としています。
+一方Container Componentsについては以下のように、データ取得を主な処理となります。
 
 ```tsx
 export default async function Page() {
@@ -159,4 +155,4 @@ describe("todos/random APIよりデータ取得成功時", () => {
 
 Presentational/Containerパターンは現状RTLやStorybookなどがServer Componentsに対して未成熟であることを前提にしつつ、テスト容易性を向上するために役立つとしています。これはつまりRTLやStorybook側の対応が進んで前提が変わってくると、Presentational/Containerパターンは不要になる可能性があるということです。
 
-このパターンを用いることのデメリットは特に多くないのではないかと筆者は考えていますが、将来エコシステムの対応が進んだ際には設計を再検討する必要があるかもしれません。
+RTLやStorybookの状況が直近大きく一変すると考えられる要素はなく、かつこのパターンを用いることのデメリットは特に多くないのではないかと筆者は考えていますが、将来エコシステムの対応が進んだ際には設計を再検討する必要があるかもしれません。

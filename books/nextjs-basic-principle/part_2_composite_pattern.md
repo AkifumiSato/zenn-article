@@ -4,21 +4,19 @@ title: "Compositionパターン"
 
 ## 要約
 
-Compositionパターンを駆使して、Client Boundaryを制御しましょう。
+Compositionパターンを駆使して、Client Componentsを適切に切り分けましょう。
 
 ## 背景
 
 [第1部](part_1)ではデータフェッチ観点を中心にServer Componentsの設計パターンについて解説してきました。そこにClient Componentsをどう組み合わせていくかを考えることが、React Server Componentsにおけるコンポーネント設計の基礎となります。
 
-Client Componentsは当然ながらクライアントサイドでも実行されるので、Client Componentsが多いほどJavaScriptバンドルサイズは増加します。一方Server Componentsは[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)として転送されるため、Server Componentsがレンダリングする`ReactElement`が多いほど転送量が多くなります。Client Componentsは最初の1回しかJavaScriptのロードをしないためこれらはトレードオフの関係にあります。そのため、パフォーマンスを鑑みると**Client** Componentsは少なければ少ない方がいいと言うほど単純ではなく、これらのトレードオフを比較した上で判断しなければ最適な設計が難しいと言えます。
+App RouterではデフォルトがServer ComponentsでClient Componentsはオプトインです。そのため、Server Componentsの設計を活かすにはClient Componentsを適切に切り分けることが重要です。Client Componentsを切り分ける際には特に、以下2つの観点について注意する必要があります。
 
-クライアントサイドでの実行必要有無以外にもJavaScriptバンドルサイズとRSC Payload転送量のトレードオフも加味して、コンポーネント分割やClient Componentsにする・しないを判断していく必要があります。重要なのは**Client Componentsにする範囲をコントロールできる**ことです。
+### Client Componentsはサーバーモジュールを`import`できない
 
-Client Componentsにする範囲をコントロールするには、特に以下の2つに注意する必要があります。
+1つはClient ComponentsはServer Componentsはじめサーバーモジュールを`import`できないという制約です。クライアントサイドでも実行され以上、サーバーサイドモジュールに依存できないのは考えてみると当然のことです。
 
-### ClientはServerを`import`できない
-
-1つはClient ComponentsはServer Componentsを`import`できないという制約です。そのため、以下のような実装はできません。
+そのため、以下のような実装はできません。
 
 ```tsx
 "use client";
@@ -43,11 +41,9 @@ export function SideMenu() {
 }
 ```
 
-Client Componentsはクライアントでもサーバーサイドでも実行されます。そのため、Client ComponentsがServer Componentsはじめサーバーサイドモジュールに依存できないのは考えてみると当然のことです。
-
 ### Client Boundary
 
-もう1つ注意すべきなのは、`"use client";`が記述されたファイル以降のモジュール依存関係は全てクライアントサイドモジュールとして扱われ、コンポーネントは**全てClient Componentsになる**ということです。Client Componentsはサーバーモジュールを`import`できない以上、これも当然の帰結です。
+もう1つ注意すべきなのは、`"use client";`が記述されたファイル以降のモジュール依存関係は全て暗黙的にクライアントサイドモジュールとして扱われ、コンポーネントは**全てClient Componentsになる**ということです。Client Componentsはサーバーモジュールを`import`できない以上、これも当然の帰結です。
 
 `"use client":`はこのように依存関係において境界(Boundary)を定義するものであり、この境界はよく**Client Boundary**と表現されます。
 
@@ -73,7 +69,7 @@ export function CompanyLinks() {
 
 ## 設計・プラクティス
 
-React Server ComponentsにおいてはClient Boundaryを制御すること、特にClient Boundaryを限定的にするテクニックが重要です。限定的にできるということは必要に応じて範囲を広げることも容易であることと同義です。
+前述の通り、App RouterでServer Componentsの設計を活かすにはClient Componentsを適切に切り分けることが重要となります。
 
 これには大きく以下2つの方法があります。
 
@@ -95,7 +91,7 @@ export function Header() {
 }
 ```
 
-こうすることで必要に応じてClient Boundaryに含まれる範囲を増減させることができます。
+このようにClient Componentsをできるだけ小さく保てる境界でコンポーネントを切り出せることが重要になってきます。
 
 ### Compositionパターンを活用する
 
@@ -134,19 +130,29 @@ Server ComponentsもClient Componentsも等しく`React.ReactNode`として表�
 
 ### RSC Payload転送量を減らすためのClient Components
 
-前述の通りServer ComponentsはRSC Payloadの転送量が増加するため、Client ComponentsのJavaScriptバンドルサイズの増加とはトレードオフの関係にあります。そのため`useState()`などのhooksを使わない場合においても、RSC Payloadの転送量を削減する目的でClient Componentsにすることが望ましいケースがあります。
+Client Componentsは当然ながらクライアントサイドでも実行されるので、Client Componentsが多いほどJavaScriptバンドルサイズは増加します。一方Server Componentsは[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)として転送されるため、Server ComponentsがレンダリングするReactElementが多いほど転送量が多くなります。Client Componentsは最初の1回しかJavaScriptのロードをしないためこれらはトレードオフの関係にあります。
 
-例えば以下の`<Product>`について考えてみます。
+そのため`useState()`などのhooksを使わない場合においても、RSC Payloadの転送量を削減する目的でClient Componentsにすることが望ましいケースがあります。例えば以下の`<Product>`について考えてみます。
 
 ```tsx
 export async function Product() {
   const product = await fetchProduct();
 
-  return <>{/* `product`を参照するとても大きな`ReactElement` */}</>;
+  return (
+    <div class="... /* 大量のtailwindクラス */">
+      <div class="... /* 大量のtailwindクラス */">
+        <div class="... /* 大量のtailwindクラス */">
+          <div class="... /* 大量のtailwindクラス */">
+            {/* `product`参照 */}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 ```
 
-hooksなども特になく、ただ`product`を取得・参照して大きなReactElementを作るだけのコンポーネントです。しかしこのデータを参照してるReactElement部分が大きいと、RSC Payloadの転送コストが大きくなりパフォーマンス劣化を引き起こす可能性があります。特に低速なネットワーク環境においてページ遷移を繰り返す際などには影響が顕著になりがちです。
+hooksなども特になく、ただ`product`を取得・参照しているのみです。しかしこのデータを参照してるReactElementの出力結果サイズが大きいと、RSC Payloadの転送コストが大きくなりパフォーマンス劣化を引き起こす可能性があります。特に低速なネットワーク環境においてページ遷移を繰り返す際などには影響が顕著になりがちです。
 
 このようなケースにおいてはServer Componentsでデータフェッチのみを行い、ReactElement部分はClient Componentsに分離することでRSC Payloadの転送量を削減することができます。
 
@@ -162,6 +168,16 @@ export async function Product() {
 "use client";
 
 export function ProductPresentaional({ product }: { product: Product }) {
-  return <>{/* `product`を参照するとても大きな`ReactElement` */}</>;
+  return (
+    <div class="... /* 大量のtailwindクラス */">
+      <div class="... /* 大量のtailwindクラス */">
+        <div class="... /* 大量のtailwindクラス */">
+          <div class="... /* 大量のtailwindクラス */">
+            {/* `product`参照 */}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 ```
