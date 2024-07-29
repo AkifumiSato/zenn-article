@@ -10,7 +10,42 @@ Compositionパターンを駆使して、Client Componentsを適切に切り分�
 
 [第1部](part_1)ではデータフェッチ観点を中心にServer Componentsの設計パターンについて解説してきました。そこにClient Componentsをどう組み合わせていくかを考えることが、React Server Componentsにおけるコンポーネント設計の基礎となります。
 
-App RouterではデフォルトがServer ComponentsでClient Componentsはオプトインです。そのため、Server Componentsの設計を活かすにはClient Componentsを適切に切り分けることが重要です。Client Componentsを切り分ける際には特に、以下2つの観点について注意する必要があります。
+App RouterではデフォルトがServer ComponentsでClient Componentsはオプトインです。そのため、Server Componentsの設計を活かすにはClient Componentsを適切に切り分けることが重要です。Client Componentsを適切に切り分けるには特に、以下3つの観点について注意する必要があります。
+
+### いつClient Componentsにすべきか
+
+そもそもいつClient Componentsを使うべきなのかしっかり考えることはClient Componentsの切り分けにおいて最も重要な観点です。様々なケースが考えられますが、ここではClient Componentsを利用すべきだと筆者が考える代表的な3つのケースを挙げます。
+
+1つ目は最もわかりやすく、`useState()`や`useEffect()`などのhooksを必要とするようなケースです。ユーザーのインタラクションに伴う処理や、ブラウザAPIとの統合などが主なユースケースでしょう。
+
+```tsx
+"use client";
+
+import { useState } from "react";
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>You clicked {count} times</p>
+      <button onClick={() => setCount(count + 1)}>Click me</button>
+    </div>
+  );
+}
+```
+
+2つ目はサードパーティライブラリが提供するコンポーネントを使う場合です。`"use client";`に対応してない場合にはre-exportsする必要があることもあるでしょう。
+
+```tsx
+"use client";
+
+import { Accordion } from "third-party-library";
+
+export default Accordion;
+```
+
+3つ目は転送するRSC Payloadを減らしたい場合です。詳細な内容は[トレードオフ](#トレードオフ)で解説しますが、非常に多くのtailwindクラスを含むReactElementのRSC Payloadは転送量が大きくなりがちです。JavaScriptサイズとのトレードオフになりますが、転送量を優先したいケースにおいてはClient Componentsにすることが有効です。
 
 ### Client Componentsはサーバーモジュールを`import`できない
 
@@ -73,7 +108,7 @@ export function CompanyLinks() {
 
 これには大きく以下2つの方法があります。
 
-### コンポーネントツリーの下層に移動する
+### コンポーネントツリーの末端をClient Componentsにする
 
 1つは**Client Componentsをコンポーネントツリーの下層に移動する**というシンプルな方法です。例えば検索バーを持つヘッダーを実装する際に、ヘッダーごとClient Componentsにするのではなく検索バーの部分だけClient Componentsとして切り出し、ヘッダー自体はServer Componentsに保つといった方法です。
 
