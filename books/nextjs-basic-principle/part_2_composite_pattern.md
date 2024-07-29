@@ -14,7 +14,7 @@ App RouterではデフォルトがServer ComponentsでClient Componentsはオプ
 
 ### Client Componentsはサーバーモジュールを`import`できない
 
-1つはClient ComponentsはServer Componentsはじめサーバーモジュールを`import`できないという制約です。クライアントサイドでも実行され以上、サーバーサイドモジュールに依存できないのは考えてみると当然のことです。
+1つはClient ComponentsはServer Componentsはじめサーバーモジュールを`import`できないという制約です。クライアントサイドでも実行される以上、サーバーサイドモジュールに依存できないのは考えてみると当然のことです。
 
 そのため、以下のような実装はできません。
 
@@ -43,9 +43,9 @@ export function SideMenu() {
 
 ### Client Boundary
 
-もう1つ注意すべきなのは、`"use client";`が記述されたファイル以降のモジュール依存関係は全て暗黙的にクライアントサイドモジュールとして扱われ、コンポーネントは**全てClient Componentsになる**ということです。Client Componentsはサーバーモジュールを`import`できない以上、これも当然の帰結です。
+もう1つ注意すべきなのは、`"use client";`が記述されたモジュールから`import`されるモジュール以降は全て暗黙的にクライアントサイドモジュールとして扱われ、それらで定義されたコンポーネントは**全てClient Componentsになる**ということです。Client Componentsはサーバーモジュールを`import`できない以上、これも当然の帰結です。
 
-`"use client":`はこのように依存関係において境界(Boundary)を定義するものであり、この境界はよく**Client Boundary**と表現されます。
+`"use client";`はこのように、`"use client";`を書いたモジュール定義のコンポーネントだけがClient Componentsになるわけではなく、依存関係において境界(Boundary)を定義するものです。この境界はよく**Client Boundary**と表現されます。
 
 以下のようにサーバーモジュールに依存せず、`"use client";`もないファイルで`export`されるコンポーネントは、Client Componentsから`import`されればClient Componentsとして扱わ、Server Componentsから`import`されればServer Componentsとして扱われます。
 
