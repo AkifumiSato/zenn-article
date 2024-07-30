@@ -129,7 +129,7 @@ export function ProductPresentaional({ product }: { product: Product }) {
 
 ### Client Boundaryと暗黙的なClient Components
 
-`"use client";`が記述されたモジュールから`import`されるモジュール以降は全て暗黙的にクライアントモジュールとして扱われ、それらで定義されたコンポーネントは**全てClient Components**として扱われます。例外となるのは`"use server";`が付与されたファイルや関数、つまりServer Actionsのみです。
+`"use client";`が記述されたモジュールから`import`されるモジュール以降は全て暗黙的にクライアントモジュールとして扱われ、それらで定義されたコンポーネントは**全てClient Components**として扱われます。
 
 このように、`"use client";`は依存関係において境界(Boundary)を定義するもので、この境界はよく**Client Boundary**と表現されます。
 

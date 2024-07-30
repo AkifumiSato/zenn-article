@@ -82,7 +82,27 @@ https://medium.com/@dan_abramov/smart-and-dumb-components-7ca2f9a7c7d0
 
 ### React Server ComponentsにおけるContainer/Presentationalパターン
 
-React Server ComponentsにおけるPresentational Componentsは、データフェッチを含まないShared Components(定義は[Compositionパターン](part_2_composite_pattern)を参照)もしくはClient Componentsを指します。これらはRTLやStorybookで扱うことができるので、テスト容易性が向上します。
+React Server ComponentsにおけるPresentational Componentsは、データフェッチを含まない**Shared Components**もしくはClient Componentsを指します。
+
+Shared Componentsとは、以下のようにサーバーモジュールに依存せず`"use client";`もないファイルで`export`されるコンポーネントを指します。このようなコンポーネントは、Client Boundary内においてはClient Componentsとして扱われ、そうでなければServer Componentsとして扱われます。
+
+```tsx
+// `"use client";`がないファイル
+export function CompanyLinks() {
+  return (
+    <ul>
+      <li>
+        <a href="/about">About</a>
+      </li>
+      <li>
+        <a href="/contact">Contact</a>
+      </li>
+    </ul>
+  );
+}
+```
+
+これらはRTLやStorybookで扱うことができるので、テスト容易性が向上します。
 
 一方でContainer Componentsはデータフェッチなどのサーバーサイド処理が主な責務となります。Container Componentsはレンダリングしてテストすることが現状難しいので、単なる関数として実行することでテストを行います。
 
