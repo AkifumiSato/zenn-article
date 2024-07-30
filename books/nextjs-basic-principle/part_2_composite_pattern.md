@@ -16,7 +16,11 @@ App RouterではデフォルトがServer ComponentsでClient Componentsはオプ
 
 そもそもいつClient Componentsを使うべきなのかしっかり考えることはClient Componentsの切り分けにおいて最も重要な観点です。様々なケースが考えられますが、ここではClient Componentsを利用すべきだと筆者が考える代表的な3つのケースを挙げます。
 
-1つ目は最もわかりやすく、`useState()`や`useEffect()`などのhooksを必要とするようなケースです。ユーザーのインタラクションに伴う処理や、ブラウザAPIとの統合などが主なユースケースでしょう。
+1つ目は最もわかりやすく、クライアントサイド処理を必要とするケースです。以下のようなケースが考えられます。
+
+- `onClick()`や`onChange()`といったイベントハンドラの利用
+- 状態hooks(`useState()`など)やライフサイクルhooks(`useEffect()`など)の利用
+- ブラウザAPIとの統合
 
 ```tsx
 "use client";
