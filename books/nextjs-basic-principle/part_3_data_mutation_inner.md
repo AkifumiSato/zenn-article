@@ -20,8 +20,7 @@ Pages Routerではデータ取得のために[getServerSideProps](https://nextjs
 
 App Routerにおけるデータ操作は[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)を利用することが推奨されており、これによりtRPCなどなしにデータ変更を実装することが可能です。
 
-```tsx
-// app/actions.ts
+```tsx :app/actions.ts
 "use server";
 
 export async function createTodo(formData: FormData) {
@@ -29,8 +28,7 @@ export async function createTodo(formData: FormData) {
 }
 ```
 
-```tsx
-// app/page.tsx
+```tsx :app/page.tsx
 "use client";
 
 import { createTodo } from "./actions";
@@ -53,8 +51,7 @@ Server Actions自体はReactの仕様ですが、App Router上で実装されて
 
 前述の通りApp Routerでは多層のキャッシュがデフォルトで有効になっており、データ操作時にはキャッシュのrevalidateが必要になります。Server Actions内で[revalidatePath](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[revalidateTag](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を呼び出すと、サーバー側の関連するキャッシュ([Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)や[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache))とクライアントサイドのキャッシュ([Router Cache](https://nextjs.org/docs/app/building-your-application/caching#router-cache))が再検証されます。
 
-```tsx
-// app/actions.ts
+```tsx :app/actions.ts
 "use server";
 
 export async function updateTodo() {
@@ -67,8 +64,7 @@ export async function updateTodo() {
 
 App Routerではサーバーサイドで呼び出せる[`redirect`](https://nextjs.org/docs/app/building-your-application/routing/redirecting#redirect-function)という関数があります。データ操作後にページをリダレイクトしたいことはよくあるユースケースですが、`redirect`をServer Actions内で呼び出すとレスポンスにリダイレクト先ページの[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)が含まれるため、HTTPリダイレクトをせずに画面遷移できます。これにより、従来データ操作リクエストとリダイレクト後ページ情報のリクエストで2往復は必要だったhttp通信が、1度で済みます。
 
-```tsx
-// app/actions.ts
+```tsx :app/actions.ts
 "use server";
 
 import { redirect } from "next/navigation";

@@ -14,8 +14,7 @@ title: "N+1とDataLoader"
 
 もう1つは、いわゆる**N+1なデータフェッチ**です。末端のコンポーネントでデータフェッチするよう設計すると、どうしてもN+1データフェッチに繋がりがちです。以下の例では投稿の一覧を取得後、子コンポーネントで著者情報を取得しています。
 
-```tsx
-// page.tsx
+```tsx :page.tsx
 import { type Post, getPosts, getUser } from "./fetcher";
 
 export const dynamic = "force-dynamic";
@@ -53,8 +52,7 @@ async function PostItem({ post }: { post: Post }) {
 }
 ```
 
-```ts
-// fetcher.ts
+```ts :fetcher.ts
 export async function getPosts() {
   return fetch("https://dummyjson.com/posts").then(
     (res) =>
@@ -124,8 +122,7 @@ Server Componentsの兄弟コンポーネントは並行レンダリングされ
 
 DataLoaderを用いて、前述の実装例の`getUser()`を書き直してみます。
 
-```ts
-// fetcher.ts
+```ts :fetcher.ts
 import DataLoader from "dataloader";
 import * as React from "react";
 

@@ -15,6 +15,7 @@ chapters:
   - part_1_fine_grained_api_design
   - part_1_interactive_fetch
   - part_2
+  - part_2_client_components_usecase
   - part_2_composite_pattern
   - part_2_presentational_container_pattern
   - part_3
