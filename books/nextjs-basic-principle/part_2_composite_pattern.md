@@ -80,7 +80,15 @@ export function SideMenu() {
 
 もう1つ注意すべきなのは、`"use client";`が記述されたモジュールから`import`されるモジュール以降は全て暗黙的にクライアントサイドモジュールとして扱われ、それらで定義されたコンポーネントは**全てClient Componentsになる**ということです。Client Componentsはサーバーモジュールを`import`できない以上、これも当然の帰結です。
 
-`"use client";`はこのように、`"use client";`を書いたモジュール定義のコンポーネントだけがClient Componentsになるわけではなく、依存関係において境界(Boundary)を定義するものです。この境界はよく**Client Boundary**と表現されます。
+`"use client";`はこのように依存関係において境界(Boundary)を定義するもので、この境界はよく**Client Boundary**と表現されます。
+
+:::message
+よくある誤解ですが、以下は**誤り**なので注意しましょう。
+
+- `"use client";`宣言付モジュールのコンポーネント**だけ**がClient Componentsになる
+- 全てのClient Componentsに`"use client";`が必要
+
+:::
 
 以下のようにサーバーモジュールに依存せず、`"use client";`もないファイルで`export`されるコンポーネントは、Client Componentsから`import`されればClient Componentsとして扱わ、Server Componentsから`import`されればServer Componentsとして扱われます。
 
