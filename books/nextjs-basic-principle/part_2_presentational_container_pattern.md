@@ -1,10 +1,10 @@
 ---
-title: "Presentational/Containerパターン"
+title: "Container/Presentationalパターン"
 ---
 
 ## 要約
 
-Presentational/Containerパターンを用いて責務を分離し、テスト容易性を向上させましょう。
+Container/Presentationalパターンを用いて責務を分離し、テスト容易性を向上させましょう。
 
 :::message
 本章の解説内容は、[Quramyさんの記事](https://quramy.medium.com/react-server-component-%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8-container-presentation-separation-7da455d66576)を参考にしています。ほとんど要約した内容となりますので、より詳細に知りたい方は元記事をご参照ください。
@@ -70,17 +70,17 @@ export const Success = {
 
 前述の状況を踏まえるとRTLやStorybookで従来サポートしておりテストしやすいDOM部分と、データフェッチ部分でテスト対象を分離しておくことが、現状テスト観点では望ましいと考えられます。
 
-このようにデータを提供する層とそれを表現する層に分離するパターンはFlux全盛だったReact初期に提唱されていた**Presentational/Containerパターン**そのものです。
+このようにデータを提供する層とそれを表現する層に分離するパターンはFlux全盛だったReact初期に提唱されていた**Container/Presentationalパターン**そのものです。
 
-### 従来のPresentational/Containerパターン
+### 従来のContainer/Presentationalパターン
 
-Presentational/Containerパターンは元々、Flux全盛の時代に提唱された設計手法です。データの読み取り・振る舞いの定義(主にFluxのaction呼び出しなど)をContainer Componentsで定義して、データを参照し表示する純粋な表示層であるPresentational Componentsに渡すという責務分割がなされていました。
+Container/Presentationalパターンは元々、Flux全盛の時代に提唱された設計手法です。データの読み取り・振る舞いの定義(主にFluxのaction呼び出しなど)をContainer Componentsで定義して、データを参照し表示する純粋な表示層であるPresentational Componentsに渡すという責務分割がなされていました。
 
 少々古い記事ですが、興味のある方はDan Abramov氏の以下の記事をご参照ください。
 
 https://medium.com/@dan_abramov/smart-and-dumb-components-7ca2f9a7c7d0
 
-### React Server ComponentsにおけるPresentational/Containerパターン
+### React Server ComponentsにおけるContainer/Presentationalパターン
 
 React Server ComponentsにおけるPresentational Componentsは、データフェッチを含まないShared Components(定義は[Compositionパターン](part_2_composite_pattern)を参照)もしくはClient Componentsを指します。これらはRTLやStorybookで扱うことができるので、テスト容易性が向上します。
 
@@ -88,7 +88,7 @@ React Server ComponentsにおけるPresentational Componentsは、データフ�
 
 ### 実装例
 
-例としてランダムなTodoを取得・表示するページをPresentational/Containerパターンで実装してみます。
+例としてランダムなTodoを取得・表示するページをContainer/Presentationalパターンで実装してみます。
 
 ```tsx
 export function TodoPagePresentation({ todo }: { todo: Todo }) {
@@ -153,6 +153,6 @@ describe("todos/random APIよりデータ取得成功時", () => {
 
 ### エコシステム側が将来対応する可能性
 
-Presentational/Containerパターンは現状RTLやStorybookなどがServer Componentsに対して未成熟であることを前提にしつつ、テスト容易性を向上するために役立つとしています。これはつまりRTLやStorybook側の対応が進んで前提が変わってくると、Presentational/Containerパターンは不要になる可能性があるということです。
+Container/Presentationalパターンは現状RTLやStorybookなどがServer Componentsに対して未成熟であることを前提にしつつ、テスト容易性を向上するために役立つとしています。これはつまりRTLやStorybook側の対応が進んで前提が変わってくると、Container/Presentationalパターンは不要になる可能性があるということです。
 
 RTLやStorybookの状況が直近大きく一変すると考えられる要素はなく、かつこのパターンを用いることのデメリットは特に多くないのではないかと筆者は考えていますが、将来エコシステムの対応が進んだ際には設計を再検討する必要があるかもしれません。
