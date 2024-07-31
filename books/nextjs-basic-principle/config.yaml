@@ -18,6 +18,7 @@ chapters:
   - part_2_client_components_usecase
   - part_2_composite_pattern
   - part_2_presentational_container_pattern
+  - part_2_container_1st_design
   - part_3
   - part_3_static_rendering_full_route_cache
   - part_3_dynamic_rendering_data_cache

@@ -21,7 +21,7 @@ RTLは現状[Server Componentsに未対応](https://github.com/testing-library/r
 具体的には非同期なコンポーネントを`render()`することができないため、以下のようにServer Componentsのデータフェッチに依存した検証はできません。
 
 ```tsx
-test("TodoPresentationalにAPIより取得した`dummyTodo`がタイトルとして表示される", () => {
+test("random Todo APIより取得した`dummyTodo`がタイトルとして表示される", async () => {
   // mswの設定
   server.use(
     http.get("https://dummyjson.com/todos/random", () => {
@@ -29,7 +29,7 @@ test("TodoPresentationalにAPIより取得した`dummyTodo`がタイトルとし
     }),
   );
 
-  render(<TodoPage />); // `<TodoPage>`はServer Components
+  await render(<TodoPage />); // `<TodoPage>`はServer Components
 
   expect(
     screen.getByRole("heading", { name: dummyTodo.title }),
@@ -70,7 +70,7 @@ export const Success = {
 
 前述の状況を踏まえると、テスト対象となるコンポーネントは「テストしやすいHTMLを表現する部分」と「テストしにくいデータフェッチ部分」で分離しておくことが望ましいと考えられます。
 
-このようにデータを提供する層とそれを表現する層に分離するパターンはFlux全盛だったReact初期に提唱されていた**Container/Presentationalパターン**そのものです。
+このようにデータを提供する層とそれを表現する層に分離するパターンはFlux全盛だったReact初期に提唱されていた**Container/Presentationalパターン**の再来とも言われています。
 
 ### 従来のContainer/Presentationalパターン
 
@@ -86,7 +86,7 @@ React Server ComponentsにおけるContainer/Presentationalパターンは従来
 
 | 種類           | 従来                                                | RSC時代                                                           |
 | -------------- | --------------------------------------------------- | ----------------------------------------------------------------- |
-| Container      | 状態の参照、状態の変更関数の定義                    | Server Components上でのデータフェッチはじめ**サーバーサイド処理** |
+| Container      | 状態参照、状態変更関数の定義                        | Server Components上でのデータフェッチなどの**サーバーサイド処理** |
 | Presentational | `props`を参照してReactElementを定義する純粋関数など | **Shared Components/Client Components**                           |
 
 **Shared Components**とは、以下のようにサーバーモジュールに依存せず`"use client";`のないファイルで`export`されるサーバーモジュールに非依存なコンポーネントを指します。このようなコンポーネントは、Client Boundary内においてはClient Componentsとして扱われ、そうでなければServer Componentsとして扱われます。
@@ -172,10 +172,12 @@ describe("todos/random APIよりデータ取得成功時", () => {
 });
 ```
 
+このようにコンポーネントを通常の関数のように実行すると`type`や`props`を得ることができるので、これらを元に期待値通りかテストすることができます。
+
 ## トレードオフ
 
 ### エコシステム側が将来対応する可能性
 
-Container/Presentationalパターンは現状RTLやStorybookなどがServer Componentsに対して未成熟であることを前提にしつつ、テスト容易性を向上するために役立つとしています。これはつまりRTLやStorybook側の対応が進んで前提が変わってくると、Container/Presentationalパターンは不要になる可能性があるということです。
+本章では現状RTLやStorybookなどがServer Componentsに対して未成熟であることを前提にしつつ、テスト容易性を向上するための手段としてContainer/Presentationalパターンが役に立つと主張しています。しかし今後RTLやStorybook側の対応状況が変わってくると、Container/Presentationalパターンを徹底せずとも容易にテストできるようになることがあるかもしれません。
 
-RTLやStorybookの状況が直近大きく一変すると考えられる要素はなく、かつこのパターンを用いることのデメリットは特に多くないのではないかと筆者は考えていますが、将来エコシステムの対応が進んだ際には設計を再検討する必要があるかもしれません。
+ではContainer/Presentationalパターンは将来的に不要になる可能性が高く、他にメリットがないのでしょうか？次章[Container 1stな設計](part_2_container_1st_design)では[Compositionパターン](part_2_composite_pattern)とContainer/Presentationalパターンを組み合わせた、RSCのメリットを生かしつつ手戻りの少ない設計順序を提案します。
