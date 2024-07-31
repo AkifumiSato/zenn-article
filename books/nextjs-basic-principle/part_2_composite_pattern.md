@@ -57,11 +57,11 @@ export function SideMenu() {
 
 :::
 
-以下の記事ではClient Boundaryの理解をコンポーネントの「親」と「所有者」の違いから説明しています。
+以下の記事ではReact Server Componentsにおけるコンポーネント間の関係性を、コンポーネントの「親」と「所有者」の違いから説明しています。
 
 https://reacttraining.com/blog/react-owner-components
 
-「親」はコンポーネントツリーにおける関係性で、「所有者」はコンポーネントを再レンダリングを共有する関係性です。Server Componentsはクライアントサイドで再レンダリングすることはないので、Client ComponentsはServer Componentsの「親」にはなり得ますが、「所有者」にはなり得ません。そしてClient Boundaryは上位の「所有者」であると考えることができます。
+「親」はコンポーネントツリーにおける上位階層のコンポーネントを指し、「所有者」はReactElementを定義・実行するコンポーネントを指します。Client Componentsが「所有者」の場合、所有するコンポーネントは当然クライアントサイドで実行されるため全てClient Componentsである必要があります。一方単に「親」の場合、コンポーネントを実行する権限を持たないのでClient ComponentsとServer Componentsは親子関係を持つことができます。
 
 ## 設計・プラクティス
 
