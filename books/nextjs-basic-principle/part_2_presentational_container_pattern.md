@@ -82,9 +82,14 @@ https://medium.com/@dan_abramov/smart-and-dumb-components-7ca2f9a7c7d0
 
 ### React Server ComponentsにおけるContainer/Presentationalパターン
 
-React Server ComponentsにおけるPresentational Componentsは、データフェッチを含まない**Shared Components**もしくはClient Componentsを指します。
+React Server ComponentsにおけるContainer/Presentationalパターンは従来のものとは異なり、Container Componentsはデータフェッチなどのサーバーサイド処理のみを担います。一方Presentational Componentsは、データフェッチを含まないShared ComponentsもしくはClient Componentsを指します。
 
-Shared Componentsとは、以下のようにサーバーモジュールに依存せず`"use client";`もないファイルで`export`されるコンポーネントを指します。このようなコンポーネントは、Client Boundary内においてはClient Componentsとして扱われ、そうでなければServer Componentsとして扱われます。
+| 種類           | 従来                                                | RSC時代                                                           |
+| -------------- | --------------------------------------------------- | ----------------------------------------------------------------- |
+| Container      | 状態の参照、状態の変更関数の定義                    | Server Components上でのデータフェッチはじめ**サーバーサイド処理** |
+| Presentational | `props`を参照してReactElementを定義する純粋関数など | **Shared Components/Client Components**                           |
+
+**Shared Components**とは、以下のようにサーバーモジュールに依存せず`"use client";`のないファイルで`export`されるサーバーモジュールに非依存なコンポーネントを指します。このようなコンポーネントは、Client Boundary内においてはClient Componentsとして扱われ、そうでなければServer Componentsとして扱われます。
 
 ```tsx
 // `"use client";`がないファイル
@@ -102,9 +107,7 @@ export function CompanyLinks() {
 }
 ```
 
-これらはRTLやStorybookで扱うことができるので、テスト容易性が向上します。
-
-一方でContainer Componentsはデータフェッチなどのサーバーサイド処理が主な責務となります。Container Componentsはレンダリングしてテストすることが現状難しいので、単なる関数として実行することでテストを行います。
+Client ComponentsやShared Componentsは従来通りRTLやStorybookで扱うことができるので、テスト容易性が向上します。一方Container Componentsはこれらのツールでレンダリング・テストすることが現状難しいので、`await ArticleContainer({ id })`のように単なる関数として実行することでテストすることが可能です。
 
 ### 実装例
 
