@@ -8,7 +8,7 @@ Compositionパターンを駆使してServer Components中心に組み立てた�
 
 ## 背景
 
-[第1部](part_1)で述べたように、React Server Componentsのメリットを活かすにはServer Components中心の設計が重要となります。そのため**Client Componentsは適切に分離・独立**していることが好ましいですが、これを実現するにはClient Componentsの依存関係における2つの制約を考慮する必要があります。
+[第1部](part_1)で述べたように、React Server Componentsのメリットを活かすにはServer Components中心の設計が重要となります。そのため**Client Componentsは適切に分離・独立**していることが好ましいですが、これを実現するにはClient Componentsの依存関係における2つの制約を考慮した設計にする必要があります。
 
 ### Client Componentsはサーバーモジュールを`import`できない
 
@@ -80,8 +80,6 @@ export function Header() {
   );
 }
 ```
-
-このようにClient Componentsをできるだけ小さく保てる境界で切り出すことは時に重要です。
 
 ### Compositionパターンを活用する
 

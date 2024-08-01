@@ -22,11 +22,11 @@ title: "Container 1stな設計"
 
 これらにも大きな違いがあります。
 
-React Server Componentsでは特に、Compositionパターンを後から適用しようとしたりすると大幅なClient Componentsの設計見直しや書き換えが発生します。こういった手戻りを防ぐためにも、設計の手順はとても重要です。
+React Server Componentsでは特に、Compositionパターンを後から適用しようとしたりすると大幅なClient Componentsの設計見直しや書き換えが発生しがちです。こういった手戻りを防ぐためにも、設計の手順はとても重要です。
 
 ## 設計・プラクティス
 
-筆者が提案する設計手順は、画面の設計はまずContainer Componentsのみで行い、Presentational Componentsやそこで使うClient Componentsは後から実装する、というものです。これは、最初からCompositionパターンありきで設計することと同義です。
+筆者が提案する設計手順は、画面の設計はまずContainer Componentsのみで行い、Presentational Componentsやそこで使うClient Componentsは後から実装する、といういわば**Container 1stな設計手法**です。これは、最初からCompositionパターンありきで設計することと同義です。
 
 具体的には以下のような手順になります。
 
@@ -36,11 +36,15 @@ React Server Componentsでは特に、Compositionパターンを後から適用�
 4. 必要に応じてClient Componentsを実装
 5. 2-4を繰り返す
 
-ポイントはCompositionパターンを使ってるのに**Compositionパターンの途中導入がない**こと、つまり最初からCompositionありきで設計しているということです。
+ポイントは最初からCompositionパターンありきで設計してるため、**Compositionパターンの途中導入がない**ということです。
+
+:::message
+「まずはContainerのツリー構造から設計する」ことが重要なのであって、「最初に決めた設計を守り切る」ことは重要ではありません。実装を進める中でContainerツリーの設計を見直すことも重要です。
+:::
 
 ### 実装例
 
-よくあるブログ記事の画面実装を例に、「まずはContainer Componentsのみで設計する」を実際にやってみましょう。
+よくあるブログ記事の画面実装を例に、Container 1stな設計を実際にやってみましょう。ここでは特に重要なステップ1を詳しく見ていきます。
 
 画面に必要な情報はPost、User、Commentsの3つを仮定し、それぞれに対してContainer Componentsを考えます。
 
@@ -78,26 +82,12 @@ async function PostContainer({ slug }: { slug: string }) {
   );
 }
 
-async function CommentsContainer({ slug }: { slug: string }) {
-  // const user = await getUser(slug);
-
-  return <CommentsPresentational />;
-}
-
-async function UserProfileContainer({ id }: { id: number }) {
-  // const user = await getUser(id);
-
-  return <UserProfilePresentational />;
-}
-
 // ...
 ```
 
-ポイントは、`<PostPresentation>`が`children`として`<UserProfileContainer>`を受け取っている点です。この時点でCompositionパターンが適用されていることがわかります。
+ポイントは、`<PostPresentation>`が`children`として`<UserProfileContainer>`を受け取っている点です。この時点でCompositionパターンが適用されているため、`<PostPresentation>`は必要に応じてClient ComponentsにもShared Componentsにもすることができます。
 
-このようにContainer Componentsの階層構造を設計してCompositionパターンを先に適用し、そこから各Container Componentsの実装やPresentational Componentsの実装を進めていくことで、設計上の手戻りを抑えることが可能です。
-
-これでステップ1は終了です。以降はステップ2-4を繰り返していくので、`<PostContainer>`の実装、`<PostPresentation>`の実装、`<CommentsContainer>`の実装...と仮実装にしたコンポーネントをひたすら実装することになるでしょう。
+これでステップ1は終了です。以降はステップ2-4を繰り返していくので、`<PostContainer>`の実装、`<PostPresentation>`の実装、`<CommentsContainer>`の実装...と仮実装にしたコンポーネントをひたすら実装しましょう。
 
 ## トレードオフ
 
@@ -127,6 +117,6 @@ function PostPresentation({
 }
 ```
 
-上記の例では`<PostPresentation>`はexportされておらず、`post.tsx`のprivate定義となっています。しかし、このままではStorybookやReact Testing Libraryで扱うことができないので、`<PostPresentation>`はexportする必要があります。
+上記の例では`<PostPresentation>`はexportされておらず、`post.tsx`のプライベート定義となっています。しかし、このままではStorybookやReact Testing Libraryで扱うことができないので、`<PostPresentation>`はexportする必要があります。
 
-本来、筆者はテストのためにこういったコンポーネントや関数をexportすることはあまりいい手段だと思っていません。プロジェクト全体での認知負荷が上がり、補完のノイズにもなるからです。しかし、この設計のメリットであるテスト容易性を得るためには、現状Presentational Componentsもexportする必要があります。
+本来、筆者はテストのためにこういったコンポーネントや関数をexportすることはあまりいい手段だと思っていません。プロジェクト全体での認知負荷が上がり、補完のノイズにもなるからです。しかし、この設計のメリットであるテスト容易性を得るためには、現状Presentational Componentsもexportするトレードオフを受け入れる必要があります。

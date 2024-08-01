@@ -89,10 +89,10 @@ React Server ComponentsにおけるContainer/Presentationalパターンは従来
 | Container      | 状態参照、状態変更関数の定義                        | Server Components上でのデータフェッチなどの**サーバーサイド処理** |
 | Presentational | `props`を参照してReactElementを定義する純粋関数など | **Shared Components/Client Components**                           |
 
-**Shared Components**とは、以下のようにサーバーモジュールに依存せず`"use client";`のないファイルで`export`されるサーバーモジュールに非依存なコンポーネントを指します。このようなコンポーネントは、Client Boundary内においてはClient Componentsとして扱われ、そうでなければServer Componentsとして扱われます。
+**Shared Components**とは、以下のようにサーバーモジュールに依存せず`"use client";`もないモジュールで`export`されるコンポーネントを指します。このようなコンポーネントは、Client Boundary内においてはClient Componentsとして扱われ、そうでなければServer Componentsとして扱われます。
 
 ```tsx
-// `"use client";`がないファイル
+// `"use client";`がないモジュール
 export function CompanyLinks() {
   return (
     <ul>
