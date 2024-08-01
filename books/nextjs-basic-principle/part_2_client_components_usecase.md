@@ -47,7 +47,7 @@ export default function Counter() {
 
 ### サードパーティで提供されたコンポーネントを使う場合
 
-明示的な`"use client";`指定を含んでいないサードパーティライブラリなコンポーネントを使う場合にも、明示的にClient Componentsにしなければならないことがあります。この場合には`"use client";`指定してre-exportするか、利用者側で`"use client";`指定する必要があります。
+`"use client";`指定対応されてないサードパーティライブラリなコンポーネントを使う場合にも、利用者側で明示的にClient Componentsにしなければならないことがあります。この場合には`"use client";`指定してre-exportするか、利用者側で`"use client";`指定する必要があります。
 
 ```tsx :app/_components/accordion.tsx
 "use client";
@@ -73,7 +73,7 @@ export function SideBar() {
 
 ### 転送するRSC Payloadを減らしたい場合
 
-3つ目は転送するRSC Payloadを減らしたい場合です。Client Componentsは当然ながらクライアントサイドでも実行されるので、Client Componentsが多いほどJavaScriptバンドルサイズは増加します。一方Server Componentsは[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)として転送されるため、Server ComponentsがレンダリングするReactElementが多いほど転送量が多くなります。Client Componentsは最初の1回しかJavaScriptのロードをしないためこれらはトレードオフの関係にあります。
+3つ目は転送するRSC Payloadを減らしたい場合です。Client Componentsは当然ながらクライアントサイドでも実行されるので、Client Componentsが多いほどJavaScriptバンドルサイズは増加します。一方Server Componentsは[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)として転送されるため、Server ComponentsがレンダリングするReactElementやReactElementに関連する情報が多いほど転送量が多くなります。Client Componentsは最初の1回しかJavaScriptのロードをしないためこれらはトレードオフの関係にあります。
 
 そのためRSC Payloadの転送量を削減する目的でClient Componentsにすることが望ましい場合があります。例えば以下の`<Product>`について考えてみます。
 

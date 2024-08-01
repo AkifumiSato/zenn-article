@@ -8,7 +8,7 @@ title: "Container 1stな設計"
 
 ## 背景
 
-[第1部](part_1)ではServer Componentsの設計パターンを、[第2部](part_2)ではここまでClient Componentsも含めたコンポーネント全体の設計パターンを解説してきました。ここまで順に読んでいただいた方はすでにReact Server Componentsにおける設計パターンを多数理解されてることと思います。
+[第1部](part_1)ではServer Componentsの設計パターンを、[第2部](part_2)ではここまでClient Componentsも含めたコンポーネント全体の設計パターンを解説してきました。ここまで順に読んでいただいた方はすでに多くの設計パターンを理解されてることと思います。
 
 しかし、これらを理解してることと使いこなせることは別問題です。
 
@@ -18,7 +18,7 @@ title: "Container 1stな設計"
 これらに大きな違いがあることと同じく、
 
 - 設計パターンを理解してること
-- 実際にそれらを駆使して設計できること
+- 設計パターンを駆使して設計できること
 
 これらにも大きな違いがあります。
 
@@ -97,10 +97,36 @@ async function UserProfileContainer({ id }: { id: number }) {
 
 このようにContainer Componentsの階層構造を設計してCompositionパターンを先に適用し、そこから各Container Componentsの実装やPresentational Componentsの実装を進めていくことで、設計上の手戻りを抑えることが可能です。
 
-この次のステップは`<PostContainer>`の実装、`<PostPresentation>`の実装、`<CommentsContainer>`の実装...と仮実装にしたコンポーネントをひたすら実装することになるでしょう。
+これでステップ1は終了です。以降はステップ2-4を繰り返していくので、`<PostContainer>`の実装、`<PostPresentation>`の実装、`<CommentsContainer>`の実装...と仮実装にしたコンポーネントをひたすら実装することになるでしょう。
 
 ## トレードオフ
 
 ### テストのためのexport
 
-TBW
+上述のようなContainer 1stな設計では、Presentational ComponentsはContainer Componentsの実装の詳細と捉えることもできます。そのため、Presentational ComponentsはContainer Componentsを定義するモジュールのプライベート定義として扱うことが好ましいとも考えられます。
+
+```tsx :app/post.tsx
+export async function PostContainer({ slug, children }: { slug: string }) {
+  const post = await getPost(slug);
+
+  return (
+    <PostPresentation>
+      <UserProfileContainer id={post.userId} />
+    </PostPresentation>
+  );
+}
+
+function PostPresentation({
+  post,
+  children,
+}: {
+  post: Post;
+  children: ReactNode;
+}) {
+  // ...
+}
+```
+
+上記の例では`<PostPresentation>`はexportされておらず、`post.tsx`のprivate定義となっています。しかし、このままではStorybookやReact Testing Libraryで扱うことができないので、`<PostPresentation>`はexportする必要があります。
+
+本来、筆者はテストのためにこういったコンポーネントや関数をexportすることはあまりいい手段だと思っていません。プロジェクト全体での認知負荷が上がり、補完のノイズにもなるからです。しかし、この設計のメリットであるテスト容易性を得るためには、現状Presentational Componentsもexportする必要があります。

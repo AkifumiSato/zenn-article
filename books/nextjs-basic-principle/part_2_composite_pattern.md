@@ -8,7 +8,7 @@ Compositionパターンを駆使してServer Components中心に組み立てた�
 
 ## 背景
 
-[第1部](part_1)で述べたように、React Server Componentsのメリットを活かすにはServer Components中心の設計が重要となります。そのため**Client Componentsは適切に分離・独立**していることが好ましいですが、そのためにはClient Componentsにおける依存関係の2つの制約について考慮する必要があります。
+[第1部](part_1)で述べたように、React Server Componentsのメリットを活かすにはServer Components中心の設計が重要となります。そのため**Client Componentsは適切に分離・独立**していることが好ましいですが、これを実現するにはClient Componentsの依存関係における2つの制約を考慮する必要があります。
 
 ### Client Componentsはサーバーモジュールを`import`できない
 
@@ -39,13 +39,11 @@ export function SideMenu() {
 }
 ```
 
-:::message
 この制約に対し唯一例外となるのが`"use server";`が付与されたファイルや関数、つまりServer Actionsです。
-:::
 
 ### Client Boundary
 
-もう1つ注意すべきなのは、`"use client";`が記述されたモジュールから`import`されるモジュール以降は全て暗黙的にクライアントモジュールとして扱われ、それらで定義されたコンポーネントは**全てClient Componentsになる**ということです。Client Componentsはサーバーモジュールを`import`できない以上、これも当然の帰結です。
+もう1つ注意すべきなのは、`"use client";`が記述されたモジュールから`import`されるモジュール以降は全て暗黙的にクライアントモジュールとして扱われるため、それらで定義されたコンポーネントは**全てClient Componentsとして実行可能でなければならない**ということです。Client Componentsはサーバーモジュールを`import`できない以上、これも当然の帰結です。
 
 `"use client";`はこのように依存関係において境界(Boundary)を定義するもので、この境界はよく**Client Boundary**と表現されます。
 
@@ -56,12 +54,6 @@ export function SideMenu() {
 - 全てのClient Componentsに`"use client";`が必要
 
 :::
-
-以下の記事ではReact Server Componentsにおけるコンポーネント間の関係性を、コンポーネントの「親」と「所有者」の違いから説明しています。
-
-https://reacttraining.com/blog/react-owner-components
-
-「親」はコンポーネントツリーにおける上位階層のコンポーネントを指し、「所有者」はReactElementを定義・実行するコンポーネントを指します。Client Componentsが「所有者」の場合、所有するコンポーネントは当然クライアントサイドで実行されるため全てClient Componentsである必要があります。一方単に「親」の場合、コンポーネントを実行する権限を持たないのでClient ComponentsとServer Componentsは親子関係を持つことができます。
 
 ## 設計・プラクティス
 
