@@ -126,7 +126,7 @@ export function TodoPagePresentation({ todo }: { todo: Todo }) {
 }
 ```
 
-上記のように、Presentationalなコンポーネントはデータを受け取って表示するだけのシンプルなコンポーネントです。場合によってはClient Componentsにすることもあるでしょう。このようなコンポーネントのテストは従来同様RTLを使ってテストできます。
+上記のように、Presentational Componentsはデータを受け取って表示するだけのシンプルなコンポーネントです。場合によってはClient Componentsにすることもあるでしょう。このようなコンポーネントのテストは従来同様RTLを使ってテストできます。
 
 ```tsx
 test("`todo`として渡された値がタイトルとして表示される", () => {
