@@ -102,7 +102,7 @@ Container/Presentationalパターンにおいて、ページやレイアウト�
 
 ```
 _containers
-├── <Container Name> e.g. `post-list`, `user-profile`
+├── <Container Name> // e.g. `post-list`, `user-profile`
 │  ├── index.tsx // Container Componentsをexport
 │  ├── container.tsx
 │  ├── presentational.tsx
@@ -144,7 +144,7 @@ app
 
 ```
 _containers
-├── <Container Name> e.g. `post-list`, `user-profile`
+├── <Container Name> // e.g. `post-list`, `user-profile`
 │  ├── index.tsx // Container Componentsをexport
 │  ├── container.tsx
 │  ├── presentational.tsx

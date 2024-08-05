@@ -16,7 +16,7 @@ chapters:
   - part_1_interactive_fetch
   - part_2
   - part_2_client_components_usecase
-  - part_2_composite_pattern
+  - part_2_composition_pattern
   - part_2_container_presentational_pattern
   - part_2_container_1st_design
   - part_3
