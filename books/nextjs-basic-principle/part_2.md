@@ -1,3 +1,11 @@
 ---
 title: "第2部 コンポーネント設計"
 ---
+
+以下RFCのmotivationを見ると、React Server Componentsはより積極的なサーバー活用を目指して生まれたアーキテクチャであることがわかります。
+
+https://github.com/reactjs/rfcs/blob/main/text/0188-server-components.md#motivation
+
+[第1部](part_1)で解説してきた通り、特にデータフェッチに関しては従来よりシンプルでセキュアに実装できるようになったことで、ほとんどトレードオフなくコンポーネントにカプセル化することが可能となりました。
+
+React Server Componentsでは同様にコンポーネント設計についても、考え方を大きく変えていく必要があります。第2部ではApp Router、特にReact Server Componentsにおけるコンポーネント設計パターンを解説します。

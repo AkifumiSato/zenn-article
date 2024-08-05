@@ -71,8 +71,7 @@ async function Page() {
 それでもパフォーマンス計測した時に無視できない遅延を含む場合などには、このpreloadパターンが有用となります。
 :::
 
-```ts
-// app/fetcher.ts
+```ts :app/fetcher.ts
 import "server-only";
 
 export const preloadCurrentUser = () => {
@@ -85,8 +84,7 @@ export async function getCurrentUser() {
 }
 ```
 
-```tsx
-// app/products/[id]/page.tsx
+```tsx :app/products/[id]/page.tsx
 export default function Page({ params: { id } }: { params: { id: string } }) {
   // `<Product>`や`<Comments>`のさらに子孫で`user`を利用するため、親コンポーネントでpreloadする
   preloadCurrentUser();

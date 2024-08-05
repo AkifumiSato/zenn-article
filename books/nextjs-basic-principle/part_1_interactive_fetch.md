@@ -22,8 +22,7 @@ Reactではユーザー操作に基づいたデータフェッチを実現する
 
 以下はユーザーの入力に基づいて商品を検索する実装例です。
 
-```ts
-// app/actions.ts
+```ts :app/actions.ts
 "use server";
 
 export async function searchProducts(
@@ -40,8 +39,7 @@ export async function searchProducts(
 // ...
 ```
 
-```tsx
-// app/form.tsx
+```tsx :app/form.tsx
 "use client";
 
 import { useActionState } from "react-dom";
