@@ -122,4 +122,6 @@ function PostPresentation({
 
 上記の例では`<PostPresentation>`はexportされておらず、`post.tsx`のプライベート定義となっています。しかし、このままではStorybookやReact Testing Libraryで扱うことができないので、`<PostPresentation>`はexportする必要があります。
 
-本来、筆者はテストのためにこういったコンポーネントや関数をexportすることはあまりいい手段だと思っていません。プロジェクト全体での認知負荷が上がり、補完のノイズにもなるからです。しかし、この設計のメリットであるテスト容易性を得るためには、現状Presentational Componentsもexportするトレードオフを受け入れる必要があります。
+本来、筆者はテストのためにこういったコンポーネントや関数をexportすることはあまりいい手段だと思っていません。プロジェクト全体での認知負荷が上がり、補完のノイズにもなるからです。しかし、この設計のメリットであるテスト容易性を得るためには、現状Presentational Componentsをexportするトレードオフを受け入れる必要があります。
+
+このトレードオフはあくまで**exportせざるを得ない**ことであって、publicなコンポーネントとして**複数のContainer Componentsで扱うことは避けるべき**です。Presentational Componentsは実装上はpublicでも実質的privateなものとして扱いましょう。
