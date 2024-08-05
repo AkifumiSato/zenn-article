@@ -75,7 +75,7 @@ async function PostContainer({ postId }: { postId: string }) {
 
   return (
     <PostPresentation post={post}>
-      <UserProfileContainer id={userId} />
+      <UserProfileContainer id={post.userId} />
     </PostPresentation>
   );
 }
