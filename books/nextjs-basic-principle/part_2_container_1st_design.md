@@ -92,24 +92,25 @@ async function PostContainer({ postId }: { postId: string }) {
 3. `<CommentsContainer>`の実装
 4. ...
 
-### ディレクトリ構成例
+### ディレクトリ構成案
 
-App Routerではファイルコロケーションを強く意識した設計がなされているため、Route Segmentで利用するコンポーネントや関数はできるだけ近くのディレクトリに、そして「関心ごと」に配置することが推奨されます。Container/Presentationalパターンにおいて「関心ごと」の単位はContainer Componentsです。Presentational Componentsやその他のコンポーネントは、Container Componentsの実装詳細に過ぎません。
+App Routerではファイルコロケーションを強く意識した設計がなされているため、Route Segmentで利用するコンポーネントや関数はできるだけ近くに配置することが推奨されます。
 
-これらを体現するContainer 1stなディレクトリ・ファイル設計として「関心ごと」の単位を`_features`以下でディレクトリ分割し、ディレクトリ内のファイルはサーバー・クライアントの境界観点から分割する構成を提案します。
+Container/Presentationalパターンにおいて、ページやレイアウトから見える単位はContainer単位です。Presentational Componentsやその他のコンポーネントは、Container Componentsの実装詳細に過ぎません。
+
+これらを体現するContainer 1stなディレクトリ設計として、Containerの単位を`_containers`以下でディレクトリ分割することを提案します。このディレクトリ設計では、外部から利用されうるContainer Componentsの公開を`index.tsx`で行うことを想定しています。
 
 ```
-_features
-├── <Feature> e.g. `post-list`, `user-profile`
+_containers
+├── <Container Name> e.g. `post-list`, `user-profile`
 │  ├── index.tsx // Container Componentsをexport
-│  ├── server.tsx // Container Componentやその他のSCを定義、boundary.tsxをimportする
-│  ├── boundary.tsx // `"use client"`してSCからimportされる境界なCCを定義
-│  ├── client.tsx // SCからimportされない普通のCCを定義
-│  └── shared.tsx // SCにもCCにもなれるコンポーネントを定義
+│  ├── container.tsx
+│  ├── presentational.tsx
+│  └── ...
 └── ...
 ```
 
-`_`をつけているのはルーティングと明確に区別する[Private Folder](https://nextjs.org/docs/app/building-your-application/routing/colocation#private-folders)の機能を利用するためです。筆者は`_components`、`_lib`のように他のSegment内共通なコンポーネントや関数も`_`をつけたディレクトリにまとめることを好みます。
+`_containers`のようにディレクトリ名に`_`をつけているのはApp Routerにおけるルーティングディレクトリと明確に区別する[Private Folder](https://nextjs.org/docs/app/building-your-application/routing/colocation#private-folders)の機能を利用するためです。筆者は`_components`、`_lib`のように他のSegment内共通なコンポーネントや関数も`_`をつけたディレクトリにまとめることを好みます。
 
 `app`直下からみた時には以下のような構成になります。
 
@@ -118,13 +119,12 @@ app
 ├── <Segment>
 │  ├── page.tsx
 │  ├── layout.tsx
-│  ├── _features
-│  │  ├── <Feature>
+│  ├── _containers
+│  │  ├── <Container Name>
 │  │  │  ├── index.tsx
-│  │  │  ├── server.tsx
-│  │  │  ├── boundary.tsx
-│  │  │  ├── client.tsx
-│  │  │  └── shared.tsx
+│  │  │  ├── container.tsx
+│  │  │  ├── presentational.tsx
+│  │  │  └── ...
 │  │  └── ...
 │  ├── _components
 │  ├── _lib
@@ -132,38 +132,28 @@ app
 └── ...
 ```
 
-ここでは`_features`としましたが、`_containers`などでもいいかもしれません。細かい点はプロジェクトごとに適宜修正しつつ、ディレクトリを「関心ごと」に・ファイルをサーバー・クライアントの境界観点から分割することが、App Routerにらしい設計だと筆者は考えます。
+命名やさらに細かい分割など詳細はプロジェクトごとに適宜修正してもいいと思いますが、App Routerらしい設計としてはディレクトリをContainer単位で、ファイルをサーバー・クライアントの境界観点から分割することが重要だと筆者は考えます。
 
 ## トレードオフ
 
 ### テストのためのexport
 
-前述のように、Presentational ComponentsはContainer Componentsの実装詳細と捉えることもできます。そのため、本来Presentational ComponentsはContainer Componentsを定義するモジュールのプライベート定義として扱うことが好ましいとも考えられます。
+前述のように、Presentational ComponentsはContainer Componentsの実装詳細と捉えることもできるので、本来Presentational Componentsはプライベート定義として扱うことが好ましいと考えられます。
 
-```tsx :app/post.tsx
-export async function PostContainer({ postId, children }: { postId: string }) {
-  const post = await getPost(postId);
+[ディレクトリ構成例](#ディレクトリ構成例)に基づいた設計の場合、Presentational Componentsは`presentational.tsx`で定義されます。
 
-  return (
-    <PostPresentation post={post}>
-      <UserProfileContainer id={post.userId} />
-    </PostPresentation>
-  );
-}
-
-function PostPresentation({
-  post,
-  children,
-}: {
-  post: Post;
-  children: ReactNode;
-}) {
-  // ...
-}
+```
+_containers
+├── <Container Name> e.g. `post-list`, `user-profile`
+│  ├── index.tsx // Container Componentsをexport
+│  ├── container.tsx
+│  ├── presentational.tsx
+│  └── ...
+└── ...
 ```
 
-上記の例では`<PostPresentation>`はexportされておらず、`post.tsx`のプライベート定義となっています。しかし、このままではStorybookやReact Testing Libraryで扱うことができないので、`<PostPresentation>`はexportする必要があります。Client Componentsにしたい場合にはさらにファイル分割も必要です。
+上記の構成では`<Container Name>`の外から参照されるモジュールは`index.tsx`のみの想定です。ただ実際には、`presentational.tsx`で定義したコンポーネントもプロジェクトのどこからでも参照することができます。
 
-筆者は、テストのためにコンポーネントや関数をexportすることはあまりいい手段だと思っていません。プロジェクト全体での認知負荷が上がり、補完のノイズにもなるからです。しかし、この設計のメリットであるテスト容易性を得るためには、現状Presentational Componentsをexportするトレードオフを受け入れる必要があります。
+このような同一ディレクトリにおいてのみ利用することを想定したモジュール分割においては、[eslint-plugin-import-access](https://github.com/uhyo/eslint-plugin-import-access)を利用すると予期せぬ外部からのimportを制限することができます。
 
-このトレードオフはあくまでexportせざるを得ないことであって、publicなコンポーネントとして複数のContainer Componentsで扱うことは避けるべきです。Presentational Componentsは実装上はpublicでも実質的privateなものとして扱う必要があります。前述のディレクトリ設計を採用していれば、`<Feature>`内でのみ利用可能なexportには[eslint-plugin-import-access](https://github.com/uhyo/eslint-plugin-import-access)を使って外側でimportされないように制限することができます。
+上記のようなディレクトリ設計に沿わない場合でも、Presentational ComponentsはContainer Componentsのみが利用しうる実質的なプライベート定義として扱うようにしましょう。
