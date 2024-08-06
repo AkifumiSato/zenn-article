@@ -58,7 +58,7 @@ fetch(`https://...`, {
 });
 ```
 
-`next.tags`には配列でタグを複数指定することができます。これは後述の`revalidateTag()`によって指定したタグに関連するData Cacheをrevalidateする際に利用されます。
+`next.tags`には配列で**tag**を複数指定することができます。これは後述の`revalidateTag()`によって指定したtagに関連するData Cacheをrevalidateする際に利用されます。
 
 ### `unstable_cache()`
 
@@ -109,7 +109,7 @@ App Routerでのデータ操作に関する詳細は[データ操作とServer Ac
 
 #### Data Cacheと`revalidatePath()`
 
-Data CacheにはデフォルトのタグとしてRoute情報を元にしたタグがNext.js内部より設定されており、`revalidatePath()`はこの特殊なタグを元に関連するData Cacheのrevalidateを実現しています。
+Data CacheにはデフォルトのtagとしてRoute情報を元にしたタグがNext.js内部より設定されており、`revalidatePath()`はこの特殊なタグを元に関連するData Cacheのrevalidateを実現しています。
 
 :::message
 より詳細にrevalidateの仕組みを知りたい方は、過去に筆者が調査した際の[こちらの記事](https://zenn.dev/akfm/articles/nextjs-revalidate)をぜひご参照ください。
