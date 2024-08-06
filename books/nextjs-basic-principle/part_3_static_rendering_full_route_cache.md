@@ -4,7 +4,7 @@ title: "static renderingとFull Route Cache"
 
 ## 要約
 
-revalidateを駆使して可能な限りstatic renderingにし、Full Route Cacheを活用しましょう。
+短い時間でもユーザー間で共有可能なページなら、static renderingにしてFull Route Cacheを活用しましょう。
 
 ## 背景
 
@@ -120,7 +120,7 @@ export async function action() {
 }
 ```
 
-これらは特に何かしらのデータ操作が発生した際に利用されることを想定したrevalidateです。App Routerでのデータ操作に関する詳細は[データ操作とServer Actions](part_3_data_mutation_inner)と[外部で発生したデータ操作](part_3_data_mutation_outer)にて解説します。
+[ドキュメント](https://nextjs.org/docs/app/building-your-application/caching#invalidation)によるとこれらのAPIはData Cacheをrevalidateし、Data Cacheがrevalidateされると関連するFull Route Cacheがrevalidateされる仕組みとなっています。
 
 ### 時間ベースrevalidate
 
@@ -135,7 +135,7 @@ export const revalidate = 10; // 10s
 重複になりますが、`layout.tsx`に`revalidate`を設定するとLayoutが利用される下層ページにも適用されるため、注意しましょう。
 :::
 
-非常に短い時間、例えば1秒設定するだけで秒間数百のリクエストが発生してもレンダリングを1つにまとめることができるので、バックエンドAPIへの負荷軽減・安定したパフォーマンスを実現できます。
+非常に短い時間、例えば1秒設定するだけで秒間数百のリクエストが発生してもレンダリングは1回で済むので、バックエンドAPIへの負荷軽減・安定したパフォーマンスを実現できます。
 
 ## トレードオフ
 
@@ -148,6 +148,24 @@ Route Segment Configや`unstable_noStore()`によってdynamic renderingを利�
 ### static/dynamic rendering境界とPPR
 
 Next.jsのv14時点ではdynamic renderingはRoute単位(`page.tsx`や`layout.tsx`)でしか切り替えられませんが、experimentalフラグで**PPR**(Partial Pre-Rendering)を有効にするにより、文字通りPartial(部分的)にdynamic renderingへの切り替えが可能になります。PPRではstatic/dynamic renderingの境界を`<Suspense>`によって定義します。
+
+```tsx
+import { Suspense } from "react";
+import { PostFeed, Weather } from "./Components";
+
+export default function Posts() {
+  return (
+    <section>
+      {/* `<PostFeed />`はstatic rendering */}
+      <PostFeed />
+      <Suspense fallback={<p>Loading weather...</p>}>
+        {/* `<Weather />`はdynamic rendering */}
+        <Weather />
+      </Suspense>
+    </section>
+  );
+}
+```
 
 PPRについては後述の[PPRの章](part_4_partial_pre_rendering)や筆者の過去記事である以下をご参照ください。
 

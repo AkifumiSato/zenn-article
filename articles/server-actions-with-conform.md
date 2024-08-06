@@ -35,7 +35,7 @@ Server Actionsは`"use server";`ディレクティブによって識別されま
 async function createUser(formData: FormData) {
   const fullname = formData.get("fullname");
 
-  // データベース操作、cacheの再検証などの処理
+  // データベース操作、cacheのrevalidateなどの処理
 }
 
 // page.tsx
@@ -59,17 +59,17 @@ https://react.dev/reference/react-dom/hooks/useFormState
 
 ```tsx
 "use client";
- 
+
 import { useFormState } from "react-dom";
 import { createUser } from "@/app/actions";
- 
+
 const initialState = {
   message: "",
 };
- 
+
 export function Signup() {
-  const [state, formAction] = useFormState(createUser, initialState)
- 
+  const [state, formAction] = useFormState(createUser, initialState);
+
   return (
     <form action={formAction}>
       <label htmlFor="email">Email</label>
@@ -80,7 +80,7 @@ export function Signup() {
       </p>
       <button>Sign up</button>
     </form>
-  )
+  );
 }
 ```
 
@@ -110,7 +110,7 @@ const App = () => {
   });
 
   const onSubmit = (data: Schema) => {
-    console.log(data)
+    console.log(data);
   };
 
   return (
@@ -119,7 +119,7 @@ const App = () => {
       <input {...register("age", { valueAsNumber: true })} type="number" />
       <input type="submit" />
     </form>
-  )
+  );
 };
 ```
 
@@ -213,7 +213,7 @@ export function LoginForm() {
     },
     shouldValidate: "onBlur",
   });
-  
+
   // action,form,filedsを参照しつつformを組み立てる
 }
 ```

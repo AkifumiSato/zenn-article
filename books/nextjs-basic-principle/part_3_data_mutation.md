@@ -2,9 +2,13 @@
 title: "データ操作とServer Actions"
 ---
 
+## 要約
+
+データ操作はServer Actionsで実装することを基本としましょう。
+
 ## 背景
 
-Pages Routerではデータ取得のために[getServerSideProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)や[getStaticProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)が提供されてましたが、データ操作アプローチは公式には提供されていませんでした。そのため、クライアントサイドを主体、または[API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes)を併用した3rd partyライブラリの実装パターンが多く存在します。
+Pages Routerではデータ取得のために[getServerSideProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)や[getStaticProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)が提供されてましたが、データ操作アプローチは公式には提供されていませんでした。そのため、クライアントサイドを主体、または[API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes)を併用した3rd partyライブラリによるデータ操作の実装パターンが多く存在します。
 
 - [SWR](https://swr.vercel.app/)
 - [React Query](https://react-query.tanstack.com/)
@@ -18,7 +22,11 @@ Pages Routerではデータ取得のために[getServerSideProps](https://nextjs
 
 ## 設計・プラクティス
 
-App Routerにおけるデータ操作は[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)を利用することが推奨されており、これによりtRPCなどなしにデータ変更を実装することが可能です。
+App Routerにおけるデータ操作は[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)を利用することが推奨されています。これにより、tRPCなどなしにクライアント・サーバーの境界を超えて関数を呼び出すことができ、データ変更処理を容易に実装できます。
+
+:::message
+クライアント・サーバーの境界を超えて呼び出して見えますが、実際には当然通信処理が伴うため、[Reactがserialize可能なもの](https://react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)のみが引数や戻り値に利用できます。
+:::
 
 ```tsx :app/actions.ts
 "use server";
@@ -43,13 +51,13 @@ export default function CreateTodo() {
 }
 ```
 
-サーバー側で実行される関数`createTodo`をClient Componentsの`<form>`の`action`propsに直接渡しているのがわかります。実際にsubmit時にはサーバー側で`createTodo`が実行されます。このように非常にシンプルな実装でクライアントサイドからサーバー側関数を呼び出せることにより、開発者はデータ操作の実装に集中できます。
+上記の実装例では、サーバー側で実行される関数`createTodo`をClient Componentsの`<form>`の`action`propsに直接渡しているのがわかります。このformを実際にsubmitすると、サーバー側で`createTodo`が実行されます。このように非常にシンプルな実装でクライアントサイドからサーバー側関数を呼び出せることにより、開発者はデータ操作の実装に集中できます。
 
-Server Actions自体はReactの仕様ですが、App Router上で実装されているため他にも以下のようなメリットが得られます。
+Server Actions自体はReactの仕様ですが、App Router上で実装されているため他にも以下のようなApp Routerならではのメリットが得られます。
 
 ### キャッシュのrevalidate
 
-前述の通りApp Routerでは多層のキャッシュがデフォルトで有効になっており、データ操作時にはキャッシュのrevalidateが必要になります。Server Actions内で[revalidatePath](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[revalidateTag](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を呼び出すと、サーバー側の関連するキャッシュ([Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)や[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache))とクライアントサイドのキャッシュ([Router Cache](https://nextjs.org/docs/app/building-your-application/caching#router-cache))が再検証されます。
+前述の通りApp Routerでは多層のキャッシュがデフォルトで有効になっており、データ操作時にはキャッシュのrevalidateが必要になります。Server Actions内で[revalidatePath](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[revalidateTag](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を呼び出すと、サーバー側の関連するキャッシュ([Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)や[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache))とクライアントサイドのキャッシュ([Router Cache](https://nextjs.org/docs/app/building-your-application/caching#router-cache))がrevalidateされます。
 
 ```tsx :app/actions.ts
 "use server";
@@ -97,20 +105,14 @@ https://developer.mozilla.org/ja/docs/Glossary/Progressive_Enhancement
 
 :::
 
-これにより、[FID](https://web.dev/articles/fid?hl=ja)(First Input Delay)の向上も見込めます。実際にはFormライブラリを利用しつつServer Actionsを利用するケースが多いと想定されるので、筆者はJavaScript非動作時もサポートしてるFormライブラリの[Conform](https://conform.guide/)をおすすめします。
+これにより、[FID](https://web.dev/articles/fid?hl=ja)(First Input Delay)の向上も見込めます。実際のアプリケーション開発においては、Formライブラリを利用しつつServer Actionsを利用するケースが多いと思われるので、筆者はJavaScript非動作時もサポートしてるFormライブラリの[Conform](https://conform.guide/)をおすすめします。
 
 https://zenn.dev/akfm/articles/server-actions-with-conform
 
-## 結論
-
-App Routerにおけるデータ操作処理は、Server Actionsで実装することでキャッシュ操作やリダイレクト時の通信効率の向上など多くのメリットを得られます。**データ取得はServer Componentsで、データ操作はServer Actionsで実装する**ことを基本としましょう。
-
-## 例外
-
-### サイト内で利用する外部SaaSのSDK都合
-
-サイト内で利用する外部SaaSのSDK都合でクライアントサイドでデータ取得や操作を行わないことはあるかもしれません。
+## トレードオフ
 
 ### サイト外で発生するデータ操作
 
-TBW
+Server Actionsは基本的にサイト内でのみ利用することが可能ですが、データ操作がサイト内でのみ発生するとは限りません。具体的にはヘッドレスCMSでのデータ更新など、サイト外でデータ操作が発生した場合にも、App Routerで保持しているキャッシュをrevalidateする必要があります。
+
+Route Handlerが`revalidatePath()`などを扱えるのはまさに上記のようなユースケースをフォローするためです。サイト外でデータ操作が行われた時には、Route Handlerで定義したAPIをWeb hookで呼び出すなどしてキャッシュをrevalidateしましょう。

@@ -18,13 +18,15 @@ Routeをdynamic renderingに切り替える方法は前の章の[static renderin
 
 ## 設計・プラクティス
 
-[Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)はデータフェッチ処理の結果をキャッシュするもので、サーバー側に永続化されリクエストやユーザーを超えて共有されます。dynamic renderingはリクエストごとにレンダリングを行いますが、必ずしも全てのデータフェッチを実行しなければならないとは限りません。Data Cacheを活用してデータフェッチを最適化することで、dynamic renderingの高速化やAPI負荷軽減などが見込めます。
+[Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)はデータフェッチ処理の結果をキャッシュするもので、サーバー側に永続化され**リクエストやユーザーを超えて共有**されます。
+
+dynamic renderingはリクエストごとにレンダリングを行いますが、必ずしも全てのデータフェッチを実行しなければならないとは限りません。Data Cacheを活用してデータフェッチを最適化することで、dynamic renderingの高速化やAPI負荷軽減などが見込めます。
 
 Data Cacheができるだけキャッシュヒットするようデータフェッチごとに適切な設定を心がけましょう。
 
 ### Next.jsサーバー上の`fetch()`
 
-サーバー上で実行される`fetch()`は[Next.jsによって拡張](https://nextjs.org/docs/app/api-reference/functions/fetch#fetchurl-options)されておりData Cacheが組み込まれています。デフォルトではキャッシュは永続化されますが、第2引数のオプション指定によってキャッシュ挙動を変更することが可能です。
+サーバー上で実行される`fetch()`は[Next.jsによって拡張](https://nextjs.org/docs/app/api-reference/functions/fetch#fetchurl-options)されておりData Cacheに関するオプションが組み込まれています。デフォルトではキャッシュは永続化されますが、第2引数のオプション指定によってキャッシュ挙動を変更することが可能です。
 
 ```ts
 fetch(`https://...`, {
@@ -32,7 +34,7 @@ fetch(`https://...`, {
 });
 ```
 
-`cache`に`force-cache`か`no-store`を指定でき、これによりキャッシュを有効・無効にすることができます。
+`cache`に`"force-cache"`か`"no-store"`を指定でき、これによりキャッシュを有効・無効にすることができます。
 
 :::message
 Next.jsの`v15.0.0-rc.0`では`fetch`の[デフォルトが`no-store`](https://nextjs.org/blog/next-15-rc#caching-updates)に変更されました。
@@ -101,7 +103,9 @@ export async function action() {
 }
 ```
 
-これらは特に何かしらのデータ操作が発生した際に利用されることを想定したrevalidateです。App Routerでのデータ操作に関する詳細は[データ操作とServer Actions](part_3_data_mutation_inner)と[外部で発生したデータ操作](part_3_data_mutation_outer)にて解説します。
+これらは特に何かしらのデータ操作が発生した際に利用されることを想定したrevalidateです。サイト内からのデータ操作にはServer Actionsを、外部で発生したデータ操作に対してはRoute Handlersからrevalidateすることが推奨されます。
+
+App Routerでのデータ操作に関する詳細は[データ操作とServer Actions](part_3_data_mutation)にて解説します。
 
 #### Data Cacheと`revalidatePath()`
 
