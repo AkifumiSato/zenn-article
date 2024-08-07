@@ -77,3 +77,5 @@ https://vercel.com/blog/how-google-handles-javascript-throughout-the-indexing-pr
 - 90%~: ~3h
 - 95%~: ~6h
 - 99%~: ~18h
+
+Googleのindexingにある程度遅延がみられるものの、上記のindexing速度は十分に早いと言えるため、コンテンツの表示がJS依存なStreaming SSRがSEOに与える影響は少ない(もしくはほとんどない)と筆者は考えます。

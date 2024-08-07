@@ -17,7 +17,7 @@ https://zenn.dev/akfm/articles/nextjs-partial-pre-rendering
 
 ## 背景
 
-従来Next.jsは[SSR](https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering)・[SSG](https://nextjs.org/docs/pages/building-your-application/rendering/static-site-generation)・[ISR](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)をサポートしてきました。App Routerではこれらに加え、[Streaming SSR](https://nextjs.org/docs/app/building-your-application/rendering/server-components#streaming)もサポートしています。従来Next.jsではレンダリングモデルやそれに付随するオプションが多数あり、そのために複雑化している・考えることが多すぎると多くの開発者が感じていました。
+従来Next.jsは[SSR](https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering)・[SSG](https://nextjs.org/docs/pages/building-your-application/rendering/static-site-generation)・[ISR](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)をサポートしてきました。App Routerではこれらに加え、[Streaming SSR](https://nextjs.org/docs/app/building-your-application/rendering/server-components#streaming)もサポートしています。複数のレンダリングモデルをサポートしているため付随するオプションが多数あり、複雑化している・考えることが多すぎるといったフィードバックがNext.js開発チームに多数寄せられていました。
 
 App Routerはこれらをできるだけシンプルに整理するために、サーバー側でのレンダリングをstatic renderingとdynamic renderingという2つのモデルに再整理しました。
 
@@ -40,9 +40,17 @@ App Routerはこれらをできるだけシンプルに整理するために、�
 
 ### ユーザーから見たPPR
 
-PPRでは、static renderingで生成されるhtmlやRSC Payloadに、dynamic renderingを含む`<Suspense>`の`fallback`が埋め込まれます。`fallback`はdynamic renderingが完了するたびに置き換わっていくことになります。
+PPRでは、static renderingで生成されるhtmlやRSC Payloadに`<Suspense>`の`fallback`が埋め込まれます。`fallback`はdynamic renderingが完了するたびに置き換わっていくことになります。
 
 そのため、ユーザーから見るとNext.jsサーバーは即座にページの一部分を返し始め、表示された`fallback`が徐々に置き換わっていくように見えます。
+
+以下はレンダリングに3秒ほどかかるRandomなTodoを表示するページの例です。
+
+_初期表示_
+![stream start](/images/nextjs-partial-pre-rendering/ppr-stream-start.png)
+
+_約 3 秒後_
+![stream end](/images/nextjs-partial-pre-rendering/ppr-stream-end.png)
 
 :::message
 より詳細な挙動の説明は筆者の過去の記事で解説しているので、興味がある方は以下をご参照ください。
@@ -91,12 +99,10 @@ export default function Page() {
 }
 ```
 
-### PPRの状況
+## トレードオフ
+
+### PPRの今後
 
 前述の通り、PPRはv14.x~v15.0.0(RC)においてまだexperimentalな機能です。PPRに伴うNext.js内部の変更は大規模なもので、バグや変更される挙動もあるかもしれません。実験的利用以上のことは避けておくのが無難でしょう。
 
-ただし、PPRは本書執筆時点でNext.jsコアチームが最も意欲的に取り組んでいる機能です。将来的には主要な機能となる可能性が高いので、先行して学んでおく価値はあると筆者は考えます。
-
-## トレードオフ
-
-本書執筆時点ではexperimentalであること以外特になし。
+ただし、PPRはNext.jsコアチームが本書執筆時現在、最も意欲的に取り組んでいる機能です。将来的には主要な機能となる可能性が高いので、先行して学んでおく価値はあると筆者は考えます。

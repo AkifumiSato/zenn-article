@@ -57,7 +57,7 @@ Server Actions自体はReactの仕様ですが、App Router上で実装されて
 
 ### キャッシュのrevalidate
 
-前述の通りApp Routerでは多層のキャッシュがデフォルトで有効になっており、データ操作時にはキャッシュのrevalidateが必要になります。Server Actions内で[revalidatePath](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[revalidateTag](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を呼び出すと、サーバー側の関連するキャッシュ([Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)や[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache))とクライアントサイドのキャッシュ([Router Cache](https://nextjs.org/docs/app/building-your-application/caching#router-cache))がrevalidateされます。
+前述の通りApp Routerでは多層のキャッシュがデフォルトで有効になっており、データ操作時にはキャッシュのrevalidateが必要になります。Server Actions内で`revalidatePath()`や`revalidateTag()`を呼び出すと、サーバー側の関連するキャッシュ([Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)や[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache))とクライアントサイドのキャッシュ([Router Cache](https://nextjs.org/docs/app/building-your-application/caching#router-cache))がrevalidateされます。
 
 ```tsx :app/actions.ts
 "use server";
