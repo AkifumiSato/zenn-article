@@ -8,7 +8,7 @@ title: "データ操作とServer Actions"
 
 ## 背景
 
-Pages Routerではデータ取得のために[getServerSideProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)や[getStaticProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)が提供されてましたが、データ操作アプローチは公式には提供されていませんでした。そのため、クライアントサイドを主体、または[API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes)を併用した3rd partyライブラリによるデータ操作の実装パターンが多く存在します。
+Pages Routerではデータ取得のために[getServerSideProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)や[getStaticProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)が提供されてましたが、データ操作アプローチは公式には提供されていませんでした。そのため、クライアントサイドを主体、または[API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes)を統合した3rd partyライブラリによるデータ操作の実装パターンが多く存在します。
 
 - [SWR](https://swr.vercel.app/)
 - [React Query](https://react-query.tanstack.com/)
@@ -18,14 +18,14 @@ Pages Routerではデータ取得のために[getServerSideProps](https://nextjs
 - [tRPC](https://trpc.io/)
 - etc...
 
-しかしAPI RouteはApp Routerにおいて[Route Handler](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)となり、定義の方法や参照できる情報などが変更されました。また、多層のキャッシュを活用しているためデータ操作時にはキャッシュのrevalidate機能との統合が必要になり、これらの実装パターンをそのままApp Routerで利用することは困難です。
+しかし、API RouteはApp Routerにおいて[Route Handler](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)となり、定義の方法や参照できる情報などが変更されました。また、App Routerは多層のキャッシュを活用しているため、データ操作時にはキャッシュのrevalidate機能との統合が必要となるため、上記にあげたライブラリや実装パターンをApp Routerで利用するには多くの工夫や実装が必要となります。
 
 ## 設計・プラクティス
 
-App Routerにおけるデータ操作は[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)を利用することが推奨されています。これにより、tRPCなどなしにクライアント・サーバーの境界を超えて関数を呼び出すことができ、データ変更処理を容易に実装できます。
+App Routerでのデータ操作は従来からある実装パターンではなく、[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)を利用することが推奨されています。これにより、tRPCなどの3rd partyライブラリなどなしにクライアント・サーバーの境界を超えて関数を呼び出すことができ、データ変更処理を容易に実装できます。
 
 :::message
-クライアント・サーバーの境界を超えて呼び出して見えますが、実際には当然通信処理が伴うため、[Reactがserialize可能なもの](https://react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)のみが引数や戻り値に利用できます。
+Server Actionsはクライアント・サーバーの境界を超えて関数を呼び出しているように見えますが、実際には当然通信処理が伴うため、[Reactがserialize可能なもの](https://react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)のみが引数や戻り値に利用できます。
 :::
 
 ```tsx :app/actions.ts
@@ -51,13 +51,13 @@ export default function CreateTodo() {
 }
 ```
 
-上記の実装例では、サーバー側で実行される関数`createTodo`をClient Componentsの`<form>`の`action`propsに直接渡しているのがわかります。このformを実際にsubmitすると、サーバー側で`createTodo`が実行されます。このように非常にシンプルな実装でクライアントサイドからサーバー側関数を呼び出せることにより、開発者はデータ操作の実装に集中できます。
+上記の実装例では、サーバーサイドで実行される関数`createTodo`をClient Componentsの`<form>`の`action`propsに直接渡しているのがわかります。このformを実際にsubmitすると、サーバーサイドで`createTodo`が実行されます。
 
-Server Actions自体はReactの仕様ですが、App Router上で実装されているため他にも以下のようなApp Routerならではのメリットが得られます。
+このように非常にシンプルな実装でクライアントサイドからサーバーサイド関数を呼び出せることで、開発者はデータ操作の実装に集中できます。Server ActionsはReactの仕様ですが実装はフレームワークに委ねられているので、他にも以下のようなApp Routerならではのメリットが得られます。
 
 ### キャッシュのrevalidate
 
-前述の通りApp Routerでは多層のキャッシュがデフォルトで有効になっており、データ操作時にはキャッシュのrevalidateが必要になります。Server Actions内で`revalidatePath()`や`revalidateTag()`を呼び出すと、サーバー側の関連するキャッシュ([Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)や[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache))とクライアントサイドのキャッシュ([Router Cache](https://nextjs.org/docs/app/building-your-application/caching#router-cache))がrevalidateされます。
+App Routerは多層のキャッシュを活用しているため、データ操作時には関連するキャッシュのrevalidateが必要になります。Server Actions内で`revalidatePath()`や`revalidateTag()`を呼び出すと、サーバーサイドの関連するキャッシュ([Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)や[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache))とクライアントサイドのキャッシュ([Router Cache](https://nextjs.org/docs/app/building-your-application/caching#router-cache))がrevalidateされます。
 
 ```tsx :app/actions.ts
 "use server";
@@ -68,9 +68,14 @@ export async function updateTodo() {
 }
 ```
 
+:::message
+Server Actionsで`revalidatePath()`/`revalidateTag()`もしくは`cookies.set()`/`cookies.delete()`を呼び出すと、Router Cacheが**全て**破棄され、呼び出したページのServer Componentsが再レンダリングされます。
+必要以上に多用するとパフォーマンス劣化の原因になるので注意しましょう。
+:::
+
 ### redirect時の通信効率
 
-App Routerではサーバーサイドで呼び出せる[`redirect`](https://nextjs.org/docs/app/building-your-application/routing/redirecting#redirect-function)という関数があります。データ操作後にページをリダレイクトしたいことはよくあるユースケースですが、`redirect`をServer Actions内で呼び出すとレスポンスにリダイレクト先ページの[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)が含まれるため、HTTPリダイレクトをせずに画面遷移できます。これにより、従来データ操作リクエストとリダイレクト後ページ情報のリクエストで2往復は必要だったhttp通信が、1度で済みます。
+App Routerではサーバーサイドで呼び出せる`redirect()`という関数があります。データ操作後にページをリダレイクトしたいことはよくあるユースケースですが、`redirect()`をServer Actions内で呼び出すとレスポンスにリダイレクト先ページの[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)が含まれるため、HTTPリダイレクトをせずに画面遷移できます。これにより、従来データ操作リクエストとリダイレクト後ページ情報のリクエストで2往復は必要だったhttp通信が、1度で済みます。
 
 ```tsx :app/actions.ts
 "use server";
@@ -116,3 +121,13 @@ https://zenn.dev/akfm/articles/server-actions-with-conform
 Server Actionsは基本的にサイト内でのみ利用することが可能ですが、データ操作がサイト内でのみ発生するとは限りません。具体的にはヘッドレスCMSでのデータ更新など、サイト外でデータ操作が発生した場合にも、App Routerで保持しているキャッシュをrevalidateする必要があります。
 
 Route Handlerが`revalidatePath()`などを扱えるのはまさに上記のようなユースケースをフォローするためです。サイト外でデータ操作が行われた時には、Route Handlerで定義したAPIをWeb hookで呼び出すなどしてキャッシュをrevalidateしましょう。
+
+### Server Actionsの呼び出しは直列化される
+
+Server Actionsは直列に実行されるよう設計されているため、同時に実行できるのは一つだけとなります。
+
+https://quramy.medium.com/server-actions-%E3%81%AE%E5%90%8C%E6%99%82%E5%AE%9F%E8%A1%8C%E5%88%B6%E5%BE%A1%E3%81%A8%E7%94%BB%E9%9D%A2%E3%81%AE%E7%8A%B6%E6%85%8B%E6%9B%B4%E6%96%B0-35acf5d825ca
+
+本書や公式ドキュメントで扱ってるような利用想定の限りではこれが問題になることは少ないと考えられますが、Server Actionsを高頻度で呼び出すような実装では問題になることがあるかもしれません。
+
+そう言った場合は、そもそも高頻度にServer Actionsを呼び出すような設計・実装を見直しましょう。
