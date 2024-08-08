@@ -26,11 +26,11 @@ App Routerはこれらをできるだけシンプルに整理するために、�
 | [static rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#static-rendering-default) | build時やrevalidate後 | SSG・ISR相当         |
 | [dynamic rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)       | ユーザーリクエスト時  | SSR相当              |
 
-しかし、v14までこれらのレンダリングの選択はページやレイアウト単位でしかできなかったため、ページの大部分がstatic renderingできるようなページでも一部dynamic renderingが必要なコンテンツがあるだけで、ページ全体をdynamic renderingにする必要がありました。
+しかし、v14までこれらのレンダリングの選択はページやレイアウト単位でしかできませんでした。そのため、大部分が静的化できるようなページでも一部動的なコンテンツがある場合には、ページ全体をdynamic renderingにするか、動的なコンテンツをClient Componentsにしてクライアントサイドデータフェッチにする必要がありました。
 
 ## 設計・プラクティス
 
-[Partial Pre Rendering(PPR)](https://nextjs.org/docs/app/api-reference/next-config-js/partial-prerendering)はこれらをさらに整理し、ページはstatic rendering、`<Suspense>`境界内をdynamic renderingとすることを可能としました。これにより、必ずしもレンダリングをページやレイアウト単位で考える必要はなくなり、1つのページにstaticとdynamicを混在させることができるようになりました。
+[Partial Pre Rendering(PPR)](https://nextjs.org/docs/app/api-reference/next-config-js/partial-prerendering)はこれらをさらに整理し、ページはstatic rendering、`<Suspense>`境界内をdynamic renderingとすることを可能としました。これにより、必ずしもレンダリングをページやレイアウト単位で考える必要はなくなり、1つのページ・1つのHTTPレスポンスにstaticとdynamicを混在させることができるようになりました。
 
 以下は[公式チュートリアル](https://nextjs.org/learn/dashboard-app/partial-prerendering)からの引用画像です。
 
@@ -106,3 +106,9 @@ export default function Page() {
 前述の通り、PPRはv14.x~v15.0.0(RC)においてまだexperimentalな機能です。PPRに伴うNext.js内部の変更は大規模なもので、バグや変更される挙動もあるかもしれません。実験的利用以上のことは避けておくのが無難でしょう。
 
 ただし、PPRはNext.jsコアチームが本書執筆時現在、最も意欲的に取り組んでいる機能です。将来的には主要な機能となる可能性が高いので、先行して学んでおく価値はあると筆者は考えます。
+
+### CDNキャッシュとの相性の悪さ
+
+PPRではstaticとdynamicを混在させつつも、1つのHTTPレスポンスで完結するという特徴を持っています。これはレスポンス単位でキャッシュすることを想定したCDNとは非常に相性が悪いため、PPRはHTTPラウンドトリップを1回で済ませる一方でCDNキャッシュできないというトレードオフが発生します。
+
+PPRは全く新しいアプローチなため、今後Next.jsやCDN側でchunk単位で容易にキャッシュする手段が提供される可能性もありますが、現状においてはトレードオフとなることを覚えておきましょう。
