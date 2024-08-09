@@ -122,6 +122,12 @@ Server Actionsは基本的にサイト内でのみ利用することが可能で
 
 Route Handlerが`revalidatePath()`などを扱えるのはまさに上記のようなユースケースをフォローするためです。サイト外でデータ操作が行われた時には、Route Handlerで定義したAPIをWeb hookで呼び出すなどしてキャッシュをrevalidateしましょう。
 
+### スクロール位置の喪失
+
+通常App Routerにおけるブラウザバックでは、Router Cacheが利用されます。この際には画面は即時に描画され、スクロール位置も正しく復元されます。
+
+しかし、Server Actionsで`revalidatePath()`などを呼び出すなどしてRouter Cacheがrevalidateされると、Router Cacheが破棄されます。Router Cacheがない状態でブラウザバックを行うと、再度Server Componentsのレンダリングと取得通信が発生し、スクロール位置も失われます。
+
 ### Server Actionsの呼び出しは直列化される
 
 Server Actionsは直列に実行されるよう設計されているため、同時に実行できるのは一つだけとなります。

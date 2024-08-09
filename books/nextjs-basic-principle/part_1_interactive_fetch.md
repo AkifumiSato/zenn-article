@@ -12,13 +12,13 @@ title: "ユーザー操作とデータフェッチ"
 
 ## 設計・プラクティス
 
-Reactではユーザー操作に基づいたデータフェッチを実現するために、[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)と[useActionState](https://react.dev/reference/react/useActionState)(旧: `useFormState`)などのhooksが提供されています。
+Reactではユーザー操作に基づいたデータフェッチを実現するために、[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)と[useActionState](https://react.dev/reference/react/useActionState)(旧: `useFormState()`)などのhooksが提供されています。
 
-データ取得の基本系はServer Components、ユーザー操作に基づく部分的更新ならServer Actionsと`useActionState`という使い分けになります。
+データ取得の基本系はServer Components、ユーザー操作に基づく部分的更新ならServer Actionsと`useActionState()`という使い分けになります。
 
-### `useActionState`
+### `useActionState()`
 
-`useActionState`はServer Actionsと初期値が必須引数となっており、Server Actionsによってのみ更新できるState管理が実現できます。
+`useActionState()`はServer Actions関数と初期値を渡すことで、Server Actionsによってのみ更新できるState管理が実現できます。
 
 以下はユーザーの入力に基づいて商品を検索する実装例です。
 
@@ -77,12 +77,12 @@ export default function Form() {
 
 https://nextjs.org/learn/dashboard-app/adding-search-and-pagination
 
-この場合、Server Actionsと`useActionState`では実現できないリロード復元やURLシェアが実現できます。
+この場合、Server Actionsと`useActionState()`のみでは実現できないリロード復元やURLシェアが実現できます。
 
-上記のような検索が最も主であるページにおいては状態をURLに保存することを検討すべきでしょう。一方サイドナビゲーションやcmd+kで開く検索モーダルのようにリロード復元やURLシェアをすべきでないケースでは、Server Actionsと`useActionState`の実装が非常に役立つことでしょう。
+上記のような検索が最も主であるページにおいては状態をURLに保存することを検討すべきでしょう。一方サイドナビゲーションやcmd+kで開く検索モーダルのようにリロード復元やURLシェアをすべきでないケースでは、Server Actionsと`useActionState()`の実装が非常に役立つことでしょう。
 
 ### データ操作に伴う再レンダリング
 
-ここで紹介したのはユーザー操作に伴うデータフェッチ、つまりデータ操作を伴わない場合の設計パターンです。ユーザー操作にともなってデータ操作・操作後の結果を再取得したいこともあります。これはServer Actionsと`revalidatePath`/`revalidateTag`を組み合わせ実行することで実現できます。
+ここで紹介したのはユーザー操作に伴うデータフェッチ、つまりデータ操作を伴わない場合の設計パターンです。ユーザー操作にともなってデータ操作・操作後の結果を再取得したいこともあります。これはServer Actionsと`revalidatePath()`/`revalidateTag()`を組み合わせ実行することで実現できます。
 
 これについては、後述の[データ操作とServer Actions](part_3_data_mutation)にて詳細を解説します。
