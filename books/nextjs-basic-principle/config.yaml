@@ -23,9 +23,7 @@ chapters:
   - part_3_static_rendering_full_route_cache
   - part_3_dynamic_rendering_data_cache
   - part_3_router_cache
-  - part_3_data_mutation_inner
-  - part_3_data_mutation_outer
-  - part_3_cache_tag_design
+  - part_3_data_mutation
   - part_4
   - part_4_suspense_and_streaming
   - part_4_partial_pre_rendering

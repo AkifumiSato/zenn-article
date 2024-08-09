@@ -4,7 +4,7 @@ title: "static renderingとFull Route Cache"
 
 ## 要約
 
-revalidateを駆使して可能な限りstatic renderingにし、Full Route Cacheを活用しましょう。
+短い時間でもユーザー間で共有可能なページなら、static renderingにしてFull Route Cacheを活用しましょう。
 
 ## 背景
 
@@ -16,7 +16,7 @@ revalidateを駆使して可能な限りstatic renderingにし、Full Route Cach
 | [dynamic rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)       | ユーザーリクエスト時  | SSR相当              |
 
 :::message
-Server Componentsは[Soft Navigation](https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#5-soft-navigation)時も実行されるので必ずしもSSR・SSG・ISRと比較できるものではないですが、ここでは簡略化して比較しています。
+Server Componentsは[Soft Navigation](https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#5-soft-navigation)時も実行されるのでSSR・SSG・ISRと単純比較できるものではないですが、ここでは簡易的に比較しています。
 :::
 
 App Routerは**デフォルトでstatic rendering**となっており、**dynamic renderingはオプトイン**になっています。dynamic renderingにオプトインする方法は以下の通りです。
@@ -106,7 +106,7 @@ static renderingのレンダリング結果のキャッシュは[Full Route Cach
 
 ### オンデマンドrevalidate
 
-[`revalidatePath()`](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)や[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)で呼び出すことで、関連するData CacheやFull Route Cacheをrevalidateすることができます。
+`revalidatePath()`や`revalidateTag()`を[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)や[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)で呼び出すことで、関連するData CacheやFull Route Cacheをrevalidateすることができます。
 
 ```ts
 "use server";
@@ -119,8 +119,6 @@ export async function action() {
   revalidatePath("/products");
 }
 ```
-
-これらは特に何かしらのデータ操作が発生した際に利用されることを想定したrevalidateです。App Routerでのデータ操作に関する詳細は[データ操作とServer Actions](part_3_data_mutation_inner)と[外部で発生したデータ操作](part_3_data_mutation_outer)にて解説します。
 
 ### 時間ベースrevalidate
 
@@ -135,7 +133,7 @@ export const revalidate = 10; // 10s
 重複になりますが、`layout.tsx`に`revalidate`を設定するとLayoutが利用される下層ページにも適用されるため、注意しましょう。
 :::
 
-非常に短い時間、例えば1秒設定するだけで秒間数百のリクエストが発生してもレンダリングを1つにまとめることができるので、バックエンドAPIへの負荷軽減・安定したパフォーマンスを実現できます。
+例えば1秒などの非常に短い時間でも設定すれば、瞬間的に非常に多くのリクエストが発生したとしてもレンダリングは1回で済むため、バックエンドAPIへの負荷軽減や安定したパフォーマンスに繋がります。更新頻度が非常に高いページでもユーザー間で共有できる(=ユーザー固有の情報などを含まない)のであれば、設定を検討しましょう。
 
 ## トレードオフ
 
@@ -148,6 +146,24 @@ Route Segment Configや`unstable_noStore()`によってdynamic renderingを利�
 ### static/dynamic rendering境界とPPR
 
 Next.jsのv14時点ではdynamic renderingはRoute単位(`page.tsx`や`layout.tsx`)でしか切り替えられませんが、experimentalフラグで**PPR**(Partial Pre-Rendering)を有効にするにより、文字通りPartial(部分的)にdynamic renderingへの切り替えが可能になります。PPRではstatic/dynamic renderingの境界を`<Suspense>`によって定義します。
+
+```tsx
+import { Suspense } from "react";
+import { PostFeed, Weather } from "./Components";
+
+export default function Posts() {
+  return (
+    <section>
+      {/* `<PostFeed />`はstatic rendering */}
+      <PostFeed />
+      <Suspense fallback={<p>Loading weather...</p>}>
+        {/* `<Weather />`はdynamic rendering */}
+        <Weather />
+      </Suspense>
+    </section>
+  );
+}
+```
 
 PPRについては後述の[PPRの章](part_4_partial_pre_rendering)や筆者の過去記事である以下をご参照ください。
 

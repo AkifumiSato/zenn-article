@@ -85,4 +85,4 @@ https://nextjs.org/learn/dashboard-app/adding-search-and-pagination
 
 ここで紹介したのはユーザー操作に伴うデータフェッチ、つまりデータ操作を伴わない場合の設計パターンです。ユーザー操作にともなってデータ操作・操作後の結果を再取得したいこともあります。これはServer Actionsと`revalidatePath`/`revalidateTag`を組み合わせ実行することで実現できます。
 
-これについては、後述の[データ操作とServer Actions](part_3_data_mutation_inner)にて詳細を解説します。
+これについては、後述の[データ操作とServer Actions](part_3_data_mutation)にて詳細を解説します。
