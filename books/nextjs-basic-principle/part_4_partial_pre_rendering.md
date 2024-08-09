@@ -26,7 +26,7 @@ App Routerはこれらをできるだけシンプルに整理するために、�
 | [static rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#static-rendering-default) | build時やrevalidate後 | SSG・ISR相当         |
 | [dynamic rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)       | ユーザーリクエスト時  | SSR相当              |
 
-しかし、v14までこれらのレンダリングの選択はページやレイアウト単位でしかできませんでした。そのため、大部分が静的化できるようなページでも一部動的なコンテンツがある場合には、ページ全体をdynamic renderingにするか、static rendering+クライアントサイドデータフェッチで処理する必要がありました。
+しかし、v14までこれらのレンダリングの選択はページやレイアウト単位でしかできませんでした。そのため、大部分が静的化できるようなページでも一部動的なコンテンツがある場合には、ページ全体をdynamic renderingにするか、static rendering+Client Componentsによるクライアントサイドデータフェッチで処理する必要がありました。
 
 ## 設計・プラクティス
 
