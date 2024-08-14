@@ -8,13 +8,13 @@ dynamic renderingで特に重いレンダリングは`<Suspense>`で遅延しStr
 
 ## 背景
 
-[dynamic rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)ではRoute全体をレンダリングするため、[dynamic renderingとData Cache](part_3_dynamic_rendering_data_cache)ではData Cacheを活用することを検討すべきであるということを述べました。しかし、キャッシュできないようなデータフェッチには、無視できないほど遅い場合があります。
+[dynamic rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)ではRoute全体をレンダリングするため、[_dynamic renderingとData Cache_](part_3_dynamic_rendering_data_cache)ではData Cacheを活用することを検討すべきであるということを述べました。しかし、キャッシュできないようなデータフェッチには、無視できないほど遅い場合があります。
 
 ## 設計・プラクティス
 
 App Routerでは[Streaming SSR](https://nextjs.org/docs/app/building-your-application/routing/loading-ui-and-streaming)をサポートしているので、このような重いデータフェッチを伴うServer Componentsのレンダリングを遅延させ、ユーザーにいち早くレスポンスを返し始めることができます。具体的には`<Suspense>`によってServer Componentsのレンダリングは遅延され、即座にfallbackを元にレスポンスを送信し始めます。その後、遅延されたレンダリングが完了するごとに徐々に結果がクライアントへと続いて送信されます。
 
-[並行データフェッチ](part_1_concurrent_fetch)で述べたようなデータフェッチ単位で分割されたコンポーネント設計ならば、`<Suspense>`で部分的に遅延させることは容易に実装できるはずです。
+[_並行データフェッチ_](part_1_concurrent_fetch)で述べたようなデータフェッチ単位で分割されたコンポーネント設計ならば、`<Suspense>`で部分的に遅延させることは容易に実装できるはずです。
 
 ### 実装例
 

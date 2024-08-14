@@ -141,7 +141,7 @@ export const revalidate = 10; // 10s
 
 Route Segment Configや`unstable_noStore()`によってdynamic renderingを利用する場合、開発者は明らかにdynamic renderingを意識して使うのでこれらが及ぼす影響を見誤ることは少ないと考えられます。一方、dynamic functionsは「cookieを利用したい」、`cache: "no-store"`な`fetch`は「Data Cacheを使いたくない」などの主目的が別にあり、これに伴って副次的にdynamic renderingに切り替わるため、開発者は影響範囲に注意する必要があります。
 
-特に、Data Cacheなどを適切に設定できていないとdynamic renderingに切り替わった際にページ全体のパフォーマンス劣化につながる可能性があります。こちらについての詳細は後述の[dynamic renderingとData Cache](part_3_dynamic_rendering_data_cache)をご参照ください。
+特に、Data Cacheなどを適切に設定できていないとdynamic renderingに切り替わった際にページ全体のパフォーマンス劣化につながる可能性があります。こちらについての詳細は後述の[_dynamic renderingとData Cache_](part_3_dynamic_rendering_data_cache)をご参照ください。
 
 ### static/dynamic rendering境界とPPR
 
@@ -165,6 +165,6 @@ export default function Posts() {
 }
 ```
 
-PPRについては後述の[PPRの章](part_4_partial_pre_rendering)や筆者の過去記事である以下をご参照ください。
+PPRについては後述の[_Partial Pre Rendering(PPR)_](part_4_partial_pre_rendering)や筆者の過去記事である以下をご参照ください。
 
 https://zenn.dev/akfm/articles/nextjs-partial-pre-rendering

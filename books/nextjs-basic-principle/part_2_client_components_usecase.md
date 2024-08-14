@@ -12,7 +12,7 @@ Client Componentsを使うべき代表的なユースケースを覚えておき
 
 ## 背景
 
-[第1部](part_1)ではデータフェッチ観点を中心にServer Componentsの設計パターンについて解説してきました。Client Componentsはオプトインのため、React Server Componentsにおけるコンポーネント全体の設計はServer Componentsの設計にClient Componentsを適切に組み合わせていくという形で行う必要があります。
+[_第1部_](part_1)ではデータフェッチ観点を中心にServer Componentsの設計パターンについて解説してきました。Client Componentsはオプトインのため、React Server Componentsにおけるコンポーネント全体の設計はServer Componentsの設計にClient Componentsを適切に組み合わせていくという形で行う必要があります。
 
 そのためにはそもそも、いつClient Componentsにオプトインすべきなのか適切に判断できることが重要です。
 
@@ -133,4 +133,4 @@ export function ProductPresentaional({ product }: { product: Product }) {
 
 このように、`"use client";`は依存関係において境界(Boundary)を定義するもので、この境界はよく**Client Boundary**と表現されます。
 
-そのため、上位層のコンポーネントでClient Boundaryを形成してしまうと下層でServer Componentsを含むことができなくなってしまい、React Server Componentsのメリットをうまく享受できなくなってしまうケースが散見されます。このようなケースへの対応は次章の[Compositionパターン](part_2_composite_pattern)で解説します。
+そのため、上位層のコンポーネントでClient Boundaryを形成してしまうと下層でServer Componentsを含むことができなくなってしまい、React Server Componentsのメリットをうまく享受できなくなってしまうケースが散見されます。このようなケースへの対応は次章の[_Compositionパターン_](part_2_composite_pattern)で解説します。

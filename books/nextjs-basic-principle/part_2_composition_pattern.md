@@ -8,7 +8,7 @@ Compositionパターンを駆使してServer Components中心に組み立てた�
 
 ## 背景
 
-[第1部](part_1)で述べたように、React Server Componentsのメリットを活かすにはServer Components中心の設計が重要となります。そのため**Client Componentsは適切に分離・独立**していることが好ましいですが、これを実現するにはClient Componentsの依存関係における2つの制約を考慮した設計にする必要があります。
+[_第1部_](part_1)で述べたように、React Server Componentsのメリットを活かすにはServer Components中心の設計が重要となります。そのため**Client Componentsは適切に分離・独立**していることが好ましいですが、これを実現するにはClient Componentsの依存関係における2つの制約を考慮した設計にする必要があります。
 
 ### Client Componentsはサーバーモジュールを`import`できない
 
@@ -122,4 +122,4 @@ Compositionパターンを駆使すればServer Components中心に部分的にC
 
 そのため、React Server Componentsにおいては設計する順番も非常に重要です。画面を実装する段階ではまずデータフェッチを行うServer Componentsを中心に設計し、そこに必要に応じてClient Componentsを末端に配置したりCompositionパターンで組み込んで実装を進めていくことを筆者はお勧めします。
 
-この「データフェッチを行うServer Componentsを中心に設計」する際には、次章の[Container/Presentationalパターン](part_2_presentational_container_pattern)におけるContainer Componentsを組み立てることに等しい工程です。
+この「データフェッチを行うServer Componentsを中心に設計」する際には、次章の[_Container/Presentationalパターン_](part_2_container_presentational_pattern)におけるContainer Componentsを組み立てることに等しい工程です。

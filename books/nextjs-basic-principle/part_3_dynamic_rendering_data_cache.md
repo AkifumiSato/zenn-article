@@ -8,12 +8,12 @@ Data Cacheを活用して、dynamic rendering時のパフォーマンスを最�
 
 ## 背景
 
-[static renderingとFull Route Cache](part_3_static_rendering_full_route_cache)で述べた通り、App Routerでは可能な限りstatic renderingにすることが推奨されています。しかし、アプリケーションによってはユーザー情報を含むページなどdynamic renderingが必要な場合もあります。
+[_static renderingとFull Route Cache_](part_3_static_rendering_full_route_cache)で述べた通り、App Routerでは可能な限りstatic renderingにすることが推奨されています。しかし、アプリケーションによってはユーザー情報を含むページなどdynamic renderingが必要な場合もあります。
 
 dynamic renderingはリクエストごとにレンダリングされるのでできるだけ早く完了する必要があります。この際最もパフォーマンスボトルネックになりやすいのが**データフェッチ処理**です。
 
 :::message
-Routeをdynamic renderingに切り替える方法は前の章の[static renderingとFull Route Cache](part_3_static_rendering_full_route_cache#背景)で解説していますので、そちらをご参照ください。
+Routeをdynamic renderingに切り替える方法は前の章の[_static renderingとFull Route Cache_](part_3_static_rendering_full_route_cache#背景)で解説していますので、そちらをご参照ください。
 :::
 
 ## 設計・プラクティス
@@ -89,7 +89,7 @@ export default async function Component({ userID }) {
 
 ### オンデマンドrevalidate
 
-[static renderingとFull Route Cache](part_3_static_rendering_full_route_cache)でも述べた通り、`revalidatePath()`や`revalidateTag()`を[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)や[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)で呼び出すことで、関連するData CacheやFull Route Cacheをrevalidateすることができます。
+[_static renderingとFull Route Cache_](part_3_static_rendering_full_route_cache)でも述べた通り、`revalidatePath()`や`revalidateTag()`を[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)や[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)で呼び出すことで、関連するData CacheやFull Route Cacheをrevalidateすることができます。
 
 ```ts
 "use server";
@@ -105,7 +105,7 @@ export async function action() {
 
 これらは特に何かしらのデータ操作が発生した際に利用されることを想定したrevalidateです。サイト内からのデータ操作にはServer Actionsを、外部で発生したデータ操作に対してはRoute Handlersからrevalidateすることが推奨されます。
 
-App Routerでのデータ操作に関する詳細は[データ操作とServer Actions](part_3_data_mutation)にて解説します。
+App Routerでのデータ操作に関する詳細は[_データ操作とServer Actions_](part_3_data_mutation)にて解説します。
 
 #### Data Cacheと`revalidatePath()`
 

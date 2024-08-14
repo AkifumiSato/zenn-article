@@ -8,11 +8,13 @@ title: "N+1とDataLoader"
 
 ## 背景
 
-前述の[データフェッチ コロケーション](part_1_colocation)や[並行データフェッチ](part_1_concurrent_fetch)を実践し、データフェッチやコンポーネントを細かく分割していくと、ページ全体で発生するデータフェッチの管理が難しくなり2つの問題を引き起こします。
+前述の[_データフェッチ コロケーション_](part_1_colocation)や[_並行データフェッチ_](part_1_concurrent_fetch)を実践し、データフェッチやコンポーネントを細かく分割していくと、ページ全体で発生するデータフェッチの管理が難しくなり2つの問題を引き起こします。
 
 1つは重複したデータフェッチです。これについてはNext.jsの機能である[Request Memoization](https://nextjs.org/docs/app/building-your-application/caching#request-memoization)によって解消されるため、我々開発者が気にする必要はありません。
 
-もう1つは、いわゆる**N+1なデータフェッチ**です。末端のコンポーネントでデータフェッチするよう設計すると、どうしてもN+1データフェッチに繋がりがちです。以下の例では投稿の一覧を取得後、子コンポーネントで著者情報を取得しています。
+もう1つは、いわゆる**N+1**なデータフェッチです。データフェッチを細粒度に分解していくと、N+1データフェッチになる可能性が高まります。
+
+以下の例では投稿の一覧を取得後、子コンポーネントで著者情報を取得しています。
 
 ```tsx :page.tsx
 import { type Post, getPosts, getUser } from "./fetcher";
@@ -91,15 +93,17 @@ type User = {
 
 ## 設計・プラクティス
 
-上記のようなN+1データフェッチを避けるため、API側では`https://dummyjson.com/users/?id=1&id=2&id=3...`のように、idを複数指定してUser情報を一括で取得できるよう設計するパターンがよく知られています。このようなバックエンドAPIと、Next.js側で[DataLoader](https://github.com/graphql/dataloader)を利用することでN+1データフェッチを解消できます。
+上記のようなN+1データフェッチを避けるため、API側では`https://dummyjson.com/users/?id=1&id=2&id=3...`のように、idを複数指定してUser情報を一括で取得できるよう設計するパターンがよく知られています。
+
+このようなバックエンドAPIと、Next.js側で[DataLoader](https://github.com/graphql/dataloader)を利用することで前述のようなN+1データフェッチを解消することができます。
 
 ### DataLoader
 
-DataLoaderはGraphQLサーバーなどでよく利用されるライブラリで、データアクセスをバッチ・キャッシュする機能を提供します。具体的には以下のような流れで利用します。
+DataLoaderはGraphQLサーバーなどでよく利用されるライブラリで、データアクセスをバッチ処理・キャッシュする機能を提供します。具体的には以下のような流れで利用します。
 
 1. バッチ処理する関数を定義
 2. DataLoaderのインスタンスを生成
-3. `dataLoader.load(id)`の形で複数回呼び出すと`id`がまとめてバッチ処理に渡される
+3. 短期間^[バッチングスケジュールの詳細は[公式の説明](https://github.com/graphql/dataloader?tab=readme-ov-file#batch-scheduling)を参照ください。]に`dataLoader.load(id)`を複数回呼び出すと、`id`の配列がバッチ処理に渡される
 4. バッチ処理が完了すると`dataLoader.load(id)`のPromiseが解決される
 
 以下は非常に簡単な実装例です。
@@ -147,9 +151,9 @@ async function batchGetUser(keys: readonly number[]) {
 // ...
 ```
 
-ポイントは`getUserLoader`が`React.cache()`を利用していることです。DataLoaderはキャッシュ機能があるため、ユーザーからのリクエストを跨いでインスタンスを共有してしまうと予期せぬデータ共有障害につながります。そのため、実装上**リクエスト単位でDataLoaderのインスタンスを生成**する必要があります。これを実現するために、[React Cache](https://nextjs.org/docs/app/building-your-application/caching#react-cache-function)を利用しています。
+ポイントは`getUserLoader`が`React.cache()`を利用していることです。DataLoaderはキャッシュ機能があるため、ユーザーからのリクエストを跨いでインスタンスを共有してしまうと予期せぬデータ共有につながります。そのため、**リクエスト単位でDataLoaderのインスタンスを生成**する必要があり、これを実現するために[React Cache](https://nextjs.org/docs/app/building-your-application/caching#react-cache-function)を利用しています。
 
-上記のように実装することで、`getUser`のインターフェースは変えずにN+1データフェッチを解消することができます。
+上記のように実装することで、`getUser()`のインターフェースは変えずにN+1データフェッチを解消することができます。
 
 ## トレードオフ
 
@@ -157,4 +161,4 @@ async function batchGetUser(keys: readonly number[]) {
 
 ここで紹介した設計パターンはいわゆる**Lazy Loading**パターンの一種です。バックエンドAPI側の実装・パフォーマンス観点からLazy Loadingが適さない場合は**Eager Loading**パターン、つまりN+1の最初の1回のリクエストで関連する必要な情報を全て取得することを検討しましょう。
 
-Eager Loadingパターンはやりすぎると、密結合で責務が大きすぎるいわゆる神APIになってしまう傾向にあります。これらの詳細については次項の[細粒度のREST API設計](part_1_fine_grained_api_design)で解説します。
+Eager Loadingパターンはやりすぎると、密結合で責務が大きすぎるいわゆる**God API**になってしまう傾向にあります。これらの詳細については次章の[_細粒度のREST API設計_](part_1_fine_grained_api_design)で解説します。

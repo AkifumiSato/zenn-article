@@ -4,20 +4,19 @@ title: "データフェッチ コロケーション"
 
 ## 要約
 
-データフェッチはデータを必要とするコンポーネントにコロケーションしましょう。
+データフェッチは、データを参照するコンポーネントにコロケーション^[コードをできるだけ関連性のある場所に配置すること]しましょう。
 
-:::message
-コロケーションとは、「コードをできるだけ関連性のある場所に配置すること」を意味します。
-参考: https://kentcdodds.com/blog/colocation
-:::
+<!-- 参考 https://kentcdodds.com/blog/colocation -->
 
 ## 背景
 
-Pages Routerにおけるサーバーサイドでのデータフェッチは、[getServerSideProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)や[getStaticProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)など、ページの外側で非同期関数を実行し、結果をpropsとしてページコンポーネントに渡すという設計がなされてました。これはいわゆる**バケツリレー**(Props Drilling)と呼ばれるpropsを親から子・孫へと渡していくような実装を必要とし、冗長で依存関係が広がりやすいというデメリットがありました。
+Pages Routerにおけるサーバーサイドでのデータフェッチは、[getServerSideProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)や[getStaticProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)など、ページの外側で非同期関数を宣言し、Next.jsがこれを実行・結果をpropsとしてページコンポーネントに渡すという設計がなされてました。
+
+これはいわゆる**バケツリレー**(Props Drilling)と呼ばれるpropsを親から子・孫へと渡していくような実装を必要とし、冗長で依存関係が広がりやすいというデメリットがありました。
 
 ### 実装例
 
-以下に商品ページを想定した実装例を示します。`product`が親から孫までそのまま渡されるような実装が見受けれれます。
+以下に商品ページを想定した実装例を示します。APIから取得した`product`というpropsが親から孫までそのまま渡されるような実装が見受けれれます。
 
 ```tsx
 type ProductProps = {
@@ -53,17 +52,19 @@ function ProductContents({ product }: ProductProps) {
 // ...
 ```
 
-例なので少々簡略化していますが、こういったバケツリレー実装はPages Routerだと発生しがちな問題です。常に最上位で必要なデータを意識し、末端まで流すのでコンポーネントのネストが深くなるほど認知負荷が高くなっていく構図です。
+わかりやすいよう少々大袈裟に実装していますが、こういったバケツリレー実装はPages Routerだと発生しがちな問題です。常に最上位で必要なデータを意識し、末端まで流すのでコンポーネントのネストが深くなるほどバケツリレーは増えていきます。
+
+この設計は我々開発者に常にページという単位を意識させてしまうため、コンポーネント思考な開発と親和性が低く、高い認知負荷を伴います。
 
 ## 設計・プラクティス
 
-App Routerでは**データフェッチはコロケーションすべき**であり、できるだけ末端のコンポーネントでデータフェッチを行うことを推奨しています。
+App RouterはReact Server Componentsをサポートしており、Server Componentsでのデータフェッチが利用可能なので、できるだけ末端のコンポーネントへ**データフェッチをコロケーション**することを推奨^[公式ドキュメントにおける[ベストプラクティス](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-where-its-needed)より]しています。
 
-https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-where-its-needed
+もちろんページの規模にもよるので小規模な実装であればページコンポーネントでデータフェッチしても問題はないでしょう。しかし、ページコンポーネントが肥大化していくと中間層でのバケツリレーが発生しやすくなるので、できるだけ末端のコンポーネントでデータフェッチを行うことを推奨します。
 
-もちろんページの規模にもよるので小規模な実装であればページコンポーネントでデータフェッチしても問題はないでしょう。しかしページコンポーネントが肥大化していくと中間層でのバケツリレーが発生しやすくなるので、できるだけ末端のコンポーネントでデータフェッチを行うことを推奨します。
+「それでは全く同じデータフェッチが何度も実行されてしまうのではないか」と懸念される方もいるかもしれませんが、App Routerでは[Request Memoization](https://nextjs.org/docs/app/building-your-application/caching#request-memoization)によってデータフェッチがメモ化されるため、全く同じデータフェッチが複数回実行されることないように設計されています。
 
-「それでは同じデータ取得を無駄に何度も行ってしまうのではないか」と懸念される方もいるかもしれませんが、App Routerでは[Request Memoization](https://nextjs.org/docs/app/building-your-application/caching#request-memoization)や[React Cache](https://nextjs.org/docs/app/building-your-application/caching#react-cache-function)によって、同じデータ取得を複数回行ってしまうことを防ぐことができます。これらを利用して、できるだけデータフェッチをコロケーションする設計を心がけましょう。
+App Routerにおいては、データフェッチをコロケーションする設計を心がけましょう。
 
 ### 実装例
 
@@ -100,14 +101,18 @@ async function ProductDetail() {
 // ...
 
 async function fetchProduct() {
-  // Request Memoizationにより、データ取得は1回のみ
+  // Request Memoizationにより、実際のデータフェッチは1回しか実行されない
   const res = await fetch("https://dummyjson.com/products/1");
   return res.json();
 }
 ```
 
-データフェッチが各コンポーネントにコロケーションされたことで、バケツリレーがなくなりました。`<ProductHeader>`と`<ProductDetail>`の利用者はそれぞれの責務のみを気にしてればよく、ページ単位で必要なデータフェッチを気にする必要がなくなりました。
+データフェッチが各コンポーネントにコロケーションされたことで、バケツリレーがなくなりました。また、`<ProductHeader>`と`<ProductDetail>`はそれぞれの責務のみを気にしてれば良いので、ページ単位でどんなデータフェッチを行っているか気にする必要がなくなりました。
 
 ## トレードオフ
 
-データフェッチのコロケーションを実現する要は**Request Memoization**や**React Cache**です。特にRequest MemoizationについてはNext.jsが自動で行っているため、開発者の理解と設計が重要になってきます。この点については次の[Request Memoization](part_1_request_memoization)のチャプターで改めて考え方を示します。
+### Request Memoizationへの理解
+
+データフェッチのコロケーションを実現する要はRequest Memoizationなので、Request Memoizationに対する理解と最適な設計が重要になってきます。
+
+この点については次の[_Request Memoization_](part_1_request_memoization)の章でより詳細に解説します。

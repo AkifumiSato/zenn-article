@@ -138,7 +138,7 @@ test("`todo`として渡された値がタイトルとして表示される", ()
 });
 ```
 
-一方Container Componentsについては以下のように、データ取得を主な処理となります。
+一方Container Componentsについては以下のように、データの取得を主な処理となります。
 
 ```tsx
 export default async function Page() {
@@ -180,4 +180,4 @@ describe("todos/random APIよりデータ取得成功時", () => {
 
 本章では現状RTLやStorybookなどがServer Componentsに対して未成熟であることを前提にしつつ、テスト容易性を向上するための手段としてContainer/Presentationalパターンが役に立つと主張しています。しかし今後RTLやStorybook側の対応状況が変わってくると、Container/Presentationalパターンを徹底せずとも容易にテストできるようになることがあるかもしれません。
 
-ではContainer/Presentationalパターンは将来的に不要になる可能性が高く、他にメリットがないのでしょうか？次章[Container 1stな設計](part_2_container_1st_design)では[Compositionパターン](part_2_composite_pattern)とContainer/Presentationalパターンを組み合わせた、RSCのメリットを生かしつつ手戻りの少ない設計順序を提案します。
+ではContainer/Presentationalパターンは将来的に不要になる可能性が高く、他にメリットがないのでしょうか？次章[_Container 1stな設計_](part_2_container_1st_design)では[_Compositionパターン_](part_2_composition_pattern)とContainer/Presentationalパターンを組み合わせた、RSCのメリットを生かしつつ手戻りの少ない設計順序を提案します。
