@@ -4,7 +4,7 @@ title: "細粒度のREST API設計"
 
 ## 要約
 
-バックエンドのREST APIは、細粒度な単位を意識して設計しましょう。
+バックエンドのREST API設計は、Next.js側の設計にも大きく影響をもたらします。App Router(React Server Components)におけるバックエンドAPIは、細粒度な単位に分割されていることが望まく、可能な限りこれを意識した設計を行いましょう。
 
 :::message alert
 このchapterの主題は「App Routerが呼び出すバックエンドAPIの設計」の話です。「App Routerの[Route Handler](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)として実装するAPIの設計」ではないのでご注意ください。

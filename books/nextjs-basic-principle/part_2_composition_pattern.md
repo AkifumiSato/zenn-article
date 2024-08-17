@@ -4,11 +4,11 @@ title: "Compositionパターン"
 
 ## 要約
 
-Compositionパターンを駆使してServer Components中心に組み立てたコンポーネントツリーから、Client Componentsを適切に切り分けましょう。
+Compositionパターンを駆使して、Server Components中心に組み立てたコンポーネントツリーからClient Componentsを適切に切り分けましょう。
 
 ## 背景
 
-[_第1部_](part_1)で述べたように、React Server Componentsのメリットを活かすにはServer Components中心の設計が重要となります。そのため**Client Componentsは適切に分離・独立**していることが好ましいですが、これを実現するにはClient Componentsの依存関係における2つの制約を考慮した設計にする必要があります。
+[_第1部 データフェッチ_](part_1)で述べたように、React Server Componentsのメリットを活かすにはServer Components中心の設計が重要となります。そのため、Client Componentsは**適切に分離・独立**していることが好ましいですが、これを実現するにはClient Componentsの依存関係における2つの制約を考慮しつつ設計する必要があります。
 
 ### Client Componentsはサーバーモジュールを`import`できない
 
@@ -39,16 +39,34 @@ export function SideMenu() {
 }
 ```
 
-この制約に対し唯一例外となるのが`"use server";`が付与されたファイルや関数、つまりServer Actionsです。
+この制約に対し唯一例外となるのが`"use server";`が付与されたファイルや関数、つまり [Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)です。
+
+```ts :actions.ts
+"use server";
+
+export async function create() {
+  // サーバーサイド処理
+}
+```
+
+```tsx :create-button.tsx
+"use client";
+
+import { create } from "./actions"; // 💡Server Actionsならimportできる
+
+export function CreateButton({ children }: { children: React.ReactNode }) {
+  return <button onClick={create}>{children}</button>;
+}
+```
 
 ### Client Boundary
 
-もう1つ注意すべきなのは、`"use client";`が記述されたモジュールから`import`されるモジュール以降は全て暗黙的にクライアントモジュールとして扱われるため、それらで定義されたコンポーネントは**全てClient Componentsとして実行可能でなければならない**ということです。Client Componentsはサーバーモジュールを`import`できない以上、これも当然の帰結です。
+もう1つ注意すべきなのは、`"use client";`が記述されたモジュールから`import`されるモジュール以降は、**全て暗黙的にクライアントモジュールとして扱われる**ということです。そのため、定義されたコンポーネントは全てClient Componentsとして実行可能でなければなりません。Client Componentsはサーバーモジュールを`import`できない以上、これも当然の帰結です。
 
 `"use client";`はこのように依存関係において境界(Boundary)を定義するもので、この境界はよく**Client Boundary**と表現されます。
 
 :::message
-よくある誤解のようですが、以下は**誤り**になります。注意しましょう。
+よくある誤解のようですが、以下は**誤り**なので注意しましょう。
 
 - `"use client";`宣言付モジュールのコンポーネントだけがClient Components
 - 全てのClient Componentsに`"use client";`が必要
@@ -67,10 +85,10 @@ export function SideMenu() {
 
 例えば検索バーを持つヘッダーを実装する際に、ヘッダーごとClient Componentsにするのではなく検索バーの部分だけClient Componentsとして切り出し、ヘッダー自体はServer Componentsに保つといった方法です。
 
-```tsx
-// header.tsx(Server Components)
+```tsx :header.tsx
 import { SearchBar } from "./search-bar"; // Client Components
 
+// page.tsxなどのServer Componentsから利用される
 export function Header() {
   return (
     <header>
@@ -89,7 +107,7 @@ export function Header() {
 
 前述の`<SideMenu>`の例を書き換えてみます。
 
-```tsx
+```tsx :side-menu.tsx
 "use client";
 
 import { useState } from "react";
@@ -112,14 +130,34 @@ export function SideMenu({ children }: { children: React.ReactNode }) {
 }
 ```
 
+```tsx :page.tsx
+import { UserInfo } from "./user-info"; // Server Components
+import { SideMenu } from "./side-menu"; // Client Components
+
+/**
+ * Server ComponentsをClient Componentsである
+ * `<SideMenu>`の`children`に渡すことが可能
+ */
+export function Page() {
+  return (
+    <div>
+      <SideMenu>
+        <UserInfo />
+      </SideMenu>
+      <main>{/* ... */}</main>
+    </div>
+  );
+}
+```
+
 Server ComponentsもClient Componentsも等しく`React.ReactNode`として表現され、tree構造を表現できています。これがいわゆるCompositionパターンと呼ばれる実装パターンです。
 
 ## トレードオフ
 
 ### 「後からComposition」の手戻り
 
-Compositionパターンを駆使すればServer Components中心に部分的にClient Componentsを組み込むことが可能です。しかし、Client Componentsである程度画面の実装を進めて後からCompositionパターンを導入しようとすると、Client Componentsの設計を大幅に変更せざるを得なくなったり、Server Components中心な設計から逸脱してしまう可能性があります。
+Compositionパターンを駆使すれば、Server Components中心にしつつ部分的にClient Componentsを組み込むことが可能です。しかし、早期にClient Boundaryを形成し後からCompositionパターンを導入しようとすると、Client Componentsの設計を大幅に変更せざるを得なくなったり、Server Components中心な設計から逸脱してしまう可能性があります。
 
 そのため、React Server Componentsにおいては設計する順番も非常に重要です。画面を実装する段階ではまずデータフェッチを行うServer Componentsを中心に設計し、そこに必要に応じてClient Componentsを末端に配置したりCompositionパターンで組み込んで実装を進めていくことを筆者はお勧めします。
 
-この「データフェッチを行うServer Componentsを中心に設計」する際には、次章の[_Container/Presentationalパターン_](part_2_container_presentational_pattern)におけるContainer Componentsを組み立てることに等しい工程です。
+データフェッチを行うServer Componentsを中心に設計することは、次章の[_Container/Presentationalパターン_](part_2_container_presentational_pattern)におけるContainer Componentsを組み立てることに等しい工程です。

@@ -4,7 +4,7 @@ title: "Container/Presentationalパターン"
 
 ## 要約
 
-Container/Presentationalパターンを用いて責務を分離し、テスト容易性を向上させましょう。
+データ取得はContainer Components・データの参照はPresentational Componentsに分離し、テスト容易性を向上させましょう。
 
 :::message
 本章の解説内容は、[Quramyさんの記事](https://quramy.medium.com/react-server-component-%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8-container-presentation-separation-7da455d66576)を参考にしています。ほとんど要約した内容となりますので、より詳細に知りたい方は元記事をご参照ください。
@@ -12,7 +12,7 @@ Container/Presentationalパターンを用いて責務を分離し、テスト�
 
 ## 背景
 
-ReactコンポーネントのテストといえばReact Testing Library(RTL)やStorybookなどを利用することが主流ですが、本書執筆時点でこれらのServer Components対応の状況は芳しくありません。
+ReactコンポーネントのテストといえばReact Testing Library(以下RTL)やStorybookなどを利用することが主流ですが、本書執筆時点でこれらのServer Components対応の状況は芳しくありません。
 
 ### React Testing Library
 
@@ -68,13 +68,13 @@ export const Success = {
 
 ## 設計・プラクティス
 
-前述の状況を踏まえると、テスト対象となるコンポーネントは「テストしやすいHTMLを表現する部分」と「テストしにくいデータフェッチ部分」で分離しておくことが望ましいと考えられます。
+前述の状況を踏まえると、テスト対象となるServer Componentsは「テストしにくいデータフェッチ部分」と「テストしやすいHTMLを表現する部分」で分離しておくことが望ましいと考えられます。
 
-このようにデータを提供する層とそれを表現する層に分離するパターンはFlux全盛だったReact初期に提唱されていた**Container/Presentationalパターン**の再来とも言われています。
+このように、データを提供する層とそれを表現する層に分離するパターンは**Container/Presentationalパターン**の再来とも言えます。
 
 ### 従来のContainer/Presentationalパターン
 
-Container/Presentationalパターンは元々、Flux全盛の時代に提唱された設計手法です。データの読み取り・振る舞いの定義(主にFluxのaction呼び出しなど)をContainer Componentsで定義して、データを参照し表示する純粋な表示層であるPresentational Componentsに渡すという責務分割がなされていました。
+Container/Presentationalパターンは元々、Flux全盛だったReact初期に提唱された設計手法です。データの読み取り・振る舞い(主にFluxのaction呼び出しなど)の定義をContainer Componentsが、データを参照し表示するのはPresentational Componentsが担うという責務分割がなされていました。
 
 少々古い記事ですが、興味のある方はDan Abramov氏の以下の記事をご参照ください。
 
@@ -82,14 +82,14 @@ https://medium.com/@dan_abramov/smart-and-dumb-components-7ca2f9a7c7d0
 
 ### React Server ComponentsにおけるContainer/Presentationalパターン
 
-React Server ComponentsにおけるContainer/Presentationalパターンは従来のものとは異なり、Container Componentsはデータフェッチなどのサーバーサイド処理のみを担います。一方Presentational Componentsは、データフェッチを含まないShared ComponentsもしくはClient Componentsを指します。
+React Server ComponentsにおけるContainer/Presentationalパターンは従来のものとは異なり、Container Componentsはデータフェッチなどのサーバーサイド処理のみを担います。一方Presentational Componentsは、データフェッチを含まない**Shared Components**もしくはClient Componentsを指します。
 
-| 種類           | 従来                                                | RSC時代                                                           |
+| Components     | React初期                                           | RSC時代                                                           |
 | -------------- | --------------------------------------------------- | ----------------------------------------------------------------- |
 | Container      | 状態参照、状態変更関数の定義                        | Server Components上でのデータフェッチなどの**サーバーサイド処理** |
 | Presentational | `props`を参照してReactElementを定義する純粋関数など | **Shared Components/Client Components**                           |
 
-**Shared Components**とは、以下のようにサーバーモジュールに依存せず`"use client";`もないモジュールで`export`されるコンポーネントを指します。このようなコンポーネントは、Client Boundary内においてはClient Componentsとして扱われ、そうでなければServer Componentsとして扱われます。
+Shared Componentsはサーバーモジュールに依存せず、`"use client";`もないモジュールで定義されるコンポーネントを指します。このようなコンポーネントは、Client Boundary内においてはClient Componentsとして扱われ、そうでなければServer Componentsとして扱われます。
 
 ```tsx
 // `"use client";`がないモジュール
@@ -152,7 +152,7 @@ export default async function Page() {
 }
 ```
 
-非同期なServer ComponentsはRTLで`render()`することができないので、純粋なJavaScript関数として実行して、戻り値を元に検証します。以下は正常系のテストケースの実装例です。
+非同期なServer ComponentsはRTLで`render()`することができないので、単なる関数として実行して戻り値を検証します。以下は正常系のテストケースの実装例です。
 
 ```ts
 describe("todos/random APIよりデータ取得成功時", () => {
@@ -172,12 +172,12 @@ describe("todos/random APIよりデータ取得成功時", () => {
 });
 ```
 
-このようにコンポーネントを通常の関数のように実行すると`type`や`props`を得ることができるので、これらを元に期待値通りかテストすることができます。
+このように、コンポーネントを通常の関数のように実行すると`type`や`props`を得ることができるので、これらを元に期待値通りかテストすることができます。
 
 ## トレードオフ
 
 ### エコシステム側が将来対応する可能性
 
-本章では現状RTLやStorybookなどがServer Componentsに対して未成熟であることを前提にしつつ、テスト容易性を向上するための手段としてContainer/Presentationalパターンが役に立つと主張しています。しかし今後RTLやStorybook側の対応状況が変わってくると、Container/Presentationalパターンを徹底せずとも容易にテストできるようになることがあるかもしれません。
+本章では現状RTLやStorybookなどがServer Componentsに対して未成熟であることを前提にしつつ、テスト容易性を向上するための手段としてContainer/Presentationalパターンが役に立つとしています。しかし今後、RTLやStorybook側の対応状況が変わってくるとContainer/Presentationalパターンを徹底せずとも容易にテストできるようになることがあるかもしれません。
 
 ではContainer/Presentationalパターンは将来的に不要になる可能性が高く、他にメリットがないのでしょうか？次章[_Container 1stな設計_](part_2_container_1st_design)では[_Compositionパターン_](part_2_composition_pattern)とContainer/Presentationalパターンを組み合わせた、RSCのメリットを生かしつつ手戻りの少ない設計順序を提案します。
