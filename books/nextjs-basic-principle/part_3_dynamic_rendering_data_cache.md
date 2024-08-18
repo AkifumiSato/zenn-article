@@ -4,13 +4,13 @@ title: "dynamic renderingとData Cache"
 
 ## 要約
 
-Data Cacheを活用して、dynamic rendering時のパフォーマンスを最適化しましょう。
+dynamic renderingにする必要がある場合でも、`fetch()`などのデータフェッチ単位のキャッシュであるData Cacheを活用して、パフォーマンスを最適化しましょう。
 
 ## 背景
 
-[_static renderingとFull Route Cache_](part_3_static_rendering_full_route_cache)で述べた通り、App Routerでは可能な限りstatic renderingにすることが推奨されています。しかし、アプリケーションによってはユーザー情報を含むページなどdynamic renderingが必要な場合もあります。
+[_static renderingとFull Route Cache_](part_3_static_rendering_full_route_cache)で述べた通り、App Routerでは可能な限りstatic renderingにすることが推奨されています。しかし、アプリケーションによってはユーザー情報を含むページなど、dynamic renderingが必要な当然考えられます。
 
-dynamic renderingはリクエストごとにレンダリングされるのでできるだけ早く完了する必要があります。この際最もパフォーマンスボトルネックになりやすいのが**データフェッチ処理**です。
+dynamic renderingはリクエストごとにレンダリングされるので、できるだけ早く完了する必要があります。この際最もパフォーマンスボトルネックになりやすいのが**データフェッチ処理**です。
 
 :::message
 Routeをdynamic renderingに切り替える方法は前の章の[_static renderingとFull Route Cache_](part_3_static_rendering_full_route_cache#背景)で解説していますので、そちらをご参照ください。
@@ -20,13 +20,13 @@ Routeをdynamic renderingに切り替える方法は前の章の[_static renderi
 
 [Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)はデータフェッチ処理の結果をキャッシュするもので、サーバー側に永続化され**リクエストやユーザーを超えて共有**されます。
 
-dynamic renderingはリクエストごとにレンダリングを行いますが、必ずしも全てのデータフェッチを実行しなければならないとは限りません。Data Cacheを活用してデータフェッチを最適化することで、dynamic renderingの高速化やAPI負荷軽減などが見込めます。
+dynamic renderingはNext.jsサーバーへのリクエストごとにレンダリングを行いますが、その際必ずしも全てのデータフェッチを実行しなければならないとは限りません。ユーザー情報に紐づくようなデータフェッチとそうでないものを切り分けて、後者に対しData Cacheを活用することで、dynamic renderingの高速化やAPI負荷軽減などが見込めます。
 
-Data Cacheができるだけキャッシュヒットするようデータフェッチごとに適切な設定を心がけましょう。
+Data Cacheができるだけキャッシュヒットするよう、データフェッチごとに適切な設定を心がけましょう。
 
 ### Next.jsサーバー上の`fetch()`
 
-サーバー上で実行される`fetch()`は[Next.jsによって拡張](https://nextjs.org/docs/app/api-reference/functions/fetch#fetchurl-options)されておりData Cacheに関するオプションが組み込まれています。デフォルトではキャッシュは永続化されますが、第2引数のオプション指定によってキャッシュ挙動を変更することが可能です。
+サーバー上で実行される`fetch()`は[Next.jsによって拡張](https://nextjs.org/docs/app/api-reference/functions/fetch#fetchurl-options)されており、Data Cacheに関するオプションが組み込まれています。デフォルトではキャッシュは永続化されますが、第2引数のオプション指定によってキャッシュ挙動を変更することが可能です。
 
 ```ts
 fetch(`https://...`, {
@@ -62,7 +62,7 @@ fetch(`https://...`, {
 
 ### `unstable_cache()`
 
-[`unstable_cache()`](https://nextjs.org/docs/app/api-reference/functions/unstable_cache)を使うことで、DBアクセスなどでData Cacheを利用することが可能です。
+`unstable_cache()`を使うことで、DBアクセスなどでもData Cacheを利用することが可能です。
 
 ```tsx
 import { getUser } from "./fetcher";
@@ -105,15 +105,15 @@ export async function action() {
 
 これらは特に何かしらのデータ操作が発生した際に利用されることを想定したrevalidateです。サイト内からのデータ操作にはServer Actionsを、外部で発生したデータ操作に対してはRoute Handlersからrevalidateすることが推奨されます。
 
-App Routerでのデータ操作に関する詳細は[_データ操作とServer Actions_](part_3_data_mutation)にて解説します。
+App Routerでのデータ操作に関する詳細は、後述の[_データ操作とServer Actions_](part_3_data_mutation)にて解説します。
 
 #### Data Cacheと`revalidatePath()`
 
-Data CacheにはデフォルトのtagとしてRoute情報を元にしたタグがNext.js内部より設定されており、`revalidatePath()`はこの特殊なタグを元に関連するData Cacheのrevalidateを実現しています。
+余談ですが、Data Cacheにはデフォルトのtagとして、Route情報を元にしたタグが内部的に設定されており、`revalidatePath()`はこの特殊なタグを元に関連するData Cacheのrevalidateを実現しています。
 
-:::message
-より詳細にrevalidateの仕組みを知りたい方は、過去に筆者が調査した際の[こちらの記事](https://zenn.dev/akfm/articles/nextjs-revalidate)をぜひご参照ください。
-:::
+より詳細にrevalidateの仕組みを知りたい方は、過去に筆者が調査した際の以下の記事をぜひご参照ください。
+
+https://zenn.dev/akfm/articles/nextjs-revalidate
 
 ## トレードオフ
 

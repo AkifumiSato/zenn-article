@@ -4,7 +4,7 @@ title: "データフェッチ コロケーション"
 
 ## 要約
 
-データフェッチは、データを参照するコンポーネントにコロケーション^[コードをできるだけ関連性のある場所に配置すること]し、独立性を高めましょう。
+データフェッチは、データを参照するコンポーネントにコロケーション^[コードをできるだけ関連性のある場所に配置することを指します。]し、独立性を高めましょう。
 
 <!-- 参考 https://kentcdodds.com/blog/colocation -->
 
@@ -58,7 +58,7 @@ function ProductContents({ product }: ProductProps) {
 
 ## 設計・プラクティス
 
-App RouterはReact Server Componentsをサポートしており、Server Componentsでのデータフェッチが利用可能なので、できるだけ末端のコンポーネントへ**データフェッチをコロケーション**することを推奨^[公式ドキュメントにおける[ベストプラクティス](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-where-its-needed)より]しています。
+App RouterはReact Server Componentsをサポートしており、Server Componentsでのデータフェッチが利用可能なので、できるだけ末端のコンポーネントへ**データフェッチをコロケーション**することを推奨^[公式ドキュメントにおける[ベストプラクティス](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-where-its-needed)を参照ください。]しています。
 
 もちろんページの規模にもよるので小規模な実装であればページコンポーネントでデータフェッチしても問題はないでしょう。しかし、ページコンポーネントが肥大化していくと中間層でのバケツリレーが発生しやすくなるので、できるだけ末端のコンポーネントでデータフェッチを行うことを推奨します。
 

@@ -22,7 +22,7 @@ Pages Routerではデータ取得のために[getServerSideProps](https://nextjs
 
 ## 設計・プラクティス
 
-App Routerでのデータ操作は従来からある実装パターンではなく、[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)を利用することが推奨されています。これにより、tRPCなどの3rd partyライブラリなどなしにクライアント・サーバーの境界を超えて関数を呼び出すことができ、データ変更処理を容易に実装できます。
+App Routerでのデータ操作は、従来からある実装パターンではなく[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)を利用することが推奨されています。これにより、tRPCなどの3rd partyライブラリなどなしにクライアント・サーバーの境界を超えて関数を呼び出すことができ、データ変更処理を容易に実装できます。
 
 :::message
 Server Actionsはクライアント・サーバーの境界を超えて関数を呼び出しているように見えますが、実際には当然通信処理が伴うため、[Reactがserialize可能なもの](https://react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)のみが引数や戻り値に利用できます。
@@ -53,7 +53,7 @@ export default function CreateTodo() {
 
 上記の実装例では、サーバーサイドで実行される関数`createTodo`をClient Componentsの`<form>`の`action`propsに直接渡しているのがわかります。このformを実際にsubmitすると、サーバーサイドで`createTodo`が実行されます。
 
-このように非常にシンプルな実装でクライアントサイドからサーバーサイド関数を呼び出せることで、開発者はデータ操作の実装に集中できます。Server ActionsはReactの仕様ですが実装はフレームワークに委ねられているので、他にも以下のようなApp Routerならではのメリットが得られます。
+このように非常にシンプルな実装でクライアントサイドからサーバーサイド関数を呼び出せることで、開発者はデータ操作の実装に集中できます。Server ActionsはReactの仕様ですが、実装はフレームワークに委ねられているので、他にも以下のようなApp Routerならではのメリットが得られます。
 
 ### キャッシュのrevalidate
 
@@ -104,7 +104,7 @@ export async function createTodo(formData: FormData) {
 App RouterのServer Actionsでは`<form>`の`action`propsにServer Actionsを渡すと、ユーザーがJavaScriptをOFFにしてたり未ロードであっても動作します。
 
 :::message
-[公式ドキュメント](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations#behavior)では「Progressive Enhancementのサポート」と称されていますが、厳密にはJavaScript非動作環境のサポートとProgressive Enhancementは異なると筆者は理解しています。詳しくは以下をご参照ください。
+[公式ドキュメント](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations#behavior)では「Progressive Enhancementのサポート」と記載されていますが、厳密にはJavaScript非動作環境のサポートとProgressive Enhancementは異なると筆者は理解しています。詳しくは以下をご参照ください。
 
 https://developer.mozilla.org/ja/docs/Glossary/Progressive_Enhancement
 
