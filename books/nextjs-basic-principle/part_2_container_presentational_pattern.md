@@ -107,7 +107,7 @@ export function CompanyLinks() {
 }
 ```
 
-Client ComponentsやShared Componentsは従来通りRTLやStorybookで扱うことができるので、テスト容易性が向上します。一方Container Componentsはこれらのツールでレンダリング・テストすることが現状難しいので、`await ArticleContainer({ id })`のように単なる関数として実行することでテストすることが可能です。
+Client ComponentsやShared Componentsは従来通りRTLやStorybookで扱うことができるので、テスト容易性が向上します。一方Container Componentsはこれらのツールでレンダリング・テストすることが現状難しいので、`await ArticleContainer({ id })`のように単なる関数として実行することでテストが可能です。
 
 ### 実装例
 
@@ -126,7 +126,7 @@ export function TodoPagePresentation({ todo }: { todo: Todo }) {
 }
 ```
 
-上記のように、Presentational Componentsはデータを受け取って表示するだけのシンプルなコンポーネントです。場合によってはClient Componentsにすることもあるでしょう。このようなコンポーネントのテストは従来同様RTLを使ってテストできます。
+上記のように、Presentational Componentsはデータを受け取って表示するだけのシンプルなコンポーネントです。場合によって^[[Client Componentsのユースケース](part_2_client_components_usecase)を参照ください。]はClient Componentsにすることもあるでしょう。このようなコンポーネントのテストは従来同様RTLを使ってテストできます。
 
 ```tsx
 test("`todo`として渡された値がタイトルとして表示される", () => {

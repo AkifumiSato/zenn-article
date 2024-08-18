@@ -4,13 +4,13 @@ title: "dynamic renderingとData Cache"
 
 ## 要約
 
-dynamic renderingにする必要がある場合でも、`fetch()`などのデータフェッチ単位のキャッシュであるData Cacheを活用して、パフォーマンスを最適化しましょう。
+dynamic renderingなページでは、データフェッチ単位のキャッシュであるData Cacheを活用してパフォーマンスを最適化しましょう。
 
 ## 背景
 
 [_static renderingとFull Route Cache_](part_3_static_rendering_full_route_cache)で述べた通り、App Routerでは可能な限りstatic renderingにすることが推奨されています。しかし、アプリケーションによってはユーザー情報を含むページなど、dynamic renderingが必要な当然考えられます。
 
-dynamic renderingはリクエストごとにレンダリングされるので、できるだけ早く完了する必要があります。この際最もパフォーマンスボトルネックになりやすいのが**データフェッチ処理**です。
+dynamic renderingはリクエストごとにレンダリングされるので、できるだけ早く完了する必要があります。この際最もボトルネックになりやすいのが**データフェッチ処理**です。
 
 :::message
 Routeをdynamic renderingに切り替える方法は前の章の[_static renderingとFull Route Cache_](part_3_static_rendering_full_route_cache#背景)で解説していますので、そちらをご参照ください。

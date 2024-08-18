@@ -137,7 +137,7 @@ app
 
 ## トレードオフ
 
-### テストのためのexport
+### 広すぎるexport
 
 前述のように、Presentational ComponentsはContainer Componentsの実装詳細と捉えることもできるので、本来Presentational Componentsはプライベート定義として扱うことが好ましいと考えられます。
 

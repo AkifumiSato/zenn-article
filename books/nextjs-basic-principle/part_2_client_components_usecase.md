@@ -12,7 +12,7 @@ Client Componentsを使うべき代表的なユースケースを覚えておき
 
 ## 背景
 
-[_第1部 データフェッチ_](part_1)ではデータフェッチ観点を中心にServer Componentsの設計パターンについて解説してきました。Client Componentsはオプトインのため、React Server Componentsにおけるコンポーネント全体の設計はServer Componentsの設計にClient Componentsを適切に組み合わせていく、という形で行います。
+[_第1部 データフェッチ_](part_1)ではデータフェッチ観点を中心にServer Componentsの設計パターンについて解説してきました。Client Componentsはオプトインのため、React Server Componentsにおけるコンポーネント全体の設計は、Server Componentsの設計にClient Componentsを適切に組み合わせていく形で行います。
 
 そのためにはそもそも、いつClient Componentsにオプトインすべきなのか適切に判断できることが重要です。
 
@@ -73,7 +73,7 @@ export function SideBar() {
 
 ### RSC Payload転送量の削減
 
-3つ目はRSC Payloadの転送量を減らしたい場合です。Client Componentsは当然ながらクライアントサイドでも実行されるので、Client Componentsが多いほどJavaScriptバンドルサイズは増加します。一方Server Componentsは[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)として転送されるため、Server ComponentsがレンダリングするReactElementやReactElementに付与される属性が多いほど転送量が多くなります。Client Componentsは最初の1回しかJavaScriptのロードをしないため、**JavaScriptの転送量とRSC Payloadの転送量はトレードオフの関係**にあります。
+3つ目はRSC Payloadの転送量を減らしたい場合です。Client Componentsは当然ながらクライアントサイドでも実行されるので、Client Componentsが多いほどJavaScriptバンドルサイズは増加します。一方Server Componentsは[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)として転送されるため、Server ComponentsがレンダリングするReactElementや属性が多いほど転送量が多くなります。Client Componentsは最初の1回しかJavaScriptのロードをしないため、**JavaScriptの転送量とRSC Payloadの転送量はトレードオフの関係**にあります。
 
 そのため、RSC Payloadの転送量を削減する目的でコンポーネントをClient Componentsにすることが望ましい場合があります。例えば以下の`<Product>`について考えてみます。
 

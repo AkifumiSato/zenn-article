@@ -4,13 +4,13 @@ title: "データフェッチ コロケーション"
 
 ## 要約
 
-データフェッチは、データを参照するコンポーネントにコロケーション^[コードをできるだけ関連性のある場所に配置することを指します。]し、独立性を高めましょう。
+データフェッチをデータ参照するコンポーネントにコロケーション^[コードをできるだけ関連性のある場所に配置することを指します。]し、コンポーネントの独立性を高めましょう。
 
 <!-- 参考 https://kentcdodds.com/blog/colocation -->
 
 ## 背景
 
-Pages Routerにおけるサーバーサイドでのデータフェッチは、[getServerSideProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)や[getStaticProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)など、ページの外側で非同期関数を宣言し、Next.jsがこれを実行・結果をpropsとしてページコンポーネントに渡すという設計がなされてました。
+Pages Routerにおけるサーバーサイドでのデータフェッチは、[getServerSideProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)や[getStaticProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)などページの外側で非同期関数を宣言し、Next.jsがこれを実行・結果をpropsとしてページコンポーネントに渡すという設計がなされてました。
 
 これはいわゆる**バケツリレー**(Props Drilling)と呼ばれるpropsを親から子・孫へと渡していくような実装を必要とし、冗長で依存関係が広がりやすいというデメリットがありました。
 
@@ -52,19 +52,17 @@ function ProductContents({ product }: ProductProps) {
 // ...
 ```
 
-わかりやすいよう少々大袈裟に実装していますが、こういったバケツリレー実装はPages Routerだと発生しがちな問題です。常に最上位で必要なデータを意識し、末端まで流すのでコンポーネントのネストが深くなるほどバケツリレーは増えていきます。
+わかりやすいよう少々大袈裟に実装していますが、こういったバケツリレー実装はPages Routerだと発生しがちな問題です。常に最上位で必要なデータを意識し末端まで流すので、コンポーネントのネストが深くなるほどバケツリレーは増えていきます。
 
 この設計は我々開発者に常にページという単位を意識させてしまうため、コンポーネント思考な開発と親和性が低く、高い認知負荷を伴います。
 
 ## 設計・プラクティス
 
-App RouterはReact Server Componentsをサポートしており、Server Componentsでのデータフェッチが利用可能なので、できるだけ末端のコンポーネントへ**データフェッチをコロケーション**することを推奨^[公式ドキュメントにおける[ベストプラクティス](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-where-its-needed)を参照ください。]しています。
+App RouterではServer Componentsでのデータフェッチが利用可能なので、できるだけ末端のコンポーネントへ**データフェッチをコロケーション**することを推奨^[公式ドキュメントにおける[ベストプラクティス](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-where-its-needed)を参照ください。]しています。
 
-もちろんページの規模にもよるので小規模な実装であればページコンポーネントでデータフェッチしても問題はないでしょう。しかし、ページコンポーネントが肥大化していくと中間層でのバケツリレーが発生しやすくなるので、できるだけ末端のコンポーネントでデータフェッチを行うことを推奨します。
+もちろんページの実装規模にもよるので、小規模な実装であればページコンポーネントでデータフェッチしても問題はないでしょう。しかし、ページコンポーネントが肥大化していくと中間層でのバケツリレーが発生しやすくなるので、できるだけ末端のコンポーネントでデータフェッチを行うことを推奨します。
 
 「それでは全く同じデータフェッチが何度も実行されてしまうのではないか」と懸念される方もいるかもしれませんが、App Routerでは[Request Memoization](https://nextjs.org/docs/app/building-your-application/caching#request-memoization)によってデータフェッチがメモ化されるため、全く同じデータフェッチが複数回実行されることないように設計されています。
-
-App Routerにおいては、データフェッチをコロケーションする設計を心がけましょう。
 
 ### 実装例
 
@@ -107,7 +105,7 @@ async function fetchProduct() {
 }
 ```
 
-データフェッチが各コンポーネントにコロケーションされたことで、バケツリレーがなくなりました。また、`<ProductHeader>`と`<ProductDetail>`はそれぞれの責務のみを気にしてれば良いので、ページ単位でどんなデータフェッチを行っているか気にする必要がなくなりました。
+データフェッチが各コンポーネントにコロケーションされたことで、バケツリレーがなくなりました。また、`<ProductHeader>`や`<ProductDetail>`などの子コンポーネントはそれぞれ必要な情報を自身で取得しているため、ページ全体でどんなデータフェッチを行っているか気にする必要がなくなりました。
 
 ## トレードオフ
 

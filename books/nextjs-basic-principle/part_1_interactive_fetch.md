@@ -12,11 +12,13 @@ title: "ユーザー操作とデータフェッチ"
 
 ## 設計・プラクティス
 
-App RouterがサポートしてるReact Server Componentsにおいては、[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)と[`useActionState()`](https://react.dev/reference/react/useActionState)(旧: `useFormState()`)を利用することで、ユーザー操作に基づいたデータフェッチを実現できます。
+App RouterがサポートしてるReact Server Componentsにおいては、[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)と`useActionState()`(旧: `useFormState()`)を利用することで、ユーザー操作に基づいたデータフェッチを実現できます。
 
 ### `useActionState()`
 
 `useActionState()`は関数と初期値を渡すことで、Server Actionsによってのみ更新できるState管理が実現できます。
+
+https://react.dev/reference/react/useActionState
 
 以下はユーザーの入力に基づいて商品を検索する実装例です。Server Actionsとして定義された`searchProducts()`を`useActionState()`の第一引数に渡しており、formがサブミットされるごとに実行されます。
 

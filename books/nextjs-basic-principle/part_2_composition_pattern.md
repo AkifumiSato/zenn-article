@@ -150,7 +150,7 @@ export function Page() {
 }
 ```
 
-Server ComponentsもClient Componentsも等しく`React.ReactNode`として表現され、tree構造を表現できています。これがいわゆるCompositionパターンと呼ばれる実装パターンです。
+`<SideMenu>`の`children`がServer Componentsである`<UserInfo />`となっています。これがいわゆるCompositionパターンと呼ばれる実装パターンです。
 
 ## トレードオフ
 
