@@ -4,7 +4,7 @@ title: "Partial Pre Rendering(PPR)"
 
 ## 要約
 
-PPRは従来のレンダリングモデルのメリットを組み合わせて、シンプルに整理した新しいアプローチです。外側をstatic rendering、`<Suspense>`境界内をdynamic renderingとすることが可能で、既存のモデルを簡素化しつつも高いパフォーマンスを実現します。PPRの使い方・考え方・実装状況を理解しておきましょう。
+PPRは従来のレンダリングモデルのメリットを組み合わせて、シンプルに整理した新しいアプローチです。外側をStatic Rendering、`<Suspense>`境界内をDynamic Renderingとすることが可能で、既存のモデルを簡素化しつつも高いパフォーマンスを実現します。PPRの使い方・考え方・実装状況を理解しておきましょう。
 
 :::message alert
 本稿はNext.js v15.0.0-rc.0時点の情報を元に執筆しており、PPRはさらにexperimentalな機能です。v15.0.0のリリース時や、PPRがstableな機能として提供される際には機能の一部が変更されてる可能性がありますので、ご注意下さい。
@@ -19,28 +19,28 @@ https://zenn.dev/akfm/articles/nextjs-partial-pre-rendering
 
 従来Next.jsは[SSR](https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering)・[SSG](https://nextjs.org/docs/pages/building-your-application/rendering/static-site-generation)・[ISR](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)をサポートしてきました。App Routerではこれらに加え、[Streaming SSR](https://nextjs.org/docs/app/building-your-application/rendering/server-components#streaming)もサポートしています。複数のレンダリングモデルをサポートしているため付随するオプションが多数あり、複雑化している・考えることが多すぎるといったフィードバックがNext.js開発チームに多数寄せられていました。
 
-App Routerはこれらをできるだけシンプルに整理するために、サーバー側でのレンダリングをstatic renderingとdynamic renderingという2つのモデルに再整理しました。
+App Routerはこれらをできるだけシンプルに整理するために、サーバー側でのレンダリングをStatic RenderingとDynamic Renderingという2つのモデルに再整理しました。
 
 | レンダリング                                                                                                                   | タイミング            | Pages Routerとの比較 |
 | ------------------------------------------------------------------------------------------------------------------------------ | --------------------- | -------------------- |
-| [static rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#static-rendering-default) | build時やrevalidate後 | SSG・ISR相当         |
-| [dynamic rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)       | ユーザーリクエスト時  | SSR相当              |
+| [Static Rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#static-rendering-default) | build時やrevalidate後 | SSG・ISR相当         |
+| [Dynamic Rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)       | ユーザーリクエスト時  | SSR相当              |
 
-しかし、v14までこれらのレンダリングはRoute単位(`page.tsx`や`layout.tsx`)でしか選択できませんでした。そのため、大部分が静的化できるようなページでも一部動的なコンテンツがある場合には、ページ全体をdynamic renderingにするか、static rendering+Client Componentsによるクライアントサイドデータフェッチで処理する必要がありました。
+しかし、v14までこれらのレンダリングはRoute単位(`page.tsx`や`layout.tsx`)でしか選択できませんでした。そのため、大部分が静的化できるようなページでも一部動的なコンテンツがある場合には、ページ全体をDynamic Renderingにするか、Static Rendering+Client Componentsによるクライアントサイドデータフェッチで処理する必要がありました。
 
 ## 設計・プラクティス
 
-[Partial Pre Rendering(PPR)](https://nextjs.org/docs/app/api-reference/next-config-js/partial-prerendering)はこれらをさらに整理し、基本はstatic rendering、`<Suspense>`境界内をdynamic renderingとすることを可能としました。これにより、必ずしもレンダリングをRoute単位で考える必要はなくなり、1つのページ・1つのHTTPレスポンスにstaticとdynamicを混在させることができるようになりました。
+[Partial Pre Rendering(PPR)](https://nextjs.org/docs/app/api-reference/next-config-js/partial-prerendering)はこれらをさらに整理し、基本はStatic Rendering、`<Suspense>`境界内をDynamic Renderingとすることを可能としました。これにより、必ずしもレンダリングをRoute単位で考える必要はなくなり、1つのページ・1つのHTTPレスポンスにStaticとDynamicを混在させることができるようになりました。
 
 以下は[公式チュートリアル](https://nextjs.org/learn/dashboard-app/partial-prerendering)からの引用画像です。
 
 ![ppr shell](/images/nextjs-partial-pre-rendering/ppr-shell.png)
 
-レイアウトや商品情報についてはstatic renderingで構成されていますが、カートやレコメンドといったユーザーごとに異なるであろう部分はdynamic renderingとすることが表現されています。
+レイアウトや商品情報についてはStatic Renderingで構成されていますが、カートやレコメンドといったユーザーごとに異なるであろう部分はDynamic Renderingとすることが表現されています。
 
 ### ユーザーから見たPPR
 
-PPRでは、static renderingで生成されるhtmlやRSC Payloadに`<Suspense>`の`fallback`が埋め込まれます。`fallback`はdynamic renderingが完了するたびに置き換わっていくことになります。
+PPRでは、Static Renderingで生成されるhtmlやRSC Payloadに`<Suspense>`の`fallback`が埋め込まれます。`fallback`はDynamic Renderingが完了するたびに置き換わっていくことになります。
 
 そのため、ユーザーから見るとStreaming SSR同様、Next.jsサーバーは即座にページの一部分を返し始め、表示された`fallback`が徐々に置き換わっていくように見えます。
 
@@ -79,7 +79,7 @@ export default nextConfig;
 export const experimental_ppr = true;
 ```
 
-あとはdynamic renderingにしたい部分を`<Suspense>`でdynamic renderingの境界を定義することができます。
+あとはDynamic Renderingにしたい部分を`<Suspense>`でDynamic Renderingの境界を定義することができます。
 
 ```tsx
 import { Suspense } from "react";
@@ -109,4 +109,4 @@ export default function Page() {
 
 ### CDNキャッシュとの相性の悪さ
 
-PPRではstaticとdynamicを混在させつつも、1つのHTTPレスポンスで完結するという特徴を持っています。これはレスポンス単位でキャッシュすることを想定したCDNとは非常に相性が悪いため、CDNキャッシュできないというトレードオフが発生します。
+PPRではStaticとDynamicを混在させつつも、1つのHTTPレスポンスで完結するという特徴を持っています。これはレスポンス単位でキャッシュすることを想定したCDNとは非常に相性が悪いため、CDNキャッシュできないというトレードオフが発生します。

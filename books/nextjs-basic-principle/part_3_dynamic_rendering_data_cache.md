@@ -1,26 +1,26 @@
 ---
-title: "dynamic renderingとData Cache"
+title: "Dynamic RenderingとData Cache"
 ---
 
 ## 要約
 
-dynamic renderingなページでは、データフェッチ単位のキャッシュであるData Cacheを活用してパフォーマンスを最適化しましょう。
+Dynamic Renderingなページでは、データフェッチ単位のキャッシュであるData Cacheを活用してパフォーマンスを最適化しましょう。
 
 ## 背景
 
-[_static renderingとFull Route Cache_](part_3_static_rendering_full_route_cache)で述べた通り、App Routerでは可能な限りstatic renderingにすることが推奨されています。しかし、アプリケーションによってはユーザー情報を含むページなど、dynamic renderingが必要な当然考えられます。
+[_Static RenderingとFull Route Cache_](part_3_static_rendering_full_route_cache)で述べた通り、App Routerでは可能な限りStatic Renderingにすることが推奨されています。しかし、アプリケーションによってはユーザー情報を含むページなど、Dynamic Renderingが必要な当然考えられます。
 
-dynamic renderingはリクエストごとにレンダリングされるので、できるだけ早く完了する必要があります。この際最もボトルネックになりやすいのが**データフェッチ処理**です。
+Dynamic Renderingはリクエストごとにレンダリングされるので、できるだけ早く完了する必要があります。この際最もボトルネックになりやすいのが**データフェッチ処理**です。
 
 :::message
-Routeをdynamic renderingに切り替える方法は前の章の[_static renderingとFull Route Cache_](part_3_static_rendering_full_route_cache#背景)で解説していますので、そちらをご参照ください。
+RouteをDynamic Renderingに切り替える方法は前の章の[_Static RenderingとFull Route Cache_](part_3_static_rendering_full_route_cache#背景)で解説していますので、そちらをご参照ください。
 :::
 
 ## 設計・プラクティス
 
 [Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)はデータフェッチ処理の結果をキャッシュするもので、サーバー側に永続化され**リクエストやユーザーを超えて共有**されます。
 
-dynamic renderingはNext.jsサーバーへのリクエストごとにレンダリングを行いますが、その際必ずしも全てのデータフェッチを実行しなければならないとは限りません。ユーザー情報に紐づくようなデータフェッチとそうでないものを切り分けて、後者に対しData Cacheを活用することで、dynamic renderingの高速化やAPI負荷軽減などが見込めます。
+Dynamic RenderingはNext.jsサーバーへのリクエストごとにレンダリングを行いますが、その際必ずしも全てのデータフェッチを実行しなければならないとは限りません。ユーザー情報に紐づくようなデータフェッチとそうでないものを切り分けて、後者に対しData Cacheを活用することで、Dynamic Renderingの高速化やAPI負荷軽減などが見込めます。
 
 Data Cacheができるだけキャッシュヒットするよう、データフェッチごとに適切な設定を心がけましょう。
 
@@ -89,7 +89,7 @@ export default async function Component({ userID }) {
 
 ### オンデマンドrevalidate
 
-[_static renderingとFull Route Cache_](part_3_static_rendering_full_route_cache)でも述べた通り、`revalidatePath()`や`revalidateTag()`を[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)や[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)で呼び出すことで、関連するData CacheやFull Route Cacheをrevalidateすることができます。
+[_Static RenderingとFull Route Cache_](part_3_static_rendering_full_route_cache)でも述べた通り、`revalidatePath()`や`revalidateTag()`を[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)や[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)で呼び出すことで、関連するData CacheやFull Route Cacheをrevalidateすることができます。
 
 ```ts
 "use server";
@@ -117,8 +117,8 @@ https://zenn.dev/akfm/articles/nextjs-revalidate
 
 ## トレードオフ
 
-### Data Cacheのオプトアウトとdynamic rendering
+### Data CacheのオプトアウトとDynamic Rendering
 
-`fetch()`のオプションで`cahce: "no-store"`か`next.revalidate: 0`を設定することでData Cacheをオプトアウトすることができますが、これは同時にRouteが**dynamic renderingに切り替わる**ことにもなります。
+`fetch()`のオプションで`cahce: "no-store"`か`next.revalidate: 0`を設定することでData Cacheをオプトアウトすることができますが、これは同時にRouteが**Dynamic Renderingに切り替わる**ことにもなります。
 
-これらを設定する時は本当にdynamic renderingにしなければいけないのか、よく考えて設定しましょう。
+これらを設定する時は本当にDynamic Renderingにしなければいけないのか、よく考えて設定しましょう。

@@ -4,15 +4,15 @@ title: "SuspenseとStreaming"
 
 ## 要約
 
-dynamic renderingで特に重いコンポーネントのレンダリングは`<Suspense>`で遅延させて、Streaming SSRにしましょう。
+Dynamic Renderingで特に重いコンポーネントのレンダリングは`<Suspense>`で遅延させて、Streaming SSRにしましょう。
 
 ## 背景
 
-[dynamic rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)ではRoute全体をレンダリングするため、[_dynamic renderingとData Cache_](part_3_dynamic_rendering_data_cache)ではData Cacheを活用することを検討すべきであるということを述べました。しかし、キャッシュできないようなデータフェッチに限って無視できないほど遅いということはよくあります。
+[Dynamic Rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)ではRoute全体をレンダリングするため、[_Dynamic RenderingとData Cache_](part_3_dynamic_rendering_data_cache)ではData Cacheを活用することを検討すべきであるということを述べました。しかし、キャッシュできないようなデータフェッチに限って無視できないほど遅いということはよくあります。
 
 ## 設計・プラクティス
 
-App Routerでは[Streaming SSR](https://nextjs.org/docs/app/building-your-application/routing/loading-ui-and-streaming)をサポートしているので、このような重いデータフェッチを伴うServer Componentsのレンダリングを遅延させ、ユーザーにいち早くレスポンスを返し始めることができます。具体的には、App Routerは`<Suspense>`を見つけるとfallbackを元に即座にレスポンスを送信し始め、その後、`<Suspense>`内のレンダリングが完了次第結果がクライアントへと続いて送信されます。
+App Routerでは[Streaming SSR](https://nextjs.org/docs/app/building-your-application/routing/loading-ui-and-streaming)をサポートしているので、このような重いデータフェッチを伴うServer Componentsのレンダリングを遅延させ、ユーザーにいち早くレスポンスを返し始めることができます。具体的には、App Routerは`<Suspense>`のfallbackを元に即座にレスポンスを送信し始め、その後、`<Suspense>`内のレンダリングが完了次第結果がクライアントへと続いて送信されます。
 
 [_並行データフェッチ_](part_1_concurrent_fetch)で述べたようなデータフェッチ単位で分割されたコンポーネント設計ならば、`<Suspense>`境界を追加するのみなので、実装は容易にできるはずです。
 
