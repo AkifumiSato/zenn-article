@@ -12,7 +12,7 @@ title: "並行データフェッチ"
 
 ## 背景
 
-「商品情報を取得してからじゃないと出品会社情報が取得できない」と言ったように、データフェッチ間に依存関係がある場合、データフェッチ処理自体は直列(ウォーターフォール)に実行せざるを得ません。
+「商品情報を取得してからじゃないと出品会社情報が取得できない」などのようにデータフェッチ間に依存関係がある場合、データフェッチ処理自体は直列(ウォーターフォール)に実行せざるを得ません。
 
 一方データ間に依存関係がない場合、当然ながらデータフェッチを並行化した方が優れたパフォーマンスを得られます。以下は[公式ドキュメント](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#parallel-and-sequential-data-fetching)にあるデータフェッチの並行化による速度改善のイメージ図です。
 
@@ -37,16 +37,14 @@ function Page({ params: { id } }: { params: { id: string } }) {
 }
 
 async function PostBody({ postId }: { postId: string }) {
-  const post = await fetch(`https://dummyjson.com/posts/${postId}`).then(
-    (res) => res.json(),
-  );
+  const res = await fetch(`https://dummyjson.com/posts/${postId}`);
+  const post = (await res.json()) as Post;
   // ...
 }
 
 async function Comments({ postId }: { postId: string }) {
-  const post = await fetch(
-    `https://dummyjson.com/posts/${postId}/comments`,
-  ).then((res) => res.json());
+  const res = await fetch(`https://dummyjson.com/posts/${postId}/comments`);
+  const comments = (await res.json()) as Comment[];
   // ...
 }
 ```
