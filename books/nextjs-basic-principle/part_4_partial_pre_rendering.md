@@ -40,7 +40,7 @@ App Routerはこれらをできるだけシンプルに整理するために、�
 
 ### ユーザーから見たPPR
 
-PPRでは、Static Renderingで生成されるhtmlやRSC Payloadに`<Suspense>`の`fallback`が埋め込まれます。`fallback`はDynamic Renderingが完了するたびに置き換わっていくことになります。
+PPRでは、Static Renderingで生成されるHTMLやRSC Payloadに`<Suspense>`の`fallback`が埋め込まれます。`fallback`はDynamic Renderingが完了するたびに置き換わっていくことになります。
 
 そのため、ユーザーから見るとStreaming SSR同様、Next.jsサーバーは即座にページの一部分を返し始め、表示された`fallback`が徐々に置き換わっていくように見えます。
 

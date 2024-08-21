@@ -4,7 +4,7 @@ title: "Static RenderingとFull Route Cache"
 
 ## 要約
 
-Static Renderingでは、htmlやRSC PayloadのキャッシュであるFull Route Cacheを生成します。Full Route Cacheは短い期間でrevalidateも可能なので、ユーザー固有の情報を含まないようなページは積極的にFull Route Cacheを活用しましょう。
+Static Renderingでは、HTMLやRSC PayloadのキャッシュであるFull Route Cacheを生成します。Full Route Cacheは短い期間でrevalidateも可能なので、ユーザー固有の情報を含まないようなページは積極的にFull Route Cacheを活用しましょう。
 
 ## 背景
 
@@ -105,7 +105,7 @@ export function LeafComponent() {
 
 Static Renderingは耐障害性・パフォーマンスに優れています。ユーザーリクエスト毎にレンダリングが必要なら前述の方法でDynamic Renderingにオプトインする必要がありますが、それ以外のケースについて、App Routerでは**可能な限りStatic Renderingにする**ことが推奨されています。
 
-Static Renderingのレンダリング結果であるhtmlやRSC Payloadのキャッシュは、[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache)と呼ばれています。App RouterではStatic Renderingを活用するために、Full Route Cacheのオンデマンドrevalidateや時間ベースでのrevalidateといったよくあるユースケースをフォローし、従来のSSGのように変更があるたびにデプロイが必要といったことがないように設計されています。
+Static Renderingのレンダリング結果であるHTMLやRSC Payloadのキャッシュは、[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache)と呼ばれています。App RouterではStatic Renderingを活用するために、Full Route Cacheのオンデマンドrevalidateや時間ベースでのrevalidateといったよくあるユースケースをフォローし、従来のSSGのように変更があるたびにデプロイが必要といったことがないように設計されています。
 
 ### オンデマンドrevalidate
 
