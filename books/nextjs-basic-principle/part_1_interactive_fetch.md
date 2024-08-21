@@ -90,6 +90,7 @@ export default function Search() {
   const { replace } = useRouter();
 
   function handleSearch(term: string) {
+    // MEMO: 実際にはdebounce処理が必要
     const params = new URLSearchParams(searchParams);
     if (term) {
       params.set("query", term);
@@ -135,9 +136,9 @@ export default async function Page({
 
 :::
 
-この場合、Server Actionsと`useActionState()`のみでは実現できないリロード復元やURLシェアが実現できます。
+この場合、Server Actionsと`useActionState()`のみでは実現できないリロード復元やURLシェアが実現できます。上記例のように検索が主であるページにおいては、状態をURLに保存することを検討すべきでしょう。`useActionState()`を使いつつ、状態をURLに保存することもできます。
 
-上記例のように検索が主であるページにおいては、状態をURLに保存することを検討すべきでしょう。一方サイドナビゲーションやcmd+kで開く検索モーダルのように、リロード復元やURLシェアをすべきでないケースではServer Actionsと`useActionState()`の実装が非常に役立つことでしょう。
+一方サイドナビゲーションやcmd+kで開く検索モーダルのように、リロード復元やURLシェアをすべきでないケースでは、Server Actionsと`useActionState()`の実装が非常に役立つことでしょう。
 
 ### データ操作に伴う再レンダリング
 
