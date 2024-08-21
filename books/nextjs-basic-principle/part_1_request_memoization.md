@@ -28,16 +28,15 @@ export async function getProduct(id: string) {
 
 ### ファイル構成
 
-上記のようなデータフェッチ層を分離する際のファイル構成には、様々なパターンが考えられます。ここでは上記関数を`/products`配下でのみ利用すると仮定して、筆者が考えるファイル構成例を示します。
+App Routerではコロケーションを強く意識した設計がなされているので、データフェッチ層をファイル分離する場合にもファイルコロケーションすることが推奨されます。
 
-- `app/products/api.ts`
-- `app/products/_lib/api.ts`
-- `app/products/_lib/api/product.ts`
+前述の`getProduct()`を分離する場合、筆者なら以下のいずれかのような形でファイルを分離します。データフェッチ層が多い場合にはより細かく分離すると良いでしょう。
+
 - `app/products/fetcher.ts`
 - `app/products/_lib/fetcher.ts`
 - `app/products/_lib/fetcher/product.ts`
 
-`/products`配下でのみ利用するならファイルコロケーションするのがApp Router流ですが、ファイルの命名やディレクトリについては開発規模や流儀によって異なるので、自分たちのチームでルールを決めておきましょう。
+ファイルの命名やディレクトリについては開発規模や流儀によって異なるので、自分たちのチームでルールを決めておきましょう。
 
 ### `server-only` package
 
