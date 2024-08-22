@@ -138,7 +138,7 @@ test("`todo`として渡された値がタイトルとして表示される", ()
 });
 ```
 
-一方Container Componentsについては以下のように、データの取得を主な処理となります。
+一方Container Componentsについては以下のように、データの取得が主な処理となります。
 
 ```tsx
 export default async function Page() {
