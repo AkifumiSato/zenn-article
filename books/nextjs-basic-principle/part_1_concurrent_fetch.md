@@ -53,7 +53,7 @@ async function Comments({ postId }: { postId: string }) {
 }
 ```
 
-上記の実装例では`<CommentsLayout>`は非同期でないコンポーネントで、`<PostBody />`と`<Comments />`は非同期コンポーネントです。この場合`<PostBody />`と`<Comments />`は並行レンダリングされるので、データフェッチも並行となります。
+上記の実装例では`<PostBody />`と`<Comments />`(およびその子孫)は並行レンダリングされるので、データフェッチも並行となります。
 
 ### 並行`fetch()`
 
