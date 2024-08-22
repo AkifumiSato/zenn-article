@@ -115,7 +115,9 @@ DataLoaderはGraphQLサーバーなどでよく利用されるライブラリで
 ```ts
 async function myBatchFn(keys: readonly number[]) {
   // keysを元にデータフェッチ(実際にはdummyjsonはid複数指定に未対応なのでイメージです)
-  const res = await fetch(`https://dummyjson.com/posts/?id=${keys.join(",")}`);
+  const res = await fetch(
+    `https://dummyjson.com/posts/?${keys.map((key) => `id=${key}`).join("&")}`,
+  );
   const { posts } = (await res.json()) as { posts: Post[] };
   return keys.map((key) => posts.find((post) => post.id === key) ?? null);
 }
@@ -150,7 +152,9 @@ export async function getUser(id: number) {
 
 async function batchGetUser(keys: readonly number[]) {
   // keysを元にデータフェッチ(実際にはdummyjsonはid複数指定に未対応なのでイメージです)
-  const res = await fetch(`https://dummyjson.com/users/?id=${keys.join(",")}`);
+  const res = await fetch(
+    `https://dummyjson.com/users/?${keys.map((key) => `id=${key}`).join("&")}`,
+  );
   const { users } = (await res.json()) as { users: User[] };
   return keys.map((key) => users.find((user: User) => user.id === key) ?? null);
 }
