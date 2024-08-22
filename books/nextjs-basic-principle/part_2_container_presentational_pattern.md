@@ -153,7 +153,7 @@ export default async function Page() {
 }
 ```
 
-非同期なServer ComponentsはRTLで`render()`することができないので、単なる関数として実行して戻り値を検証します。以下は正常系のテストケースの実装例です。
+非同期なServer ComponentsはRTLで`render()`することができないので、単なる関数として実行して戻り値を検証します。以下は簡易的なテストケースの実装例です。
 
 ```ts
 describe("todos/random APIよりデータ取得成功時", () => {
@@ -165,15 +165,38 @@ describe("todos/random APIよりデータ取得成功時", () => {
       }),
     );
 
-    const { type, props } = await Page();
+    const page = await Page();
 
-    expect(type).toBe(TodoPagePresentation);
-    expect(props.todo).toEqual(dummyTodo);
+    expect(page.type).toBe(TodoPagePresentation);
+    expect(page.props.todo).toEqual(dummyTodo);
   });
 });
 ```
 
 このように、コンポーネントを通常の関数のように実行すると`type`や`props`を得ることができるので、これらを元に期待値通りかテストすることができます。
+
+ただし、上記のように`expect(page.type).toBe(TodoPagePresentation);`とすると、ReactElementの構造に強く依存してしまうFragile(壊れやすい)なテストになってしまいます。そのため、実際には[こちらの記事](https://quramy.medium.com/react-server-component-%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8-container-presentation-separation-7da455d66576#:~:text=%E3%81%8A%E3%81%BE%E3%81%912%3A%20Container%20%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8%20JSX%20%E3%81%AE%E6%A7%8B%E9%80%A0)にあるように、ReactElementを扱うユーティリティの作成やスナップショットテストなどを検討すると良いでしょう。
+
+```tsx
+describe("todos/random APIよりデータ取得成功時", () => {
+  test("TodoPresentationalにAPIより取得した値が渡される", async () => {
+    // mswの設定
+    server.use(
+      http.get("https://dummyjson.com/todos/random", () => {
+        return HttpResponse.json(dummyTodo);
+      }),
+    );
+
+    const page = await Page();
+
+    expect(
+      getProps<typeof TodoPagePresentation>(page, TodoPagePresentation),
+    ).toEqual({
+      todo: dummyTodo,
+    });
+  });
+});
+```
 
 ## トレードオフ
 
