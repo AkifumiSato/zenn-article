@@ -129,7 +129,7 @@ myLoader.load(2);
 
 ### Next.jsにおけるDataLoaderの利用
 
-Server Componentsの兄弟コンポーネントは並行レンダリングされるので、それぞれで`await myLoader.load(1);`のようにしてもDataLoaderによってバッチングされます。
+Server Componentsの兄弟もしくは兄弟の子孫コンポーネントは並行レンダリングされるので、それぞれで`await myLoader.load(1);`のようにしてもDataLoaderによってバッチングされます。
 
 DataLoaderを用いて、前述の実装例の`getUser()`を書き直してみます。
 
