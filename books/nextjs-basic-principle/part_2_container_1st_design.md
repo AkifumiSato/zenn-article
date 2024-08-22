@@ -22,7 +22,7 @@ title: "Container 1stな設計とディレクトリ構成"
 
 これらにも大きな違いがあります。
 
-React Server Componentsでは特に、Compositionパターンを後から適用しようとしたりすると大幅なClient Componentsの設計見直しや書き換えが発生しがちです。こういった手戻りを防ぐためにも、設計の手順はとても重要です。
+React Server Componentsでは特に、Compositionパターンを後から適用しようとすると大幅なClient Componentsの設計見直しや書き換えが発生しがちです。こういった手戻りを防ぐためにも、設計の手順はとても重要です。
 
 ## 設計・プラクティス
 
