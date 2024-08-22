@@ -60,12 +60,10 @@ async function PostItem({ post }: { post: Post }) {
 
 ```ts :fetcher.ts
 export async function getPosts() {
-  return fetch("https://dummyjson.com/posts").then(
-    (res) =>
-      res.json() as Promise<{
-        posts: Post[];
-      }>,
-  );
+  const res = await fetch("https://dummyjson.com/posts");
+  return (await res.json()) as {
+    posts: Post[];
+  };
 }
 
 type Post = {
@@ -76,9 +74,8 @@ type Post = {
 };
 
 export async function getUser(id: number) {
-  return fetch(`https://dummyjson.com/users/${id}`).then(
-    (res) => res.json() as Promise<User>,
-  );
+  const res = await fetch(`https://dummyjson.com/users/${id}`);
+  return (await res.json()) as User;
 }
 
 type User = {

@@ -39,7 +39,7 @@ test("random Todo APIより取得した`dummyTodo`がタイトルとして表示
 
 ### Storybook
 
-一方Storybookはexperimentalながら[Server Components対応](https://storybook.js.org/blog/storybook-react-server-components/)を実装したとしているものの、実際にはasyncなClient Componentsをレンダリングしてるにすぎず、大量のmockを必要とするため筆者はあまり実用的とは考えていません。
+一方Storybookはexperimentalながら[Server Components対応](https://storybook.js.org/blog/storybook-react-server-components/)を実装したとしているものの、実際にはasyncなClient Componentsをレンダリングしているにすぎず、大量のmockを必要とするため筆者はあまり実用的とは考えていません。
 
 ```tsx
 export default { component: DbCard };
@@ -142,11 +142,12 @@ test("`todo`として渡された値がタイトルとして表示される", ()
 
 ```tsx
 export default async function Page() {
-  const todo: Todo = await fetch("https://dummyjson.com/todos/random", {
+  const res = await fetch("https://dummyjson.com/todos/random", {
     next: {
       revalidate: 0,
     },
-  }).then((res) => res.json());
+  });
+  const todo = ((res) => res.json()) as Todo;
 
   return <TodoPagePresentation todo={todo} />;
 }
