@@ -51,7 +51,7 @@ React Server Componentsでは特に、Compositionパターンを後から適用�
 - `<UserProfileContainer id={post.userId}>`
 - `<CommentsContainer postId={postId}>`
 
-`postId`はURLから取得できますが`userId`はPost情報に含まれているので、`<UserProfileContainer>`は`<PostContainer>`で呼び出される形になります。一方`<CommentsContainer>`は`postId`を元にレンダリングされるので、`<PostContainer>`と並列に呼び出すことが可能です。
+`postId`はURLから取得できますが`userId`はPost情報に含まれているので、`<UserProfileContainer>`は`<PostContainer>`で呼び出される形になります。一方`<CommentsContainer>`は`postId`を元にレンダリングされるので、`<PostContainer>`と並行に呼び出すことが可能です。
 
 これらを加味して、まずはContainer Componentsのツリー構造を`page.tsx`に実際に書き出してみます。各ContainerやPresentational Componentsの実装は後から行うので、ここでは仮実装で構造を設計することに集中しましょう。
 
@@ -97,7 +97,7 @@ async function PostContainer({ postId }: { postId: string }) {
 
 App Routerの規約ファイルはコロケーションを強く意識した設計がなされており、Route Segmentで利用するコンポーネントや関数もできるだけコロケーションすることが推奨されます。
 
-Container/Presentationalパターンにおいて、ページやレイアウトから見える単位はContainer単位です。Presentational Componentsやその他のコンポーネントは、Container Componentsの実装詳細に過ぎません。
+Container/Presentationalパターンにおいて、ページやレイアウトから見える単位はContainer単位です。Presentational Componentsやその他のコンポーネントは、Container Componentsのプライベートな実装詳細に過ぎません。
 
 これらを体現するContainer 1stなディレクトリ設計として、Containerの単位を`_containers`以下でディレクトリ分割することを提案します。このディレクトリ設計では、外部から利用されうるContainer Componentsの公開を`index.tsx`で行うことを想定しています。
 
@@ -133,7 +133,7 @@ app
 └── ...
 ```
 
-命名やさらに細かい分割など、詳細はプロジェクトごとに適宜修正してもいいと思いますが、ディレクトリをContainer単位で・ファイルをサーバー・クライアントの境界観点から分割することがApp Routerらしい設計ではないかと、筆者は考えます。
+命名やさらに細かい分割の詳細は、プロジェクトごとに適宜修正してもいいと思います。筆者が重要だと思うのはディレクトリをContainer単位で、ファイルをContainer/Presentationalで分割することです。
 
 ## トレードオフ
 
