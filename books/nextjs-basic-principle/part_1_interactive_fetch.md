@@ -138,7 +138,7 @@ export default async function Page({
 
 この場合、Server Actionsと`useActionState()`のみでは実現できないリロード復元やURLシェアが実現できます。上記例のように検索が主であるページにおいては、状態をURLに保存することを検討すべきでしょう。`useActionState()`を使いつつ、状態をURLに保存することもできます。
 
-一方サイドナビゲーションやcmd+kで開く検索モーダルのように、リロード復元やURLシェアをすべきでないケースでは、Server Actionsと`useActionState()`の実装が非常に役立つことでしょう。
+一方サイドナビゲーションやcmd+kで開く検索モーダルのように、リロード復元やURLシェアをする必要がないケースでは、Server Actionsと`useActionState()`の実装が非常に役立つことでしょう。
 
 ### データ操作に伴う再レンダリング
 
