@@ -4,7 +4,7 @@ title: "Compositionパターン"
 
 ## 要約
 
-Compositionパターンを駆使して、Server Components中心に組み立てたコンポーネントツリーからClient Componentsを適切に切り分けましょう。
+Compositionパターンを駆使して、Server Componentsを中心に組み立てたコンポーネントツリーからClient Componentsを適切に切り分けましょう。
 
 ## 背景
 
@@ -135,8 +135,8 @@ import { UserInfo } from "./user-info"; // Server Components
 import { SideMenu } from "./side-menu"; // Client Components
 
 /**
- * Server ComponentsをClient Componentsである
- * `<SideMenu>`の`children`に渡すことが可能
+ * Client Components(`<SideMenu>`)の子要素に
+ * Server Components(`<UserInfo>`)を渡せる
  */
 export function Page() {
   return (
@@ -156,7 +156,7 @@ export function Page() {
 
 ### 「後からComposition」の手戻り
 
-Compositionパターンを駆使すれば、Server Components中心にしつつ部分的にClient Componentsを組み込むことが可能です。しかし、早期にClient Boundaryを形成し後からCompositionパターンを導入しようとすると、Client Componentsの設計を大幅に変更せざるを得なくなったり、Server Components中心な設計から逸脱してしまう可能性があります。
+Compositionパターンを駆使すればServer Componentsを中心にしつつ、部分的にClient Componentsを組み込むことが可能です。しかし、早期にClient Boundaryを形成し後からCompositionパターンを導入しようとすると、Client Componentsの設計を大幅に変更せざるを得なくなったり、Server Components中心な設計から逸脱してしまう可能性があります。
 
 そのため、React Server Componentsにおいては設計する順番も非常に重要です。画面を実装する段階ではまずデータフェッチを行うServer Componentsを中心に設計し、そこに必要に応じてClient Componentsを末端に配置したりCompositionパターンで組み込んで実装を進めていくことを筆者はお勧めします。
 
