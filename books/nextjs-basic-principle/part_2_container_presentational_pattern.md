@@ -107,6 +107,10 @@ export function CompanyLinks() {
 }
 ```
 
+:::message
+上記のような`"use client";`を含まない場合において、自身でClient Boundaryを形成するのではなく、Client Boundary内で利用することを強制したいような場合には[`client-only`](https://www.npmjs.com/package/client-only)パッケージが役立ちます。
+:::
+
 Client ComponentsやShared Componentsは従来通りRTLやStorybookで扱うことができるので、テスト容易性が向上します。一方Container Componentsはこれらのツールでレンダリング・テストすることが現状難しいので、`await ArticleContainer({ id })`のように単なる関数として実行することでテストが可能です。
 
 ### 実装例
