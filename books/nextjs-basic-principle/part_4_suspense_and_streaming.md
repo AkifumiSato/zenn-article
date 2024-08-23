@@ -12,9 +12,9 @@ Dynamic Renderingで特に重いコンポーネントのレンダリングは`<S
 
 ## 設計・プラクティス
 
-App Routerでは[Streaming SSR](https://nextjs.org/docs/app/building-your-application/routing/loading-ui-and-streaming)をサポートしているので、このような重いデータフェッチを伴うServer Componentsのレンダリングを遅延させ、ユーザーにいち早くレスポンスを返し始めることができます。具体的には、App Routerは`<Suspense>`のfallbackを元に即座にレスポンスを送信し始め、その後、`<Suspense>`内のレンダリングが完了次第結果がクライアントへと続いて送信されます。
+App Routerでは[Streaming SSR](https://nextjs.org/docs/app/building-your-application/routing/loading-ui-and-streaming)をサポートしているので、重いデータフェッチを伴うServer Componentsのレンダリングを遅延させ、ユーザーにいち早くレスポンスを返し始めることができます。具体的には、App Routerは`<Suspense>`のfallbackを元に即座にレスポンスを送信し始め、その後、`<Suspense>`内のレンダリングが完了次第結果がクライアントへと続いて送信されます。
 
-[_並行データフェッチ_](part_1_concurrent_fetch)で述べたようなデータフェッチ単位で分割されたコンポーネント設計ならば、`<Suspense>`境界を追加するのみなので、実装は容易にできるはずです。
+[_並行データフェッチ_](part_1_concurrent_fetch)で述べたようなデータフェッチ単位で分割されたコンポーネント設計ならば、`<Suspense>`境界を追加するのみで容易に実装できるはずです。
 
 ### 実装例
 
@@ -60,7 +60,7 @@ Streaming SSRを活用するとユーザーに即座に画面を表示し始め�
 
 置き換え後の高さが固定ならば、fallbackも同様の高さで固定することでLayout Shiftを防ぐことができます。一方、置き換え後の高さが固定でない場合にはLayout Shiftが発生することになり、[Time to First Byte](https://web.dev/articles/ttfb?hl=ja)(TTFB)と[CumulativeLayout Shift](https://web.dev/articles/cls?hl=ja)(CLS)のトレードオフが発生します。
 
-そのため、実際のユースケースにおいてはどの程度コンポーネントが遅いのかによってレンダリングを遅延させるべきかどうか判断が変わってきます。筆者の感覚論ですが、たとえば200ms程度のデータフェッチを伴うServer ComponentsならTTFBを短縮するよりLayout Shiftのデメリットの方が大きいと判断することが多いでしょう。1sを超えてくるようなServer Componentsなら迷わず遅延することを選びます。
+そのため、実際のユースケースにおいてはコンポーネントがどの程度遅いのかによって、レンダリングを遅延させるべきかどうか判断が変わってきます。筆者の感覚論ですが、たとえば200ms程度のデータフェッチを伴うServer ComponentsならTTFBを短縮するよりLayout Shiftのデメリットの方が大きいと判断することが多いでしょう。1sを超えてくるようなServer Componentsなら迷わず遅延することを選びます。
 
 TTFBとCLSどちらを優先すべきかはケースバイケースなので、状況に応じて最適な設計を検討しましょう。
 
