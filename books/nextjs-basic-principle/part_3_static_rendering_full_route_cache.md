@@ -8,7 +8,7 @@ Static Renderingでは、HTMLやRSC PayloadのキャッシュであるFull Route
 
 ## 背景
 
-従来Pages Routerではサーバー側のレンダリングについて、[SSR](https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering)・[SSG](https://nextjs.org/docs/pages/building-your-application/rendering/static-site-generation)・[ISR](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)という3つのレンダリングモデル^[[こちらの記事](https://vercel.com/blog/partial-prerendering-with-next-js-creating-a-new-default-rendering-model)より引用。レンダリング戦略とも呼ばれます。]をサポートしてきました。App Routerでは上記相当のレンダリングをサポートしつつ、オンデマンドなrevalidateがより整理され、SSGとISRを大きく区別せずまとめて**Static Rendering**・従来のSSR相当を**Dynamic Rendering**と呼称する形で再定義されました。
+従来Pages Routerではサーバー側のレンダリングについて、[SSR](https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering)・[SSG](https://nextjs.org/docs/pages/building-your-application/rendering/static-site-generation)・[ISR](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)という3つのレンダリングモデル^[[こちらの記事](https://vercel.com/blog/partial-prerendering-with-next-js-creating-a-new-default-rendering-model)より引用。レンダリング戦略とも呼ばれます。]をサポートしてきました。App Routerでは上記相当のレンダリングをサポートしつつ、revalidateがより整理され、SSGとISRを大きく区別せずまとめて**Static Rendering**、従来のSSR相当を**Dynamic Rendering**と呼称する形で再定義されました。
 
 | レンダリング                                                                                                                   | タイミング            | Pages Routerとの比較 |
 | ------------------------------------------------------------------------------------------------------------------------------ | --------------------- | -------------------- |
@@ -62,9 +62,9 @@ export default async function Page({
 ```
 
 :::message
-従来`cache`オプションのデフォルトは`"force-cache"`でした。`v15.0.0-rc.0`では、デフォルトが`"no-store"`に変更されていますが、明示的に指定しないとDynamic Renderingにならないという仕様になっています。
+v14以前において、`cache`オプションのデフォルトは`"force-cache"`でした。`v15.0.0-rc.0`では、デフォルトが`"no-store"`に変更されていますが、明示的に指定しないとDynamic Renderingにならないという仕様になっています。
 
-これらの仕様については[RC中に変更される可能性](https://x.com/feedthejim/status/1794778189354705190)が示唆されていますが、本書執筆時点では変更されるかは不明です。
+これらの仕様については[v15のリリースまでに変更される可能性](https://x.com/feedthejim/status/1794778189354705190)が示唆されていますが、本書執筆時点では変更されるかは不明です。
 :::
 
 ### Route Segment Config

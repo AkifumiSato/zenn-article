@@ -8,7 +8,7 @@ Dynamic Renderingなページでは、データフェッチ単位のキャッシ
 
 ## 背景
 
-[_Static RenderingとFull Route Cache_](part_3_static_rendering_full_route_cache)で述べた通り、App Routerでは可能な限りStatic Renderingにすることが推奨されています。しかし、アプリケーションによってはユーザー情報を含むページなど、Dynamic Renderingが必要な当然考えられます。
+[_Static RenderingとFull Route Cache_](part_3_static_rendering_full_route_cache)で述べた通り、App Routerでは可能な限りStatic Renderingにすることが推奨されています。しかし、アプリケーションによってはユーザー情報を含むページなど、Dynamic Renderingが必要な場合も当然考えられます。
 
 Dynamic Renderingはリクエストごとにレンダリングされるので、できるだけ早く完了する必要があります。この際最もボトルネックになりやすいのが**データフェッチ処理**です。
 
@@ -20,7 +20,7 @@ RouteをDynamic Renderingに切り替える方法は前の章の[_Static Renderi
 
 [Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)はデータフェッチ処理の結果をキャッシュするもので、サーバー側に永続化され**リクエストやユーザーを超えて共有**されます。
 
-Dynamic RenderingはNext.jsサーバーへのリクエストごとにレンダリングを行いますが、その際必ずしも全てのデータフェッチを実行しなければならないとは限りません。ユーザー情報に紐づくようなデータフェッチとそうでないものを切り分けて、後者に対しData Cacheを活用することで、Dynamic Renderingの高速化やAPI負荷軽減などが見込めます。
+Dynamic RenderingはNext.jsサーバーへのリクエストごとにレンダリングを行いますが、その際必ずしも全てのデータフェッチを実行しなければならないとは限りません。ユーザー情報に紐づくようなデータフェッチとそうでないものを切り分けて、後者に対しData Cacheを活用することで、Dynamic Renderingの高速化やAPIサーバーの負荷軽減などが見込めます。
 
 Data Cacheができるだけキャッシュヒットするよう、データフェッチごとに適切な設定を心がけましょう。
 
@@ -34,7 +34,7 @@ fetch(`https://...`, {
 });
 ```
 
-`cache`に`"force-cache"`か`"no-store"`を指定でき、これによりキャッシュを有効・無効にすることができます。
+`cache`はデフォルトで`"force-cache"`となっており、`"no-store"`を指定することでキャッシュを無効化することができます。
 
 :::message
 Next.jsの`v15.0.0-rc.0`では`fetch`の[デフォルトが`no-store`](https://nextjs.org/blog/next-15-rc#caching-updates)に変更されました。
@@ -122,3 +122,5 @@ https://zenn.dev/akfm/articles/nextjs-revalidate
 `fetch()`のオプションで`cahce: "no-store"`か`next.revalidate: 0`を設定することでData Cacheをオプトアウトすることができますが、これは同時にRouteが**Dynamic Renderingに切り替わる**ことにもなります。
 
 これらを設定する時は本当にDynamic Renderingにしなければいけないのか、よく考えて設定しましょう。
+
+また、Next.jsではv14以降、Static RenderingとDynamic Renderingを1つのRouteで混在させることができる**Partial Pre Rendering**(PPR)をexperimentalで提供しています。PPRでは、Suspense境界単位でDynamic Renderingにオプトインすることができます。PPRのより詳細な内容については、後述の[_Partial Pre Rendering(PPR)_](part_4_partial_pre_rendering)で解説します。
