@@ -1,5 +1,5 @@
 ---
-title: "データアクセス層の認可"
+title: "Parallel/Intercepting Routes"
 ---
 
 ## 要約
