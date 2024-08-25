@@ -1,7 +1,7 @@
 title: "Next.jsの考え方"
 summary: "Next.js App Routerにおける設計やベストプラクティスを、筆者なりにまとめました。"
 topics: ["nextjs", "react"]
-published: false
+published: true
 price: 0 # 有料の場合200〜5000
 # 本に含めるチャプターを順番に並べましょう
 chapters:
