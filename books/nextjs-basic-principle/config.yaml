@@ -1,0 +1,29 @@
+title: "Next.jsの考え方"
+summary: "Next.js App Routerにおける設計やベストプラクティスを、筆者なりにまとめました。"
+topics: ["nextjs", "react"]
+published: false
+price: 0 # 有料の場合200〜5000
+# 本に含めるチャプターを順番に並べましょう
+chapters:
+  - intro
+  - part_1
+  - part_1_server_components
+  - part_1_colocation
+  - part_1_request_memoization
+  - part_1_concurrent_fetch
+  - part_1_data_loader
+  - part_1_fine_grained_api_design
+  - part_1_interactive_fetch
+  - part_2
+  - part_2_client_components_usecase
+  - part_2_composition_pattern
+  - part_2_container_presentational_pattern
+  - part_2_container_1st_design
+  - part_3
+  - part_3_static_rendering_full_route_cache
+  - part_3_dynamic_rendering_data_cache
+  - part_3_router_cache
+  - part_3_data_mutation
+  - part_4
+  - part_4_suspense_and_streaming
+  - part_4_partial_pre_rendering
