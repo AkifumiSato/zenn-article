@@ -6,13 +6,13 @@ title: "Client Componentsのユースケース"
 
 Client Componentsを使うべき代表的なユースケースを覚えておきましょう。
 
-- クライアントサイド処理を必要とする場合
-- サードパーティで提供されたコンポーネントを使う場合
-- 転送するRSC Payloadを減らしたい場合
+- [クライアントサイド処理](#クライアントサイド処理)
+- [サードパーティコンポーネント](#サードパーティコンポーネント)
+- [RSC Payload転送量の削減](#rsc-payload転送量の削減)
 
 ## 背景
 
-[第1部](part_1)ではデータフェッチ観点を中心にServer Componentsの設計パターンについて解説してきました。Client Componentsはオプトインのため、React Server Componentsにおけるコンポーネント全体の設計はServer Componentsの設計にClient Componentsを適切に組み合わせていくという形で行う必要があります。
+[_第1部 データフェッチ_](part_1)ではデータフェッチ観点を中心にServer Componentsの設計パターンについて解説してきました。Client Componentsはオプトインのため、App Routerにおけるコンポーネント全体の設計は、Server Componentsを中心とした設計にClient Componentsを適切に組み合わせていく形で行います。
 
 そのためにはそもそも、いつClient Componentsにオプトインすべきなのか適切に判断できることが重要です。
 
@@ -20,13 +20,13 @@ Client Componentsを使うべき代表的なユースケースを覚えておき
 
 筆者がClient Componentsを利用すべきだと考える代表的な場合は大きく以下の3つです。
 
-### クライアントサイド処理を必要とする場合
+### クライアントサイド処理
 
 最もわかりやすくClient Componentsが必要な場合は、クライアントサイド処理を必要とする場合です。以下のような場合が考えられます。
 
 - `onClick()`や`onChange()`といったイベントハンドラの利用
-- 状態hooks(`useState()`など)やライフサイクルhooks(`useEffect()`など)の利用
-- ブラウザAPIとの統合
+- 状態hooks(`useState()`や`useReducer()`など)やライフサイクルhooks(`useEffect()`など)の利用
+- ブラウザAPIの利用
 
 ```tsx
 "use client";
@@ -45,9 +45,9 @@ export default function Counter() {
 }
 ```
 
-### サードパーティで提供されたコンポーネントを使う場合
+### サードパーティコンポーネント
 
-`"use client";`指定対応されてないサードパーティライブラリなコンポーネントを使う場合にも、利用者側で明示的にClient Componentsにしなければならないことがあります。この場合には`"use client";`指定してre-exportするか、利用者側で`"use client";`指定する必要があります。
+Client Componentsを提供するサードパーティライブラリがReact Server Componentsに未対応な場合は、利用者側でClient Boundaryを明示しなければならないことがあります。この場合には`"use client";`指定してre-exportするか、利用者側で`"use client";`指定する必要があります。
 
 ```tsx :app/_components/accordion.tsx
 "use client";
@@ -71,11 +71,15 @@ export function SideBar() {
 }
 ```
 
-### 転送するRSC Payloadを減らしたい場合
+### RSC Payload転送量の削減
 
-3つ目は転送するRSC Payloadを減らしたい場合です。Client Componentsは当然ながらクライアントサイドでも実行されるので、Client Componentsが多いほどJavaScriptバンドルサイズは増加します。一方Server Componentsは[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)として転送されるため、Server ComponentsがレンダリングするReactElementやReactElementに付与される属性が多いほど転送量が多くなります。Client Componentsは最初の1回しかJavaScriptのロードをしないため、**JavaScriptの転送量とRSC Payloadの転送量はトレードオフの関係**にあります。
+3つ目はRSC Payloadの転送量を減らしたい場合です。Client Componentsは当然ながらクライアントサイドでも実行されるので、Client Componentsが多いほどJavaScriptバンドルサイズは増加します。一方Server Componentsは[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)として転送されるため、Server ComponentsがレンダリングするReactElementや属性が多いほど転送量が多くなります。
 
-そのため、RSC Payloadの転送量を削減する目的でコンポーネントをClient Componentsにすることが望ましい場合があります。例えば以下の`<Product>`について考えてみます。
+つまり**Client ComponentsのJavaScript転送量とServer ComponentsのRSC Payload転送量はトレードオフの関係**にあります。
+
+Client Componentsを含むJavaScriptバンドルは1回しかロードされませんが、Server ComponentsはレンダリングされるたびにRSC Payloadが転送されます。そのため、繰り返しレンダリングされるコンポーネントはRSC Payloadの転送量を削減する目的でClient Componentsにすることが望ましい場合があります。
+
+例えば以下の`<Product>`について考えてみます。
 
 ```tsx
 export async function Product() {
@@ -133,4 +137,4 @@ export function ProductPresentaional({ product }: { product: Product }) {
 
 このように、`"use client";`は依存関係において境界(Boundary)を定義するもので、この境界はよく**Client Boundary**と表現されます。
 
-そのため、上位層のコンポーネントでClient Boundaryを形成してしまうと下層でServer Componentsを含むことができなくなってしまい、React Server Componentsのメリットをうまく享受できなくなってしまうケースが散見されます。このようなケースへの対応は次章の[Compositionパターン](part_2_composite_pattern)で解説します。
+そのため、上位層のコンポーネントでClient Boundaryを形成してしまうと下層でServer Componentsを含むことができなくなってしまい、React Server Componentsのメリットをうまく享受できなくなってしまうケースが散見されます。このようなケースへの対応は次章の[_Compositionパターン_](part_2_composition_pattern)で解説します。

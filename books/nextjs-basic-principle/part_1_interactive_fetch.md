@@ -4,23 +4,23 @@ title: "ユーザー操作とデータフェッチ"
 
 ## 要約
 
-ユーザー操作に基づくデータフェッチと再レンダリングには、Server Actionsと`useActionState`を利用しましょう。
+ユーザー操作に基づくデータフェッチと再レンダリングには、Server Actionsと`useActionState()`を利用しましょう。
 
 ## 背景
 
-[データフェッチ on Server Components](part_1_server_components)で述べた通り、RSCにおいてデータフェッチはServer Componentsで行うことが基本形です。しかし、ユーザー操作に基づいてデータフェッチ・再レンダリングを行うのにServer Componentsは適していません。App Routerにおいては`router.refresh()`などでページ全体を再レンダリングすることはできますが、ユーザー操作に基づいて部分的に再レンダリングしたい場合には不適切です。
+[_データフェッチ on Server Components_](part_1_server_components)で述べた通り、App RouterにおいてデータフェッチはServer Componentsで行うことが基本形です。しかし、ユーザー操作に基づいてデータフェッチ・再レンダリングを行うのにServer Componentsは適していません。App Routerにおいては`router.refresh()`などでページ全体を再レンダリングすることはできますが、ユーザー操作に基づいて部分的に再レンダリングしたい場合には不適切です。
 
 ## 設計・プラクティス
 
-Reactではユーザー操作に基づいたデータフェッチを実現するために、[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)と[useActionState](https://react.dev/reference/react/useActionState)(旧: `useFormState`)などのhooksが提供されています。
+App RouterがサポートしてるReact Server Componentsにおいては、[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)と`useActionState()`(旧: `useFormState()`)を利用することで、ユーザー操作に基づいたデータフェッチを実現できます。
 
-データ取得の基本系はServer Components、ユーザー操作に基づく部分的更新ならServer Actionsと`useActionState`という使い分けになります。
+### `useActionState()`
 
-### `useActionState`
+`useActionState()`は関数と初期値を渡すことで、Server Actionsによってのみ更新できるState管理が実現できます。
 
-`useActionState`はServer Actionsと初期値が必須引数となっており、Server Actionsによってのみ更新できるState管理が実現できます。
+https://react.dev/reference/react/useActionState
 
-以下はユーザーの入力に基づいて商品を検索する実装例です。
+以下はユーザーの入力に基づいて商品を検索する実装例です。Server Actionsとして定義された`searchProducts()`を`useActionState()`の第一引数に渡しており、formがサブミットされるごとに実行されます。
 
 ```ts :app/actions.ts
 "use server";
@@ -67,22 +67,81 @@ export default function Form() {
 }
 ```
 
-検索したい文字列を入力し、Submitボタンを押すとヒットした商品の名前が表出するようになっています。
+これにより、 検索したい文字列を入力・サブミットすると、検索ヒットした商品の名前が表出するようになっています。
 
 ## トレードオフ
 
 ### URLシェア・リロード対応
 
-上記実装例の`<Form>`以外ほとんど要素がないような単純なページであれば、公式チュートリアルの実装例のように`router.replace()`によってURLを更新・ページ全体を再レンダリングするという手段があります。
+form以外ほとんど要素がないような単純なページであれば、公式チュートリアルの実装例のように`router.replace()`によってURLを更新・ページ全体を再レンダリングするという手段があります。
 
 https://nextjs.org/learn/dashboard-app/adding-search-and-pagination
 
-この場合、Server Actionsと`useActionState`では実現できないリロード復元やURLシェアが実現できます。
+:::details チュートリアルの実装例(簡易版)
 
-上記のような検索が最も主であるページにおいては状態をURLに保存することを検討すべきでしょう。一方サイドナビゲーションやcmd+kで開く検索モーダルのようにリロード復元やURLシェアをすべきでないケースでは、Server Actionsと`useActionState`の実装が非常に役立つことでしょう。
+```tsx
+"use client";
+
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
+
+export default function Search() {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { replace } = useRouter();
+
+  function handleSearch(term: string) {
+    // MEMO: 実際にはdebounce処理が必要
+    const params = new URLSearchParams(searchParams);
+    if (term) {
+      params.set("query", term);
+    } else {
+      params.delete("query");
+    }
+    replace(`${pathname}?${params.toString()}`);
+  }
+
+  return (
+    <input
+      onChange={(e) => handleSearch(e.target.value)}
+      defaultValue={searchParams.get("query")?.toString()}
+    />
+  );
+}
+```
+
+```tsx
+export default async function Page({
+  searchParams,
+}: {
+  searchParams?: {
+    query?: string;
+    page?: string;
+  };
+}) {
+  const query = searchParams?.query || "";
+  const currentPage = Number(searchParams?.page) || 1;
+
+  return (
+    <div>
+      <Search />
+      {/* ... */}
+      <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
+        <Table query={query} currentPage={currentPage} />
+      </Suspense>
+      {/* ... */}
+    </div>
+  );
+}
+```
+
+:::
+
+この場合、Server Actionsと`useActionState()`のみでは実現できないリロード復元やURLシェアが実現できます。上記例のように検索が主であるページにおいては、状態をURLに保存することを検討すべきでしょう。`useActionState()`を使いつつ、状態をURLに保存することもできます。
+
+一方サイドナビゲーションやcmd+kで開く検索モーダルのように、リロード復元やURLシェアをする必要がないケースでは、Server Actionsと`useActionState()`の実装が非常に役立つことでしょう。
 
 ### データ操作に伴う再レンダリング
 
-ここで紹介したのはユーザー操作に伴うデータフェッチ、つまりデータ操作を伴わない場合の設計パターンです。ユーザー操作にともなってデータ操作・操作後の結果を再取得したいこともあります。これはServer Actionsと`revalidatePath`/`revalidateTag`を組み合わせ実行することで実現できます。
+ここで紹介したのはユーザー操作に伴うデータフェッチ、つまり**データ操作を伴わない**場合の設計パターンです。ユーザー操作にともなってデータを操作し、その後の結果を再取得したいこともあります。これはServer Actionsと`revalidatePath()`/`revalidateTag()`を組み合わせ実行することで実現できます。
 
-これについては、後述の[データ操作とServer Actions](part_3_data_mutation)にて詳細を解説します。
+これについては、後述の[_データ操作とServer Actions_](part_3_data_mutation)にて詳細を解説します。

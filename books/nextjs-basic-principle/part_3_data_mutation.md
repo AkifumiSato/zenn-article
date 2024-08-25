@@ -22,7 +22,7 @@ Pages Routerではデータ取得のために[getServerSideProps](https://nextjs
 
 ## 設計・プラクティス
 
-App Routerでのデータ操作は従来からある実装パターンではなく、[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)を利用することが推奨されています。これにより、tRPCなどの3rd partyライブラリなどなしにクライアント・サーバーの境界を超えて関数を呼び出すことができ、データ変更処理を容易に実装できます。
+App Routerでのデータ操作は、従来からある実装パターンではなく[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)を利用することが推奨されています。これにより、tRPCなどの3rd partyライブラリなどなしにクライアント・サーバーの境界を超えて関数を呼び出すことができ、データ変更処理を容易に実装できます。
 
 :::message
 Server Actionsはクライアント・サーバーの境界を超えて関数を呼び出しているように見えますが、実際には当然通信処理が伴うため、[Reactがserialize可能なもの](https://react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)のみが引数や戻り値に利用できます。
@@ -51,9 +51,9 @@ export default function CreateTodo() {
 }
 ```
 
-上記の実装例では、サーバーサイドで実行される関数`createTodo`をClient Componentsの`<form>`の`action`propsに直接渡しているのがわかります。このformを実際にsubmitすると、サーバーサイドで`createTodo`が実行されます。
+上記の実装例では、サーバーサイドで実行される関数`createTodo`をClient Componentsで`<form>`の`action`propsに直接渡しているのがわかります。このformを実際にsubmitすると、サーバーサイドで`createTodo`が実行されます。
 
-このように非常にシンプルな実装でクライアントサイドからサーバーサイド関数を呼び出せることで、開発者はデータ操作の実装に集中できます。Server ActionsはReactの仕様ですが実装はフレームワークに委ねられているので、他にも以下のようなApp Routerならではのメリットが得られます。
+このように非常にシンプルな実装でクライアントサイドからサーバーサイド関数を呼び出せることで、開発者はデータ操作の実装に集中できます。Server ActionsはReactの仕様ですが、実装はフレームワークに統合されているので、他にも以下のようなApp Routerならではのメリットが得られます。
 
 ### キャッシュのrevalidate
 
@@ -101,10 +101,10 @@ export async function createTodo(formData: FormData) {
 
 ### JavaScript非動作時・未ロード時サポート
 
-App RouterのServer Actionsでは`<form>`の`action`propsにServer Actionsを渡すと、ユーザーがJavaScriptをOFFにしてたり未ロードであっても動作します。
+App RouterのServer Actionsでは`<form>`の`action`propsにServer Actionsを渡すと、ユーザーがJavaScriptをOFFにしてたり、JavaScriptファイルが未ロードであっても動作します。
 
 :::message
-[公式ドキュメント](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations#behavior)では「Progressive Enhancementのサポート」と称されていますが、厳密にはJavaScript非動作環境のサポートとProgressive Enhancementは異なると筆者は理解しています。詳しくは以下をご参照ください。
+[公式ドキュメント](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations#behavior)では「Progressive Enhancementのサポート」と記載されていますが、厳密にはJavaScript非動作環境のサポートとProgressive Enhancementは異なると筆者は理解しています。詳しくは以下をご参照ください。
 
 https://developer.mozilla.org/ja/docs/Glossary/Progressive_Enhancement
 
@@ -122,6 +122,16 @@ Server Actionsは基本的にサイト内でのみ利用することが可能で
 
 Route Handlerが`revalidatePath()`などを扱えるのはまさに上記のようなユースケースをフォローするためです。サイト外でデータ操作が行われた時には、Route Handlerで定義したAPIをWeb hookで呼び出すなどしてキャッシュをrevalidateしましょう。
 
+:::message
+Router Cacheはユーザー端末のインメモリに保存されており、全ユーザーのRouter Cacheを一括で破棄する方法はありません。上記の方法で破棄できるのは、サーバー側キャッシュのData CacheとFull Route Cacheのみです。
+:::
+
+### ブラウザバックにおけるスクロール位置の喪失
+
+App RouterにおけるブラウザバックではRouter Cacheが利用されます。この際には画面は即時に描画され、スクロール位置も正しく復元されます。
+
+しかし、Server Actionsで`revalidatePath()`などを呼び出すなどすると、Router Cacheが破棄されます。Router Cacheがない状態でブラウザバックを行うと即座に画面を更新できないため、スクロール位置がうまく復元されないことがあります。
+
 ### Server Actionsの呼び出しは直列化される
 
 Server Actionsは直列に実行されるよう設計されているため、同時に実行できるのは一つだけとなります。
@@ -130,4 +140,4 @@ https://quramy.medium.com/server-actions-%E3%81%AE%E5%90%8C%E6%99%82%E5%AE%9F%E8
 
 本書や公式ドキュメントで扱ってるような利用想定の限りではこれが問題になることは少ないと考えられますが、Server Actionsを高頻度で呼び出すような実装では問題になることがあるかもしれません。
 
-そう言った場合は、そもそも高頻度にServer Actionsを呼び出すような設計・実装を見直しましょう。
+そういった場合は、そもそも高頻度にServer Actionsを呼び出すような設計・実装を見直しましょう。
