@@ -123,7 +123,7 @@ Server Actionsは基本的にサイト内でのみ利用することが可能で
 Route Handlerが`revalidatePath()`などを扱えるのはまさに上記のようなユースケースをフォローするためです。サイト外でデータ操作が行われた時には、Route Handlerで定義したAPIをWeb hookで呼び出すなどしてキャッシュをrevalidateしましょう。
 
 :::message
-Router Cacheはユーザー端末のインメモリに保存されており、全ユーザーのRouter Cacheを一括に破棄する方法はありません。上記の方法で破棄できるのは、サーバー側キャッシュのData CacheとFull Route Cacheのみです。
+Router Cacheはユーザー端末のインメモリに保存されており、全ユーザーのRouter Cacheを一括で破棄する方法はありません。上記の方法で破棄できるのは、サーバー側キャッシュのData CacheとFull Route Cacheのみです。
 :::
 
 ### ブラウザバックにおけるスクロール位置の喪失
