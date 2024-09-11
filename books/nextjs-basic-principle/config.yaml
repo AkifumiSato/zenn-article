@@ -30,5 +30,6 @@ chapters:
   - part_5
   - part_5_request_ref
   - part_5_authorization
+  - part_5_error_handling
   - part_5_self_hosting
   - part_5_parallel_intercepting_routes

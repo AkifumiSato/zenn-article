@@ -15,3 +15,18 @@ https://nextjs.org/learn
 https://gihyo.jp/book/2024/978-4-297-14061-8
 
 本書を通じてNext.jsの考え方を学び、自信を持って実装する方が増えてくれたら幸いです。
+
+## 変更履歴
+
+- [2024/08/26](https://github.com/AkifumiSato/zenn-article/pull/65/files)
+  - 初稿
+- 2024/09/xx(TBW)
+  - 第5部追加
+    - [第5部 その他のプラクティス](part_5)
+    - [リクエスト情報の参照とレスポンス](part_5_request_ref)
+    - [データアクセス層の認可](part_5_authorization)
+    - [エラーハンドリングとerror.tsx](part_5_error_handling)
+    - [Vercel以外でのHosting](part_5_self_hosting)
+    - [Parallel/Intercepting Routes](part_5_parallel_intercepting_routes)
+  - 校正
+    - [細粒度のREST API設計](part_1_fine_grained_api_design)
