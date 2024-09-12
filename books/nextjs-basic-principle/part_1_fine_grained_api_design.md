@@ -16,7 +16,7 @@ title: "細粒度のREST API設計"
 
 ### リソース単位の粒度とトレードオフ
 
-細粒度なAPIで通信回数が多くなることはChatty API（おしゃべりなAPI）と呼ばれ、逆に粗粒度なAPIで汎用性に乏しい状態はGod API（神API）と呼ばれます。これらはそれぞれアンチパターンとされることがありますが、実際には観点次第で最適解が異なるので一概にアンチパターンなのではなく、それぞれトレードオフが伴うと捉えるべきです。
+細粒度なAPIで通信回数が多くなることはChatty API（おしゃべりなAPI）と呼ばれ、逆に粗粒度なAPIで汎用性に乏しい状態はGod API（神API）と呼ばれます。これらはそれぞれアンチパターンとされることがありますが、実際には観点次第で最適解が異なるので、一概にアンチパターンなのではなくそれぞれトレードオフが伴うと捉えるべきです。
 
 | リソース単位の粒度 | 設計観点 | 通信回数観点 |
 | ------------------ | -------- | ------------ |
@@ -37,17 +37,17 @@ App Routerにおいては、Server Componentsによってデータフェッチ�
 
 バックエンドAPIの設計観点から言っても、細粒度で設計されたREST APIの実装はシンプルに実装できることが多く、メリットとなるはずです。
 
-### RSCとGraphQLのアナロジー
+### React Server ComponentsとGraphQLのアナロジー
 
-細粒度なAPI設計はReact Server Componentsで初めて注目されたものではなく、従来からBFFとしてのGraphQLサーバーに対するバックエンドAPIで好まれる傾向にありました。
+細粒度なAPI設計はReact Server Componentsで初めて注目されたものではなく、従来からGraphQL BFFに対するバックエンドAPIで好まれる傾向にありました。
 
 https://x.com/koichik/status/1825711304834953337
 
-このように、React Server Components（以下RSC）とGraphQLには共通の思想が見えます。
+このように、React Server ComponentsとGraphQLには共通の思想が見えます。
 
-[_データフェッチ on Server Components_](part_1_server_components)でも述べたように、RSCの最初のRFCはRelayの初期開発者の1人でGraphQLを通じてReactにおけるデータフェッチのベストプラクティスを追求してきた[Joe Savona氏](https://twitter.com/en_js)が提案しており、RSCには**GraphQLの精神的後継**という側面があります。
+[_データフェッチ on Server Components_](part_1_server_components)でも述べたように、React Server Componentsの最初のRFCはRelayの初期開発者の1人でGraphQLを通じてReactにおけるデータフェッチのベストプラクティスを追求してきた[Joe Savona氏](https://twitter.com/en_js)が提案しており、React Server Componentsには**GraphQLの精神的後継**という側面があります。
 
-このようなRSCとGraphQLにおける類似点については以下のQuramyさんの記事で詳しく解説されているので、興味がある方は参照してみてください。
+このようなReact Server ComponentsとGraphQLにおける類似点については、以下のQuramyさんの記事で詳しく解説されているので、興味がある方は参照してみてください。
 
 https://quramy.medium.com/react-server-components-%E3%81%A8-graphql-%E3%81%AE%E3%82%A2%E3%83%8A%E3%83%AD%E3%82%B8%E3%83%BC-89b3f5f41a01
 
