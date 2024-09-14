@@ -24,7 +24,7 @@ https://gihyo.jp/book/2024/978-4-297-14061-8
   - 第5部追加
     - [第5部 その他のプラクティス](part_5)
     - [リクエスト情報の参照とレスポンス](part_5_request_ref)
-    - [データアクセス層の認可](part_5_authorization)
+    - [データアクセス層の認可](part_5_authorization_fetch)
     - [エラーハンドリングとerror.tsx](part_5_error_handling)
     - [Vercel以外でのHosting](part_5_self_hosting)
     - [Parallel/Intercepting Routes](part_5_parallel_intercepting_routes)

@@ -29,7 +29,8 @@ chapters:
   - part_4_partial_pre_rendering
   - part_5
   - part_5_request_ref
-  - part_5_authorization
+  - part_5_authorization_path
+  - part_5_authorization_fetch
   - part_5_error_handling
   - part_5_self_hosting
   - part_5_parallel_intercepting_routes
