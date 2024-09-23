@@ -1,121 +1,107 @@
 ---
-title: "ユーザー認証とデータアクセス認可"
+title: "認証と認可"
 ---
 
 ## 要約
 
 アプリケーションで認証状態を保持する代表的な方法としては以下2つが挙げられ、App Routerにおいてもこれらを実装することが可能です。
 
-- セッションとしてRedisなどに保持（JWTは任意）
 - 保持したい情報をCookieに保持（JWTは必須）
+- セッションとしてRedisなどに保持（JWTは任意）
 
-また、アプリケーションで保持した認証状態や認証後情報に基づく認可チェックには、以下2つの方法が考えられます。これらは両立が可能で、App Routerは特に後者の実装を推奨しています。
+また、アプリケーションで保持した認証状態に基づく認可チェックには、以下2つの方法が考えられます。
 
 - URLに対する認可チェック
 - データリソースに対する認可チェック
+
+これらは両立が可能ですが、前者の実装にはApp Routerならではのいくつかの制約が伴います。
+
+## 背景
+
+Webアプリケーションにおいて、認証と認可は非常にありふれた一般的な要件です。
 
 :::message
 認証と認可は混在されがちですが、別物です。これらの違いについて自信がない方は、筆者の[過去記事](https://zenn.dev/akfm/articles/authentication-with-security)を参照ください。
 :::
 
-## 背景
+しかし、App Routerにおける認証認可の実装には、従来のWebフレームワークとは異なる独自の制約が伴います。
 
-特定のURL（e.g. `/dashboard`配下など）に対して認可チェックを儲けるような仕様は、一般的でありふれた要件です。しかし、App Routerでこのような仕様を実装するには、いくつかの制約を考慮する必要があります。
+これはApp Routerが、React Server Componentsという**自律分散性**と**並行実行性**を重視したアーキテクチャに基づいて構築されていることや、edgeランタイムとNode.jsランタイムなど**多層の実行環境**を持つといった、従来のWebフレームワークとは異なる特徴を持つことに起因します。
 
 ### 並行レンダリングされるページとレイアウト
 
-App Routerを学んだ方であれば、特定パス以下に共通処理を差し込むのに`layout.tsx`などの[レイアウト](https://nextjs.org/docs/app/building-your-application/routing/layouts-and-templates)機能が使えるかもしれないと思われた方も多いでしょう。しかし、実際にはレイアウトで認可チェックを行うことは情報漏洩につながる可能性もあり、避けるべき実装です。
+App Routerでは、Route間で共通となる[レイアウト](https://nextjs.org/docs/app/building-your-application/routing/layouts-and-templates)を`layout.tsx`などで定義することができます。特定のRoute配下に対する認可チェックをレイアウト層で一律実装できるのでは、と考える方もいらっしゃると思います。しかし、このような実装は一見期待通りに動いてるように見えても、RSC Payloadなどを通じて情報漏洩などにつながるリスクがあり、避けるべき実装です。
 
-App Routerのページとレイアウトは並行にレンダリングされるため、必ずしもレイアウト層の認可チェックがページより先に実行されるとは限りません。仕様なのかは不明ですが、現状だとページの方が先にレンダリングされるようです。そのため、一見すると期待通りに動いてるようでも、RSC Payloadなどを通じて情報漏洩するリスクがあります。
+これは、App Routerの並行実行性に起因する制約です。App Routerにおいてページとレイアウトは並行にレンダリングされるため、必ずしもレイアウト層の認可チェックがページより先に実行されるとは限りません。意図した仕様なのかは不明ですが、現状だとページの方が先にレンダリングされ始めるようです。そのため、ページ側で認可チェックをしていないと予期せぬデータ漏洩が起きる可能性があります。
 
-詳細な解説については以下の記事が参考になります。
+これらの詳細な解説については以下の記事が参考になります。
 
 https://zenn.dev/moozaru/articles/0d6c4596425da9
 
+### Server ComponentsでCookie操作は行えない
+
+React Server Componentsでは、データ取得をServer Components・データ変更をServer Actionsという責務分けがされています。Server Componentsにおける並行レンダリングやRequest Memoizationは、レンダリング中にデータ操作が起きえない前提の元設計されています。
+
+Cookie操作は他のコンポーネントのレンダリングに影響する可能性がある、一種のデータ変更です。そのため、App RouterにおけるCookie操作である`cookies().set()`や`cookies().delete()`は、Server ActionsかRoute Handler内でのみ行うことができます。
+
 ### 制限を伴うmiddleware
 
-上記の記事にもあるように、次に選択肢として上がるのはmiddlewareでしょう。middlewareならリクエストに対して一律処理を差し込むことができます。
+Next.jsのmiddlewareは、ユーザーからのリクエストに対して一律処理を差し込むことができますが、middlewareは本書執筆現在のv14以下ではランタイムがedgeに限定されており、Node APIが利用できなかったりDB操作系が非推奨など、様々な制限が伴います。
 
-ただし、Next.jsのmiddlewareはv14系現在ランタイムがedgeに限定されており、Node APIが利用できなかったりDB操作系が非推奨だったり様々な制限が伴います。
-
-将来的にNode.jsがランタイムとして選択できるようになる可能性はありますが、現状議論中の段階です。
+将来的にはNode.jsがランタイムとして選択できるようになる可能性はありますが、現状議論中の段階です。
 
 https://github.com/vercel/next.js/discussions/46722#discussioncomment-10262088
 
 ## 設計・プラクティス
 
-TBW
+App Routerにおける認証認可の実装には、上述の制約を踏まえて実装する必要があります。考えるべきポイントは大きく以下の3つです。
 
-### 参考実装
+- [認証状態の保持](#認証状態の保持)
+- [URL認可](#URL認可)
+- [データアクセス認可](#データアクセス認可)
 
-https://github.com/AkifumiSato/nextjs-book-oauth-app-example
+### 認証状態の保持
 
-## トレードオフ
+サーバー側で認証状態を参照したい場合はCookieを利用することが一般的です。認証状態をJWTにして直接Cookieに格納するか、もしくはRedisなどにセッション状態を保持してCookieにはセッションIDを格納するなどの方法が考えられます。
 
----
+公式ドキュメントに詳細な解説があるので、本書では詳細は割愛します。
 
-## 設計・プラクティス
+https://nextjs.org/docs/app/building-your-application/authentication#session-management
 
-上記背景を踏まえると、App Routerにおいて特定のパスに対する認可チェックを行う手段はいくつか考えられます。大きくは「楽観的チェック」と「厳密チェック」で2つに分けられます。
+筆者は認証拡張されたOAuthやOIDCを用いることが多く、セッションIDをJWTにしてCookieに格納しつつセッション自体はRedisに保持する方法をよく利用します。こうすることで、アクセストークンやIDトークンをブラウザ側に送信せず、Cookieのサイズを節約し、JWTにより改竄を防止することができます。
 
-- 楽観的チェック
-  - middlewareでJWT検証
-- 厳密チェック
-  - カスタムサーバーで実装
-  - ページごとに処理を実装
+:::details GitHub OAuthアプリのサンプル実装
+以下はGitHub OAuthアプリとして実装したサンプル実装の一部です。GitHubからリダイレクト後、stateトークンの検証、アクセストークンの取得、セッション保持を行っています。
 
-### middlewareでJWT検証
+https://github.com/AkifumiSato/nextjs-book-oauth-app-example/blob/main/app/api/github/callback/route.ts
+:::
 
-前述の通り、middlewareはedgeランタイムで動作するため制約が大きいのが現状です。しかし、署名したcookieの内容に基づいてログイン状態を判定するのみなどの楽観的チェックであれば、middlewareで実装することができます。
+### URL認可
 
-以下は公式ドキュメントにある[参考実装](https://nextjs.org/docs/app/building-your-application/authentication#optimistic-checks-with-middleware-optional)をさらに簡略化したものです。
+URL認可の実装は多くの場合、認証状態や認証情報に基づいて行われます。App Routerにおいては前述のようにmiddlewareがedgeランタイムでNode.js APIが利用できないため、JWTの検証のみならmiddlewareで行うことが可能です。
+
+RedisやDBのデータ参照が必要な場合には、各ページで認可のチェックを行う必要があります。認可処理を`verifySession()`として共通化した場合、各ページで以下のような実装を行うことになるでしょう。
 
 ```tsx
-import { NextRequest, NextResponse } from "next/server";
-import { decrypt } from "@/app/lib/session";
-import { cookies } from "next/headers";
+export default async function Page() {
+  await verifySession(); // 認可に失敗したら`/login`にリダイレクト
 
-const protectedRoutes = ["/dashboard"];
-
-export default async function middleware(req: NextRequest) {
-  const isProtectedRoute = protectedRoutes.includes(req.nextUrl.pathname);
-
-  const cookie = cookies().get("session")?.value;
-  const session = await decrypt(cookie);
-
-  if (isProtectedRoute && !session?.userId) {
-    return NextResponse.redirect(new URL("/login", req.nextUrl));
-  }
-
-  return NextResponse.next();
+  // ...
 }
-
-// Routes Middleware should not run on
-export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|.*\\.png$).*)"],
-};
 ```
 
-`session`というcookieにJWTを格納し、middlewareで複合化し`userId`のあるなしのみで楽観的にログイン状態をチェックしています。JWTを検証しているので改ざんからは保護されています。
+このようにデータ参照が必要な場合でもCookieに格納する情報をJWTにしている場合には、[楽観的チェック](https://nextjs.org/docs/app/building-your-application/authentication#optimistic-checks-with-middleware-optional)としてmiddlewareでJWT検証を行うことができます。
 
-しかし、このような実装について公式ドキュメントでは以下のように述べられており、データアクセス層におけるセキュリティチェックを強く推奨しています。
+### データアクセス認可
 
-> While Middleware can be useful for initial checks, it should not be your only line of defense in protecting your data. The majority of security checks should be performed as close as possible to your data source, see Data Access Layer for more information.
-> <以下Deepl訳>
-> Middlewareは初期チェックには有用ですが、データを保護するための唯一の防御手段であってはなりません。セキュリティ・チェックの大部分は、可能な限りデータ・ソースの近くで行うべきです。
-
-データアクセス層で認可チェックを行うことは、FGAC（Fine Grained Access Control、より粒度の細かいアクセス制御）を実現したい時などに特に有効です。データアクセス層における保護については次の[_データアクセスと認可_](part_5_authorization_fetch)にて詳細に解説します。
-
-### カスタムサーバーで実装
-
-TBW: Redis繋いでみる
-
-### ページごとに処理を実装
+- データアクセス層での認可チェックはFGAC（Fine-Grained Access Control）なUIと相性が良い
+- 具体的には「アクセス権限がありません」と表示するようなUIなど
+- Vercelのサンプルはデータアクセス層での認可チェックに失敗するとログイン画面に飛ばすようなものもあるが、無限ログインのループになる可能性もあるので注意が必要
 
 ## トレードオフ
 
-### データフェッチに対する暗黙的制約
+### URL認可の冗長な実装
 
-- 特に「ページごとのチェック処理」において、データフェッチが「特定の処理が通っているはずである」という前提になる
-- つまり、暗黙的な制約のため実装ミスによる漏洩リスクは少々高いと考えられる
-- これを回避するには...次章
+- RedisやDBのデータ参照が必要な場合、実装が非常に冗長になる
+- これに対する回避策として検討されてるのが、middlewareのNode.jsランタイム対応である
+- Vercelのインフラを大きく変更しなければならないためなのか、要望に対しNext.jsコアチームの動きは重いようにも感じる。今後に期待
