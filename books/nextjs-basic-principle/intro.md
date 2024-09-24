@@ -16,6 +16,10 @@ https://gihyo.jp/book/2024/978-4-297-14061-8
 
 本書を通じてNext.jsの考え方を学び、自信を持って実装する方が増えてくれたら幸いです。
 
+:::message alert
+本書は執筆時の最新であるNext.js v14系を前提としています。
+:::
+
 ## 変更履歴
 
 - [2024/08/26](https://github.com/AkifumiSato/zenn-article/pull/65/files)

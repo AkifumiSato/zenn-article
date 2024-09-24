@@ -9,10 +9,10 @@ title: "認証と認可"
 - 保持したい情報をCookieに保持（JWTは必須）
 - セッションとしてRedisなどに保持（JWTは任意）
 
-また、アプリケーションで保持した認証状態に基づく認可チェックには、以下2つの方法が考えられます。
+また、認証状態に基づく認可チェックには、以下2つの方法が考えられます。
 
-- URLに対する認可チェック
-- データリソースに対する認可チェック
+- URL認可
+- データアクセス認可
 
 これらは両立が可能ですが、前者の実装にはApp Routerならではのいくつかの制約が伴います。
 
@@ -40,13 +40,13 @@ https://zenn.dev/moozaru/articles/0d6c4596425da9
 
 ### Server ComponentsでCookie操作は行えない
 
-React Server Componentsでは、データ取得をServer Components・データ変更をServer Actionsという責務分けがされています。Server Componentsにおける並行レンダリングやRequest Memoizationは、レンダリング中にデータ操作が起きえない前提の元設計されています。
+React Server Componentsではデータ取得をServer Components、データ変更をServer Actionsという責務分けがされています。Server Componentsにおける並行レンダリングやRequest Memoizationは、レンダリング中にデータ操作が起きえない前提の元設計されています。
 
 Cookie操作は他のコンポーネントのレンダリングに影響する可能性がある、一種のデータ変更です。そのため、App RouterにおけるCookie操作である`cookies().set()`や`cookies().delete()`は、Server ActionsかRoute Handler内でのみ行うことができます。
 
 ### 制限を伴うmiddleware
 
-Next.jsのmiddlewareは、ユーザーからのリクエストに対して一律処理を差し込むことができますが、middlewareは本書執筆現在のv14以下ではランタイムがedgeに限定されており、Node APIが利用できなかったりDB操作系が非推奨など、様々な制限が伴います。
+Next.jsのmiddlewareは、ユーザーからのリクエストに対して一律処理を差し込むことができますが、middlewareは本書執筆現在ランタイムがedgeに限定されており、Node APIが利用できなかったりDB操作系が非推奨など、様々な制限が伴います。
 
 将来的にはNode.jsがランタイムとして選択できるようになる可能性はありますが、現状議論中の段階です。
 
@@ -54,7 +54,7 @@ https://github.com/vercel/next.js/discussions/46722#discussioncomment-10262088
 
 ## 設計・プラクティス
 
-App Routerにおける認証認可の実装には、上述の制約を踏まえて実装する必要があります。考えるべきポイントは大きく以下の3つです。
+App Routerにおける認証認可は、上述の制約を踏まえて実装する必要があります。考えるべきポイントは大きく以下の3つです。
 
 - [認証状態の保持](#認証状態の保持)
 - [URL認可](#URL認可)
@@ -68,7 +68,7 @@ App Routerにおける認証認可の実装には、上述の制約を踏まえ�
 
 https://nextjs.org/docs/app/building-your-application/authentication#session-management
 
-筆者は認証拡張されたOAuthやOIDCを用いることが多く、セッションIDをJWTにしてCookieに格納しつつセッション自体はRedisに保持する方法をよく利用します。こうすることで、アクセストークンやIDトークンをブラウザ側に送信せず、Cookieのサイズを節約し、JWTにより改竄を防止することができます。
+筆者は認証拡張されたOAuthやOIDCを用いることが多く、セッションIDをJWTにしてCookieに格納し、セッション自体はRedisに保持する方法をよく利用します。こうすることで、アクセストークンやIDトークンをブラウザ側に送信せず、Cookieのサイズを節約し、JWTにより改竄を防止することができます。
 
 :::details GitHub OAuthアプリのサンプル実装
 以下はGitHub OAuthアプリとして実装したサンプル実装の一部です。GitHubからリダイレクト後、stateトークンの検証、アクセストークンの取得、セッション保持を行っています。
@@ -78,9 +78,7 @@ https://github.com/AkifumiSato/nextjs-book-oauth-app-example/blob/main/app/api/g
 
 ### URL認可
 
-URL認可の実装は多くの場合、認証状態や認証情報に基づいて行われます。App Routerにおいては前述のようにmiddlewareがedgeランタイムでNode.js APIが利用できないため、JWTの検証のみならmiddlewareで行うことが可能です。
-
-RedisやDBのデータ参照が必要な場合には、各ページで認可のチェックを行う必要があります。認可処理を`verifySession()`として共通化した場合、各ページで以下のような実装を行うことになるでしょう。
+URL認可の実装は多くの場合、認証状態や認証情報に基づいて行われます。App Routerにおいては前述のようにmiddlewareでNode.js APIが利用できないため、RedisやDBのデータ参照が必要な場合は各ページで認可チェックを行う必要があります。認可処理を`verifySession()`として共通化した場合、各ページで以下のような実装を行うことになるでしょう。
 
 ```tsx
 export default async function Page() {
@@ -90,13 +88,27 @@ export default async function Page() {
 }
 ```
 
-このようにデータ参照が必要な場合でもCookieに格納する情報をJWTにしている場合には、[楽観的チェック](https://nextjs.org/docs/app/building-your-application/authentication#optimistic-checks-with-middleware-optional)としてmiddlewareでJWT検証を行うことができます。
+認証状態をやセッションIDをCookieにJWTで格納している場合は、middlewareでJWT検証を行うことができます。認証状態をJWTにしてCookieから参照できる場合は細かいチェックも可能ですが、セッションIDをJWTにしている場合にはIDの有効性や関連するセッション情報を取得できないため、あくまで[楽観的チェック](https://nextjs.org/docs/app/building-your-application/authentication#optimistic-checks-with-middleware-optional)に留まるということに注意しましょう。
 
 ### データアクセス認可
 
-- データアクセス層での認可チェックはFGAC（Fine-Grained Access Control）なUIと相性が良い
-- 具体的には「アクセス権限がありません」と表示するようなUIなど
-- Vercelのサンプルはデータアクセス層での認可チェックに失敗するとログイン画面に飛ばすようなものもあるが、無限ログインのループになる可能性もあるので注意が必要
+[_Request Memoization_](part_1_request_memoization)で述べたように、App Routerではデータフェッチ層を分離して実装するケースが多々あります。データアクセス認可が必要な場合は、分離したデータフェッチ層で実装しましょう。
+
+例えばVercelのようなSaaSにおいて、有償プランユーザーのみが利用可能なデータアクセスがあった場合、データフェッチ層に以下のような認可チェックを実装すべきでしょう。
+
+```ts
+export async function fetchPaidOnlyData() {
+  if (!(await isPaidUser())) {
+    throw new Error("Unauthorized paid user");
+  }
+
+  // ...
+}
+```
+
+:::message
+[公式ドキュメント](https://nextjs.org/docs/app/building-your-application/authentication#creating-a-data-access-layer-dal)やVercelの[SaaS参考実装](https://github.com/vercel/nextjs-subscription-payments)では、認可エラーで`redirect("/login")`のようにリダイレクトするのみのものが多いですが、認可エラー=必ずしもリダイレクトではありません。
+:::
 
 ## トレードオフ
 
