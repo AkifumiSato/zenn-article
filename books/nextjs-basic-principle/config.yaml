@@ -25,6 +25,7 @@ chapters:
   - part_3_router_cache
   - part_3_data_mutation
   - part_4
+  - part_4_rendering_without_side_effects
   - part_4_suspense_and_streaming
   - part_4_partial_pre_rendering
   - part_5

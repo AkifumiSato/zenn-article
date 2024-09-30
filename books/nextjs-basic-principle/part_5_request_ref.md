@@ -47,11 +47,18 @@ App Routerでは上記のようなリクエスト単位のオブジェクトを�
 Server Componentsでリクエスト時の情報を参照する関数などは[Dynamic Functions](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-functions)と呼ばれ、これらを利用するとRoute全体が[Dynamic Rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)となります。
 :::
 
+### `params` props
+
+Dynamic RoutesのURLパスの情報は[`params` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#params-optional)で提供されます。以下は`/posts/[slug]`と`/posts/[slug]/comments/[commentId]`というルーティングがあった場合の`params`の例です。
+
+| URL                        | `params` props                       |
+| -------------------------- | ------------------------------------ |
+| `/posts/hoge`              | `{ slug: "hoge" }`                   |
+| `/posts/hoge/comments/111` | `{ slug: "hoge", commentId: "111" }` |
+
 ### `searchParams` props
 
-[`searchParams` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional)は、URLのGETパラメータを参照するためのpropsです。`/posts/[slug]`のように、Dynamic RoutesのURLパスの情報は[`params` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#params-optional)で、GETパラメータについては`searchParams` propsにて提供されます。
-
-`searchParams` propsでは、GETパラメータのkey-value相当なオブジェクトが提供されます。
+[`searchParams` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional)は、URLのGETパラメータを参照するためのpropsです。`searchParams` propsでは、GETパラメータのkey-value相当なオブジェクトが提供されます。
 
 | URL                             | `searchParams` props             |
 | ------------------------------- | -------------------------------- |
