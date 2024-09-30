@@ -9,12 +9,12 @@ title: "認証と認可"
 - 保持したい情報をCookieに保持（JWTは必須）
 - セッションとしてRedisなどに保持（JWTは任意）
 
-また、認証状態に基づく認可チェックには、以下2つの方法が考えられます。
+また、代表的な認可チェックには以下2つが考えられます。
 
 - URL認可
 - データアクセス認可
 
-これらは両立が可能ですが、前者の実装にはApp Routerならではのいくつかの制約が伴います。
+これらの認可チェックは両立が可能ですが、URL認可の実装にはApp Routerならではの制約が伴います。
 
 ## 背景
 
@@ -30,9 +30,9 @@ Webアプリケーションにおいて、認証と認可は非常にありふ�
 
 ### 並行レンダリングされるページとレイアウト
 
-App Routerでは、Route間で共通となる[レイアウト](https://nextjs.org/docs/app/building-your-application/routing/layouts-and-templates)を`layout.tsx`などで定義することができます。特定のRoute配下に対する認可チェックをレイアウト層で一律実装できるのでは、と考える方もいらっしゃると思います。しかし、このような実装は一見期待通りに動いてるように見えても、RSC Payloadなどを通じて情報漏洩などにつながるリスクがあり、避けるべき実装です。
+App Routerでは、Route間で共通となる[レイアウト](https://nextjs.org/docs/app/building-your-application/routing/layouts-and-templates)を`layout.tsx`などで定義することができます。特定のRoute配下（e.g. `/dashboard`配下など）に対する認可チェックをレイアウト層で一律実装できるのでは、と考える方もいらっしゃると思います。しかし、このような実装は一見期待通りに動いてるように見えても、RSC Payloadなどを通じて情報漏洩などにつながるリスクがあり、避けるべき実装です。
 
-これは、App Routerの並行実行性に起因する制約です。App Routerにおいてページとレイアウトは並行にレンダリングされるため、必ずしもレイアウト層の認可チェックがページより先に実行されるとは限りません。意図した仕様なのかは不明ですが、現状だとページの方が先にレンダリングされ始めるようです。そのため、ページ側で認可チェックをしていないと予期せぬデータ漏洩が起きる可能性があります。
+これは、App Routerの並行実行性に起因する制約です。App Routerにおいてページとレイアウトは並行にレンダリングされるため、必ずしもレイアウト層に実装した認可チェックがページより先に実行されるとは限りません。意図した仕様なのかは不明ですが、現状だとページの方が先にレンダリングされ始めるようです。そのため、ページ側で認可チェックをしていないと予期せぬデータ漏洩が起きる可能性があります。
 
 これらの詳細な解説については以下の記事が参考になります。
 
@@ -46,7 +46,7 @@ Cookie操作は他のコンポーネントのレンダリングに影響する�
 
 ### 制限を伴うmiddleware
 
-Next.jsのmiddlewareは、ユーザーからのリクエストに対して一律処理を差し込むことができますが、middlewareは本書執筆現在ランタイムがedgeに限定されており、Node APIが利用できなかったりDB操作系が非推奨など、様々な制限が伴います。
+Next.jsのmiddlewareは、ユーザーからのリクエストに対して一律処理を差し込むことができますが、middlewareは本書執筆現在ランタイムがedgeに限定されており、Node.js APIが利用できなかったりDB操作系が非推奨など、様々な制限が伴います。
 
 将来的にはNode.jsがランタイムとして選択できるようになる可能性はありますが、現状議論中の段階です。
 
@@ -62,16 +62,16 @@ App Routerにおける認証認可は、上述の制約を踏まえて実装す�
 
 ### 認証状態の保持
 
-サーバー側で認証状態を参照したい場合はCookieを利用することが一般的です。認証状態をJWTにして直接Cookieに格納するか、もしくはRedisなどにセッション状態を保持してCookieにはセッションIDを格納するなどの方法が考えられます。
+サーバー側で認証状態を参照したい場合、Cookieを利用することが一般的です。認証状態をJWTにして直接Cookieに格納するか、もしくはRedisなどにセッション状態を保持してCookieにはセッションIDを格納するなどの方法が考えられます。
 
-公式ドキュメントに詳細な解説があるので、本書では詳細は割愛します。
+公式ドキュメントに詳細な解説があるので、本書でこれらの詳細は割愛します。
 
 https://nextjs.org/docs/app/building-your-application/authentication#session-management
 
-筆者は認証拡張されたOAuthやOIDCを用いることが多く、セッションIDをJWTにしてCookieに格納し、セッション自体はRedisに保持する方法をよく利用します。こうすることで、アクセストークンやIDトークンをブラウザ側に送信せず、Cookieのサイズを節約し、JWTにより改竄を防止することができます。
+筆者は、認証利用可能に拡張されたOAuthやOIDCを用いることが多く、セッションIDをJWTにしてCookieに格納し、セッション自体はRedisに保持する方法をよく利用します。こうすることで、アクセストークンやIDトークンをブラウザ側に送信せず、Cookieのサイズを節約し、JWTにより改竄を防止することができます。
 
 :::details GitHub OAuthアプリのサンプル実装
-以下はGitHub OAuthアプリとして実装したサンプル実装の一部です。GitHubからリダイレクト後、stateトークンの検証、アクセストークンの取得、セッション保持を行っています。
+以下はGitHub OAuthアプリとして実装したサンプル実装の一部です。GitHubからリダイレクト後、CSRF攻撃対策のためのstateトークン検証、アクセストークンの取得、セッション保持などを行っています。
 
 https://github.com/AkifumiSato/nextjs-book-oauth-app-example/blob/main/app/api/github/callback/route.ts
 :::
@@ -80,7 +80,7 @@ https://github.com/AkifumiSato/nextjs-book-oauth-app-example/blob/main/app/api/g
 
 URL認可の実装は多くの場合、認証状態や認証情報に基づいて行われます。App Routerにおいては前述のようにmiddlewareでNode.js APIが利用できないため、RedisやDBのデータ参照が必要な場合は各ページで認可チェックを行う必要があります。認可処理を`verifySession()`として共通化した場合、各ページで以下のような実装を行うことになるでしょう。
 
-```tsx
+```tsx :page.tsx
 export default async function Page() {
   await verifySession(); // 認可に失敗したら`/login`にリダイレクト
 
@@ -88,7 +88,7 @@ export default async function Page() {
 }
 ```
 
-認証状態をやセッションIDをCookieにJWTで格納している場合は、middlewareでJWT検証を行うことができます。認証状態をJWTにしてCookieから参照できる場合は細かいチェックも可能ですが、セッションIDをJWTにしている場合にはIDの有効性や関連するセッション情報を取得できないため、あくまで[楽観的チェック](https://nextjs.org/docs/app/building-your-application/authentication#optimistic-checks-with-middleware-optional)に留まるということに注意しましょう。
+CookieにJWTを格納している場合は、middlewareでJWTの検証を行うことができます。認証状態をJWTに含めている場合は、さらに細かいチェックも可能です。一方、セッションIDのみをJWTに含めるようにしている場合には、IDの有効性やセッション情報の取得にRedisやDB接続が必要になるため、middlewareで行えるのは[楽観的チェック](https://nextjs.org/docs/app/building-your-application/authentication#optimistic-checks-with-middleware-optional)に留まるということに注意しましょう。
 
 ### データアクセス認可
 
@@ -99,10 +99,25 @@ export default async function Page() {
 ```ts
 export async function fetchPaidOnlyData() {
   if (!(await isPaidUser())) {
-    throw new Error("Unauthorized paid user");
+    throw new Unauthorized("Unauthorized paid user");
   }
 
   // ...
+}
+```
+
+X（旧Twitter）のようにブロックやミュートなど、きめ細かいアクセス制御（Fine-Grained Access Control）が必要な場合は、バックエンドAPIにアクセス制御を隠蔽する場合もあります。
+
+```ts
+export async function fetchPost(postId: string) {
+  const res = await fetch(`https://dummyjson.com/posts/${postId}`);
+  if (res.status === 401) {
+    const { reason } = (await res.json()) as PostApiError;
+    // e.g. reason: 「投稿者からブロックされています」など
+    throw new Forbidden(reason);
+  }
+
+  return (await res.json()) as Post;
 }
 ```
 
@@ -114,6 +129,31 @@ export async function fetchPaidOnlyData() {
 
 ### URL認可の冗長な実装
 
-- RedisやDBのデータ参照が必要な場合、実装が非常に冗長になる
-- これに対する回避策として検討されてるのが、middlewareのNode.jsランタイム対応である
-- Vercelのインフラを大きく変更しなければならないためなのか、要望に対しNext.jsコアチームの動きは重いようにも感じる。今後に期待
+認証状態に基づくURL認可はありふれた要件ですが、認証状態を確認するのにRedisやDBのデータ参照が必要な場合、前述のように各`page.tsx`で認可チェックを行う必要があり、実装が少々冗長になります。
+
+```tsx :page.tsx
+export default async function Page() {
+  await verifySession(); // 認可に失敗したら`/login`にリダイレクト
+
+  // ...
+}
+```
+
+これに対する回避策として検討されているのが、既出の[middlewareのNode.jsランタイム対応](https://github.com/vercel/next.js/discussions/46722#discussioncomment-10262088)です。これが実現されれば、middlewareで一律認可チェックを行うことが可能になり、URL認可実装をシンプルに行うことができます。
+
+```ts :middelware.ts
+// ...
+export default async function middleware(req: NextRequest) {
+  const path = req.nextUrl.pathname;
+  // RedisやDBからセッション情報を取得、**これが現状できない**
+  const session = await getSession();
+
+  if (isMatch(path, protectedRoutes) && !session?.userId) {
+    return NextResponse.redirect(new URL("/login", req.nextUrl));
+  }
+
+  return NextResponse.next();
+}
+```
+
+middlewareのNode.js対応はコミュニティでそれなりに賛同の声が上がっているものの、Vercelのインフラを大きく変更しないといけないためなのか、Next.jsコアチームの動きは重いようにも感じます。今後の動向に期待しましょう。
