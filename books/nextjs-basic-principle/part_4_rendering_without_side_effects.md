@@ -4,7 +4,7 @@ title: "副作用のないレンダリング"
 
 ## 要約
 
-Reactコンポーネントのレンダリングは副作用を含むべきでなく、これはServer Componentsにおいても同様です。
+Reactコンポーネントのレンダリングは副作用を含むべきでありません。Server Componentsにおいてもこれは同様で、データフェッチのみが例外として扱われます。
 
 ## 背景
 
@@ -12,25 +12,32 @@ Reactの最大の特徴の1つは、[宣言的](https://ja.wikipedia.org/wiki/%E
 
 https://ja.react.dev/learn/keeping-components-pure#side-effects-unintended-consequences
 
-この強力な前提により、Reactはレンダリングを適切なタイミングで適切な範囲で行うことができます。
-
 ### Client Componentsにおける副作用
 
-とはいえ、WebのUI実装にはイベントハンドラや非同期処理など、副作用がつきものです。Reactではこれらの副作用をイベントハンドラ内や`useEffect()`などの[Escape Hatches](https://ja.react.dev/learn/escape-hatches)で実装します。
+とはいえ、WebのUI実装には様々な副作用がつきものです。Reactではこのような副作用を扱う場所として、イベントハンドラや`useEffect()`を推奨しています。
 
 https://ja.react.dev/learn/keeping-components-pure#where-you-\_can\_-cause-side-effects
 
 ## 設計・プラクティス
 
-Server Componentsも同様にReactコンポーネントであり、レンダリングに副作用を含むべきではありません。App Routerもこの原則に沿って、各種APIが設計されています。
+Server Componentsも同様にReactコンポーネントであり、**データフェッチを除く副作用**を含むべきではありません。App Routerもこの原則に沿って、各種APIが設計されています。
 
-:::message
-Server Componentsはページ遷移時に1度だけレンダリングされるように見えますが、実際にはServer Components内では`Promise`が`throw`されSuspendされることもあるため、レンダリングの中止と再開が行われる可能性があります。
-:::
+### データフェッチの負荷軽減と一貫性
 
-### Request Memoization、`React.cache()`
+[_データフェッチ on Server Components_](part_1_server_components)で述べたように、App RouterにおけるデータフェッチはServer Componentsで行うことが推奨されます。外部通信の処理は副作用の1つと考えられることが多いですが、Server Componentsではデータフェッチに限り扱うことができます。その他の副作用はServer Actionsを通じて行うことが推奨されます。
 
-TBW
+また、App RouterではRequest Memoizationと呼ばれる`fetch()`のメモ化を提供しており、これによりデータアクセス負荷の軽減とレンダリングにおける一貫性を実現しています。これは`React.cache()`を利用することで実現されており、DBアクセスなどでもこれを利用して実装することが推奨されます。
+
+```ts
+export const getPost = cache(async (id: number) => {
+  const post = await db.query.posts.findFirst({
+    where: eq(posts.id, id),
+  });
+
+  if (!post) throw new NotFoundError("Post not found");
+  return post;
+});
+```
 
 ### 並行レンダリング
 
@@ -41,3 +48,7 @@ TBW
 TBW
 
 ## トレードオフ
+
+### リクエストごとのロギング
+
+TBW
