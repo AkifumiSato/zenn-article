@@ -4,7 +4,7 @@ title: "副作用のないレンダリング"
 
 ## 要約
 
-Reactコンポーネントのレンダリングは副作用を含むべきでありません。Server Componentsにおいてもこれは同様で、データフェッチのみが例外として扱われます。
+Reactコンポーネントのレンダリングは副作用を含むべきではありません。Server Componentsにおいてもこれは同様で、データフェッチのみが例外として扱われます。
 
 ## 背景
 
@@ -12,11 +12,13 @@ Reactの最大の特徴の1つは、[宣言的](https://ja.wikipedia.org/wiki/%E
 
 https://ja.react.dev/learn/keeping-components-pure#side-effects-unintended-consequences
 
-### Client Componentsにおける副作用
+とはいえ、WebのUI実装には様々な副作用がつきものです。ReactではClient Componentsにおける副作用のハンドリングを、イベントハンドラや`useEffect()`で行うことを推奨しています。
 
-とはいえ、WebのUI実装には様々な副作用がつきものです。Reactではこのような副作用を扱う場所として、イベントハンドラや`useEffect()`を推奨しています。
+### 並行レンダリング
 
-https://ja.react.dev/learn/keeping-components-pure#where-you-\_can\_-cause-side-effects
+React18で並行レンダリングの機能が導入されましたが、これはコンポーネントが純粋であることを前提としています。もしレンダリングに副作用が含まれるまま並行レンダリングにしてしまうと、レンダリング結果が不安定になってしまう可能性があります。
+
+このように、Reactの多くの機能はコンポーネントが副作用を持たないことを前提としています。
 
 ## 設計・プラクティス
 
@@ -39,16 +41,34 @@ export const getPost = cache(async (id: number) => {
 });
 ```
 
-### 並行レンダリング
-
-TBW
-
 ### Cookie操作
 
-TBW
+App RouterにおいてCookie操作は典型的な副作用の1つであり、Server Componentsからは変更操作である`cookies().set()`や`cookies().delete()`は呼び出すことができません。
+
+https://nextjs.org/docs/app/api-reference/functions/cookies
+
+[_データ操作とServer Actions_](part_3_data_mutation)でも述べたように、Cookie操作や、APIに対するデータ変更リクエストなど変更操作はServer Actionsで行いましょう。
 
 ## トレードオフ
 
-### リクエストごとのロギング
+### レンダリングのlog
 
-TBW
+データフェッチ同様loggingもよく副作用の1つとして扱われます。loggingは他のコンポーネントのレンダリングに影響することはありませんが、Server Componentsで実装したい場合は注意が必要です。Server ComponentsはClient Componentsと違ってレンダリングされる頻度は少ないですが、Suspend（`Promise`の`throw`）によってレンダリングの中断や再開を行う可能性があり、実装次第では意図せず何度もlog出力されてしまう可能性もあります。
+
+少々極端な例ですが、以下のコンポーネントに`promise={setTimeout(1000)}`を渡すと、2回consoleが出力されます。
+
+```tsx
+function ConcurrentComponent({ promise }: { promise: Promise<void> }) {
+  console.log("render: ConcurrentComponent");
+  use(promise);
+  return <div>ConcurrentComponent</div>;
+}
+```
+
+`use()`は`Promise`を受け取って未解決の場合`throw`し、`Promise`が解決するとそのSuspense境界を再実行します。そのため、上記実装では`conosle.log()`が2回実行されます。
+
+このように、実装次第ではServer Componentsも再実行される可能性もあるので、logの実装には注意が必要です。`return`の直前に実装するようにしつつ、v15以上なら上述の`after`を利用しましょう。
+
+:::message
+Next.js@v15RCで導入された[`after()`](https://nextjs.org/docs/app/api-reference/functions/unstable_after)は、レスポンス完了後に実行されるライフサイクルメソッドです。ただし、`after()`は実行を遅延するのみなので、上記のように`use()`より前に`after()`を実行すると、やはり2回log出力されます。
+:::
