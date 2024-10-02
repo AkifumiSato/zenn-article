@@ -1,24 +1,18 @@
 ---
-title: "リクエスト情報の参照とレスポンス"
+title: "リクエストの参照とレスポンスの操作"
 ---
 
 ## 要約
 
 App Routerでは他フレームワークにあるようなリクエストオブジェクト(`req`)やレスポンスオブジェクト(`res`)を参照することはできません。代わりに必要な情報を参照するためのhooksや関数などのAPIが提供されています。
 
-- [`searchParams` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional)
-- [`cookies()`](https://nextjs.org/docs/app/api-reference/functions/cookies)
-- [`headers()`](https://nextjs.org/docs/app/api-reference/functions/headers)
-- [`useParams()`](https://nextjs.org/docs/app/api-reference/functions/use-params)
-- [`useSearchParams()`](https://nextjs.org/docs/app/api-reference/functions/use-search-params)
-- [`notFound()`](https://nextjs.org/docs/app/api-reference/functions/not-found)
-- [`redirect()`](https://nextjs.org/docs/app/api-reference/functions/redirect)
-- [`permanentRedirect()`](https://nextjs.org/docs/app/api-reference/functions/permanentRedirect)
-- [その他](https://nextjs.org/docs/app/api-reference/functions)
+https://nextjs.org/docs/app/api-reference/functions
+
+https://nextjs.org/docs/app/api-reference/file-conventions/page#props
 
 ## 背景
 
-Pages Routerはじめ従来のフレームーワークでは、リクエストオブジェクト(`req`)やレスポンスオブジェクト(`res`)を参照することで様々な情報にアクセスしたり、レスポンスをカスタマイズすることができました。
+Pages Router然り従来のNode.jsのフレームーワークでは、リクエストオブジェクト(`req`)やレスポンスオブジェクト(`res`)を参照することで様々な情報にアクセスしたり、レスポンスをカスタマイズするような設計が広く使われてきました。
 
 ```tsx
 export const getServerSideProps = (async ({ req, res }) => {
@@ -41,13 +35,15 @@ export const getServerSideProps = (async ({ req, res }) => {
 
 ## 設計・プラクティス
 
-App Routerでは上記のようなリクエスト単位のオブジェクトを提供する代わりに、それぞれ必要な情報を参照するための関数などのAPIが提供されています。
+App Routerでは上記のようなリクエスト単位のオブジェクトを提供する代わりに、それぞれ必要な情報を参照するためのAPIが提供されています。
 
 :::message
 Server Componentsでリクエスト時の情報を参照する関数などは[Dynamic Functions](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-functions)と呼ばれ、これらを利用するとRoute全体が[Dynamic Rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)となります。
 :::
 
-### `params` props
+### URL情報の参照
+
+#### `params` props
 
 Dynamic RoutesのURLパスの情報は[`params` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#params-optional)で提供されます。以下は`/posts/[slug]`と`/posts/[slug]/comments/[commentId]`というルーティングがあった場合の`params`の例です。
 
@@ -56,7 +52,7 @@ Dynamic RoutesのURLパスの情報は[`params` props](https://nextjs.org/docs/a
 | `/posts/hoge`              | `{ slug: "hoge" }`                   |
 | `/posts/hoge/comments/111` | `{ slug: "hoge", commentId: "111" }` |
 
-### `searchParams` props
+#### `searchParams` props
 
 [`searchParams` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional)は、URLのGETパラメータを参照するためのpropsです。`searchParams` propsでは、GETパラメータのkey-value相当なオブジェクトが提供されます。
 
@@ -80,40 +76,7 @@ export default function Page({
 }
 ```
 
-### `cookies()`
-
-[`cookies()`](https://nextjs.org/docs/app/api-reference/functions/cookies)は、Cookie情報を参照するための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
-
-:::message
-`cookies().set()`をはじめとしたCookieの操作は、Server ActionsやRoute Handlerでのみ利用でき、**Server Componentsでは利用できません**。
-:::
-
-```tsx
-import { cookies } from "next/headers";
-
-export default function Page() {
-  const cookieStore = cookies();
-  const theme = cookieStore.get("theme");
-  return "...";
-}
-```
-
-### `headers()`
-
-[`headers()`](https://nextjs.org/docs/app/api-reference/functions/headers)は、リクエストヘッダーを参照するための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
-
-```tsx
-import { headers } from "next/headers";
-
-export default function Page() {
-  const headersList = headers();
-  const referer = headersList.get("referer");
-
-  return <div>Referer: {referer}</div>;
-}
-```
-
-### `useParams()`
+#### `useParams()`
 
 [`useParams()`](https://nextjs.org/docs/app/api-reference/functions/use-params)は、Client ComponentsでURLパスに含まれるDynamic Params（e.g. `/posts/[slug]`の`[slug]`部分）を参照するためのhooksです。
 
@@ -133,7 +96,7 @@ export default function ExampleClientComponent() {
 }
 ```
 
-### `useSearchParams()`
+#### `useSearchParams()`
 
 [`useSearchParams()`](https://nextjs.org/docs/app/api-reference/functions/use-search-params)は、Client ComponentsでURLのGETパラメータを参照するためのhooksです。
 
@@ -153,7 +116,58 @@ export default function SearchBar() {
 }
 ```
 
-### `notFound()`
+### ヘッダー情報の参照
+
+### `headers()`
+
+[`headers()`](https://nextjs.org/docs/app/api-reference/functions/headers)は、リクエストヘッダーを参照するための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
+
+```tsx
+import { headers } from "next/headers";
+
+export default function Page() {
+  const headersList = headers();
+  const referer = headersList.get("referer");
+
+  return <div>Referer: {referer}</div>;
+}
+```
+
+### クッキー情報の参照と変更
+
+#### `cookies()`
+
+[`cookies()`](https://nextjs.org/docs/app/api-reference/functions/cookies)は、Cookie情報の参照や変更を担うオブジェクトを取得するための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
+
+:::message
+`cookies().set()`をはじめとしたCookieの操作は、Server ActionsやRoute Handlerでのみ利用でき、**Server Componentsでは利用できません**。
+:::
+
+```tsx :app/page.tsx
+import { cookies } from "next/headers";
+
+export default function Page() {
+  const cookieStore = cookies();
+  const theme = cookieStore.get("theme");
+  return "...";
+}
+```
+
+```ts :app/actions.ts
+"use server";
+
+import { cookies } from "next/headers";
+
+async function create(data) {
+  cookies().set("name", "lee");
+
+  // ...
+}
+```
+
+### HTTP Status Code（`404`,`307`,`308`など）
+
+#### `notFound()`
 
 [`notFound()`](https://nextjs.org/docs/app/api-reference/functions/not-found)は、ページが存在しないことをブラウザに示すための関数です。Server Componentsで利用することができます。
 
@@ -177,7 +191,7 @@ export default async function Profile({ params }: { params: { id: string } }) {
 }
 ```
 
-### `redirect()`
+#### `redirect()`
 
 [`redirect()`](https://nextjs.org/docs/app/api-reference/functions/redirect)は、リダイレクトを行うための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
 
@@ -200,7 +214,7 @@ export default async function Profile({ params }: { params: { id: string } }) {
 }
 ```
 
-### `permanentRedirect()`
+#### `permanentRedirect()`
 
 [`permanentRedirect()`](https://nextjs.org/docs/app/api-reference/functions/permanentRedirect)は、永続的なリダイレクトを行うための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
 
@@ -231,4 +245,10 @@ https://nextjs.org/docs
 
 ## トレードオフ
 
-特になし
+### `req`拡張によるセッション情報の持ち運び
+
+従来`req`オブジェクトは、3rd partyライブラリが拡張して`req.session`にセッション情報を格納するような実装が見られました。App Routerではこのような実装はできず、これに代わるセッション管理の仕組みなどを実装する必要があります。
+
+以下はGitHub OAuthアプリとして実装したサンプル実装の一部です。`sessionStore.get()`でRedisに格納したセッション情報を取得できます。
+
+https://github.com/AkifumiSato/nextjs-book-oauth-app-example/blob/main/app/api/github/callback/route.ts#L12
