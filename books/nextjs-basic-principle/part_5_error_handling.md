@@ -4,32 +4,45 @@ title: "エラーハンドリング"
 
 ## 要約
 
-App Routerにおけるサーバー側エラー時のUIは`app/not-found.tsx`や各Route Segmentで定義する`error.tsx`で行います。また、クライアントサイドのエラーは、従来からある`ErrorBoundary`パターンで対応しましょう。
+App Routerにおけるサーバー側エラー時のUIは`app/not-found.tsx`や各Route Segmentで定義する`error.tsx`で行うことが可能です。また、クライアントサイドのエラーは、従来からある`ErrorBoundary`パターンで対応しましょう。
 
 ## 背景
 
-Pages Routerではサーバー側エラー発生時、エラーページが返却されます。エラーページの定義は、エラーの種類に応じて以下のファイルで定意義可能です。
+Pages Routerにおけるエラーハンドリングは、主に以下の観点で考える必要があります。
 
-- 404 Not Found: `404.tsx`
-- 500 Internal Server Error: `500.tsx`
-- その他のエラー: `_error.tsx`
+- SSR時のエラー
+- API Routesにおけるエラー
+- クライアントサイドのエラー
 
-クライアントサイドのエラーハンドリングは、`ErrorBoundary`と呼ばれるコンポーネントを実装するパターンが広く普及しています。
+### SSR時のエラー
+
+Pages RouterではSSR時にエラーが発生すると、エラーページが返却されます。エラーページの定義は、エラーの種類に応じて以下のファイルで定義することが可能です。
+
+- `404.tsx`: 404 Not Found
+- `500.tsx`: 500 Internal Server Error
+- `_error.tsx`: その他のエラー
+
+### API Routesにおけるエラー
+
+API Routesにおけるエラーハンドリングは、適切なHTTP Status Codeやメッセージの返却が基本となります。API Routesを3rd partyライブラリと統合している場合は、エラーハンドリングの実装はそのライブラリに依存することになります。
+
+### クライアントサイドのエラー
+
+クライアントサイドのエラーハンドリングはNext.jsからは提供されていないため、Reactドキュメントなどでも紹介されている`ErrorBoundary`パターンで対応することが可能です。
 
 https://ja.react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary
 
 ## 設計・プラクティス
 
-App Routerでも同様にエラー時のUIをファイル規約で定義しますが、Route Segment単位でエラーUIを定義可能になった点が大きな違いです。
+App Routerにおけるエラーハンドリングは、Pages Routerと類似する以下3つの観点で考える必要があります。
 
-- サーバー側エラーは`error.tsx`で定義しましょう
-  - Server Actionsのエラーも同様
-  - formのバリデーションエラーやトーストで表示したいような回復可能なエラーについては、conformなどのformライブラリを利用すると実装が容易
-- クライアントサイドのエラーハンドリングには、従来同様`ErrorBoundary`を定義して利用しましょう
+- [Server Componentsのエラー](#server-componentsのエラー)
+- [Server Actionsのエラー](#server-actionsのエラー)
+- [クライアントサイドのエラー](#クライアントサイドのエラー)
 
-### `error.tsx`
+### Server Componentsのエラー
 
-App Routerでは、サーバー側エラー時のUIをRoute Segment単位の`error.tsx`で定義します。Route Segment単位なのでレイアウトはそのままで、ページ部分だけに`error.tsx`で定義したUIが表示されます。
+App Routerでは、サーバー側エラー時のUIをRoute Segment単位の`error.tsx`で定義します。Route Segment単位なのでレイアウトはそのままで、ページ部分だけに`error.tsx`で定義したUIが表示されます。以下は[公式ドキュメント](https://nextjs.org/docs/app/api-reference/file-conventions/error#how-errorjs-works)にある図です。
 
 ![エラー時のUIイメージ](/images/nextjs-basic-principle/error-ui.png)
 
@@ -62,11 +75,13 @@ export default function ErrorPage({
 }
 ```
 
-### `not-found.tsx`
+TBW: `not-found.tsx`
 
-### Server Actionsの回復可能なエラー
+### Server Actionsのエラー
 
-### クライアントサイドのエラーからの回復
+TBW: 回復可能なエラー、回復不能なエラー
+
+### クライアントサイドのエラー
 
 - Client Componentsでのエラーハンドリングには、従来同様`ErrorBoundary`を利用しましょう
 
