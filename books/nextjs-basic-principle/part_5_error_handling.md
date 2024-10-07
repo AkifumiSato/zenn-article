@@ -19,7 +19,7 @@ Pages Routerにおけるエラーハンドリングは、主に以下の観点�
 
 ### ページにおけるエラー
 
-Pages Routerにおいてサーバー側で回復不能なエラーが発生すると、エラーページが表示されます。エラーページの定義は、エラーの種類に応じて以下のファイルで定義することが可能です。
+Pages Routerにおいてサーバー側エラーが発生すると、エラーページが表示されます。エラーページの定義は、エラーの種類に応じて以下のファイルで定義することが可能です。
 
 - `404.tsx`: 404 Not Found
 - `500.tsx`: 500 Internal Server Error
@@ -28,22 +28,25 @@ Pages Routerにおいてサーバー側で回復不能なエラーが発生す�
 
 ### API Routesにおけるエラー
 
-API Routesにおけるエラーハンドリングは、適切なHTTP Status Codeやメッセージの返却が基本となります。[tRPC](https://trpc.io/)やGraphQLなどを採用し、API Routesを3rd partyライブラリと統合している場合は、エラーハンドリングの実装はそのライブラリに依存することになります。
+API Routesにおけるエラーハンドリングは、適切なHTTP Status Codeやメッセージの返却が基本となります。API RoutesをGraphQLや[tRPC](https://trpc.io/)などの3rd partyライブラリと統合している場合には、エラーハンドリングの実装がライブラリに依存することもあります。
 
 ## 設計・プラクティス
 
-App Routerにおけるエラーハンドリングは、Pages Routerと類似する以下3つの観点で考える必要があります。
-
-- [Server Componentsのエラー](#server-componentsのエラー)
-- [Server Actionsのエラー](#server-actionsのエラー)
+App Routerにおけるエラーハンドリングは大きく分けて、Server ComponentsとServer Actionsの2つで考える必要があります。
 
 ### Server Componentsのエラー
 
-App Routerでは、サーバー側エラー時のUIをRoute Segment単位の`error.tsx`で定義します。Route Segment単位なのでレイアウトはそのままで、ページ部分だけに`error.tsx`で定義したUIが表示されます。以下は[公式ドキュメント](https://nextjs.org/docs/app/api-reference/file-conventions/error#how-errorjs-works)にある図です。
+App Routerでは、サーバー側エラー時のUIをRoute Segment単位の`error.tsx`で定義することができます。Route Segment単位なのでレイアウトはそのまま、ページ部分だけが`error.tsx`で定義したUIが表示されます。以下は[公式ドキュメント](https://nextjs.org/docs/canary/app/api-reference/file-conventions/error#how-errorjs-works)にある図です。
 
 ![エラー時のUIイメージ](/images/nextjs-basic-principle/error-ui.png)
 
-`error.tsx`はServer Components、Server Actions、そしてClient ComponentsのSSR時にエラーが発生した場合に利用されます。`error.tsx`はpropsにリロード的振る舞いをする`reset()`を受け取るので、これを利用して再度レンダリングを試みるようなUI実装がよく行われます。
+`error.tsx`は主にServer Components、Server Actionsでエラーが発生した場合に利用されます。
+
+:::message
+厳密にはSSR時のClient Componentsでエラーが起きた場合にも`error.tsx`が利用されます。
+:::
+
+`error.tsx`はpropsで、リロード的振る舞いをする`reset()`を受け取るので、これを利用して再度レンダリングを試みるようなUI実装がよく行われます。
 
 ```tsx
 "use client";
@@ -72,8 +75,13 @@ export default function ErrorPage({
 }
 ```
 
-TBW: `not-found.tsx`
-TBW: `global-error.tsx`
+また、App Routerでは特別なエラーをthrowするためのAPIとして`notFound()`を提供しています。HTTPにおける404 Not Found相当のUIを通常のエラーと分けたいケースは非常によくあるユースケースで、App Routerではこれを`not-found.tsx`で定義することが可能です。
+
+https://nextjs.org/docs/canary/app/api-reference/file-conventions/not-found
+
+:::message
+多くの場合、`notFound()`はHTTP Status Codeとして404 Not Foundを返しますが、`<Suspens>`内などで利用すると200 OKを返すことがあります。この際、`<meta name="robots" content="noindex" />`タグを挿入してGoogleクローラなどに対してIndexingの必要がないことを示します。
+:::
 
 ### Server Actionsのエラー
 
