@@ -4,11 +4,9 @@ title: "エラーハンドリング"
 
 ## 要約
 
-App Routerにおけるエラーハンドリングは主に、Server ComponentsとServer Actionsの2つで発生します。特にServer Actionsについては、回復可能なエラーと回復不能なエラーを区別して実装する必要があります。
+App Routerにおけるエラーハンドリングは主に、Server ComponentsとServer Actionsの2つで発生します。
 
-Server ComponentsのエラーやServer Actionsにおける回復不能なエラーでは、エラー時UIを`error.tsx`や`not-found.tsx`で定義が可能が可能です。
-
-一方Server Actionsにおける回復可能なエラーは、戻り値でエラーを表現する必要があります。
+Server Componentsのエラーは、エラー時UIを`error.tsx`や`not-found.tsx`で定義が可能が可能です。一方Server Actionsにおけるエラーは、基本的に戻り値で表現することが推奨されます。
 
 ## 背景
 
@@ -75,7 +73,7 @@ export default function ErrorPage({
 }
 ```
 
-また、App Routerでは特別なエラーをthrowするためのAPIとして`notFound()`を提供しています。HTTPにおける404 Not Found相当のUIを通常のエラーと分けたいケースは非常によくあるユースケースで、App Routerではこれを`not-found.tsx`で定義することが可能です。
+また、App Routerでは特別なエラーをthrowするためのAPIとして`notFound()`を提供しています。HTTPにおける404 Not Found相当のUIを通常のエラーと分けたいケースは非常によくあるユースケースで、App Routerではこの際のUIを`not-found.tsx`で定義することが可能です。
 
 https://nextjs.org/docs/canary/app/api-reference/file-conventions/not-found
 
@@ -85,7 +83,50 @@ https://nextjs.org/docs/canary/app/api-reference/file-conventions/not-found
 
 ### Server Actionsのエラー
 
-TBW: 回復可能なエラー、回復不能なエラー
+Server Actionsのエラーは、**予想可能なエラー**と**予期せぬエラー**で分けて考える必要があります。
+
+Server Actionsは多くの場合、データ更新の際に呼び出されます。何かしらの理由でデータ更新に失敗したとしても、ユーザーは再度更新をリクエストできることが望ましいUXと考えられます。しかし、Server Actionsではエラーが`throw`されると、前述の通り`error.tsx`で定義したエラー時UIが表示されます。`error.tsx`が表示され、直前までページで入力してた`<form>`の入力内容などが失われると、ユーザーは操作を最初からやり直すことになりかねません。そのため、Server Actionsでエラーは極力`throw`せず、戻り値でエラーを表現することが推奨されます。
+
+以下は[conform](https://ja.conform.guide/integration/nextjs)を使ったServer Actionsにおけるzodバリデーションの実装例です。バリデーションエラー時は`throw`せず、`submission.reply()`を返している点がポイントです。
+
+```tsx
+"use server"; // action.ts
+
+import { redirect } from "next/navigation";
+import { parseWithZod } from "@conform-to/zod";
+import { loginSchema } from "@/app/schema";
+
+export async function login(prevState: unknown, formData: FormData) {
+  const submission = parseWithZod(formData, {
+    schema: loginSchema,
+  });
+
+  if (submission.status !== "success") {
+    return submission.reply();
+  }
+
+  redirect("/dashboard");
+}
+```
+
+formライブラリを利用しない場合は、以下のように自身で戻り値を定義しましょう。
+
+```tsx
+"use server";
+
+import { redirect } from "next/navigation";
+
+export async function createUser(prevState: any, formData: FormData) {
+  const res = await fetch("https://...");
+  const json = await res.json();
+
+  if (!res.ok) {
+    return { message: "Please enter a valid email" };
+  }
+
+  redirect("/dashboard");
+}
+```
 
 ## トレードオフ
 
