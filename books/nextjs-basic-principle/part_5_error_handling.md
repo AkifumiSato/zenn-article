@@ -130,9 +130,12 @@ export async function createUser(prevState: any, formData: FormData) {
 
 ## トレードオフ
 
-### クライアントサイドにおけるレンダリング時エラー
+### クライアントサイドにおけるレンダリングエラー
 
-- Client Componentsでのエラーはブラウザ依存など致命的なエラーな可能性があり、リトライでは解決しない可能性が高い
-- もしエラーログ収集や特別なUIを出したいなどの場合には、自身で`ErrorBoundary`を実装してハンドリングしましょう
+App Routerが提供する`error.tsx`などは、サーバー側エラー時に利用されます。クライアントサイドにおけるレンダリングエラーのハンドリングが必要な場合は、開発者が自身で`<ErrorBoundary>`を定義する必要があります。
 
 https://ja.react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary
+
+また、クライアントサイドにおいてレンダリングエラーが発生する場合、ブラウザの種類やバージョンなどに依存するエラーの可能性が高く、サーバー側とは異なりリトライしても回復しない可能性があります。クライアントサイドのエラーは当然ながらサーバーに記録されないので、開発者はエラーが起きた事実さえ把握が難しくなります。
+
+クライアントサイドのエラー実態を把握したい場合、RUM（Real User Monitoring）の導入も同時に検討しましょう。
