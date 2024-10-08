@@ -22,15 +22,16 @@ https://gihyo.jp/book/2024/978-4-297-14061-8
 
 ## 変更履歴
 
-- [2024/08/26](https://github.com/AkifumiSato/zenn-article/pull/65/files)
+- [2024/08](https://github.com/AkifumiSato/zenn-article/pull/65/files)
   - 初稿
-- 2024/09/xx(TBW)
-  - 第5部追加
-    - [第5部 その他のプラクティス](part_5)
-    - [リクエスト情報の参照とレスポンス](part_5_request_ref)
-    - [データアクセス層の認可](part_5_authorization_fetch)
-    - [エラーハンドリングとerror.tsx](part_5_error_handling)
-    - [Vercel以外でのHosting](part_5_self_hosting)
-    - [Parallel/Intercepting Routes](part_5_parallel_intercepting_routes)
+- [2024/10](https://github.com/AkifumiSato/zenn-article/pull/67/files)
+  - 追加
+    - 第4部
+      - [副作用のないレンダリング](part_4_rendering_without_side_effects)
+    - 第5部
+      - [第5部 その他のプラクティス](part_5)
+      - [リクエストの参照とレスポンスの操作](part_5_request_ref)
+      - [認証と認可](part_5_authorization_fetch)
+      - [エラーハンドリング](part_5_error_handling)
   - 校正
     - [細粒度のREST API設計](part_1_fine_grained_api_design)
