@@ -40,15 +40,15 @@ https://zenn.dev/moozaru/articles/0d6c4596425da9
 
 ### Server ComponentsでCookie操作は行えない
 
-React Server Componentsではデータ取得をServer Components、データ変更をServer Actionsという責務分けがされています。Server Componentsにおける並行レンダリングやRequest Memoizationは、レンダリング中にデータ操作が起きえない前提の元設計されています。
+React Server Componentsではデータ取得をServer Components、データ変更をServer Actionsという責務分けがされています。[_副作用のないレンダリング_](part_4_rendering_without_side_effects)でも述べたように、Server Componentsにおける並行レンダリングやRequest Memoizationは、レンダリングに副作用が含まれないという前提の元設計されています。
 
-Cookie操作は他のコンポーネントのレンダリングに影響する可能性がある、一種のデータ変更です。そのため、App RouterにおけるCookie操作である`cookies().set()`や`cookies().delete()`は、Server ActionsかRoute Handler内でのみ行うことができます。
+Cookie操作は他のコンポーネントのレンダリングに影響する可能性がある副作用です。そのため、App RouterにおけるCookie操作である`cookies().set()`や`cookies().delete()`は、Server ActionsかRoute Handler内でのみ行うことができます。
 
 ### 制限を伴うmiddleware
 
-Next.jsのmiddlewareは、ユーザーからのリクエストに対して一律処理を差し込むことができますが、middlewareは本書執筆現在ランタイムがedgeに限定されており、Node.js APIが利用できなかったりDB操作系が非推奨など、様々な制限が伴います。
+Next.jsのmiddlewareは、ユーザーからのリクエストに対して一律処理を差し込むことができますが、middlewareは本書執筆時の最新である14系においては、ランタイムがedgeに限定されておりNode.js APIが利用できなかったりDB操作系が非推奨など、様々な制限が伴います。
 
-将来的にはNode.jsがランタイムとして選択できるようになる可能性はありますが、現状議論中の段階です。
+将来的にはNode.jsがランタイムとして選択できるようになる可能性もありますが、現状議論中の段階です。
 
 https://github.com/vercel/next.js/discussions/46722#discussioncomment-10262088
 
@@ -68,7 +68,7 @@ App Routerにおける認証認可は、上述の制約を踏まえて実装す�
 
 https://nextjs.org/docs/app/building-your-application/authentication#session-management
 
-筆者は、認証利用可能に拡張されたOAuthやOIDCを用いることが多く、セッションIDをJWTにしてCookieに格納し、セッション自体はRedisに保持する方法をよく利用します。こうすることで、アクセストークンやIDトークンをブラウザ側に送信せず、Cookieのサイズを節約し、JWTにより改竄を防止することができます。
+筆者は、拡張されたOAuthやOIDCを用いることが多く、セッションIDをJWTにしてCookieに格納し、セッション自体はRedisに保持する方法をよく利用します。こうすることでアクセストークンやIDトークンをブラウザ側に送信せずに済むので、セキュリティ性の向上やCookieのサイズを節約が得られます。また、Cookieに格納するセッションIDはJWTにすることで、改竄を防止することができます。
 
 :::details GitHub OAuthアプリのサンプル実装
 以下はGitHub OAuthアプリとして実装したサンプル実装の一部です。GitHubからリダイレクト後、CSRF攻撃対策のためのstateトークン検証、アクセストークンの取得、セッション保持などを行っています。
@@ -78,7 +78,7 @@ https://github.com/AkifumiSato/nextjs-book-oauth-app-example/blob/main/app/api/g
 
 ### URL認可
 
-URL認可の実装は多くの場合、認証状態や認証情報に基づいて行われます。App Routerにおいては前述のようにmiddlewareでNode.js APIが利用できないため、RedisやDBのデータ参照が必要な場合は各ページで認可チェックを行う必要があります。認可処理を`verifySession()`として共通化した場合、各ページで以下のような実装を行うことになるでしょう。
+URL認可の実装は多くの場合、認証状態や認証情報に基づいて行われます。前述の通り、App RouterのmiddlewareではNode.js APIが利用できないため、RedisやDBのデータ参照が必要な場合は各ページで認可チェックを行う必要があります。認可処理を`verifySession()`として共通化した場合、各ページで以下のような実装を行うことになるでしょう。
 
 ```tsx :page.tsx
 export default async function Page() {
@@ -139,21 +139,22 @@ export default async function Page() {
 }
 ```
 
-これに対する回避策として検討されているのが、既出の[middlewareのNode.jsランタイム対応](https://github.com/vercel/next.js/discussions/46722#discussioncomment-10262088)です。これが実現されれば、middlewareで一律認可チェックを行うことが可能になり、URL認可実装をシンプルに行うことができます。
+これに対する回避策として検討されているのが、**Request Interceptors**の機能です。
 
-```ts :middelware.ts
+https://github.com/vercel/next.js/pull/70961
+
+```ts :interceptor.ts
 // ...
-export default async function middleware(req: NextRequest) {
-  const path = req.nextUrl.pathname;
-  // RedisやDBからセッション情報を取得、**これが現状できない**
+export default async function intercept(request: NextRequest) {
+  const path = request.nextUrl.pathname;
   const session = await getSession();
 
   if (isMatch(path, protectedRoutes) && !session?.userId) {
     return NextResponse.redirect(new URL("/login", req.nextUrl));
   }
-
-  return NextResponse.next();
 }
 ```
 
-middlewareのNode.js対応はコミュニティでそれなりに賛同の声が上がっているものの、Vercelのインフラを大きく変更しないといけないためなのか、Next.jsコアチームの動きは重いようにも感じます。今後の動向に期待しましょう。
+これは`interceptor.ts`というファイルを定義することで、特定のRoute配下に対して一律で処理を差し込むことができるものです。執筆時点ではDraftのため、v15に取り込まれるかなどについては不明です。
+
+今後の動向に期待しましょう。
