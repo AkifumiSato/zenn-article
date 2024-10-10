@@ -6,4 +6,4 @@ title: "第4部 レンダリング"
 
 具体的には[Streaming SSR](https://nextjs.org/docs/app/building-your-application/rendering/server-components#streaming)や[Partial Pre-Rendering(PPR)](https://nextjs.org/docs/app/api-reference/next-config-js/partial-prerendering)など、Pages Routerにはない新たなレンダリングモデルがサポートされています。特にPPRは、従来より高いパフォーマンスを実現しつつもシンプルなメンタルモデルでNext.jsを扱うことができるようになります。
 
-第4部ではApp RouterにおけるStreamingの活用やPPRについて解説します。
+第4部ではReactやApp Routerにおけるレンダリングの考え方について解説します。
