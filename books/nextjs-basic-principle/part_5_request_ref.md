@@ -4,11 +4,7 @@ title: "リクエストの参照とレスポンスの操作"
 
 ## 要約
 
-App Routerでは他フレームワークにあるようなリクエストオブジェクト(`req`)やレスポンスオブジェクト(`res`)を参照することはできません。代わりに必要な情報を参照するためのhooksや関数などのAPIが提供されています。
-
-https://nextjs.org/docs/app/api-reference/functions
-
-https://nextjs.org/docs/app/api-reference/file-conventions/page#props
+App Routerでは他フレームワークにあるようなリクエストオブジェクト(`req`)やレスポンスオブジェクト(`res`)を参照することはできません。代わりに必要な情報を参照するためのAPIが提供されています。
 
 ## 背景
 
@@ -35,10 +31,10 @@ export const getServerSideProps = (async ({ req, res }) => {
 
 ## 設計・プラクティス
 
-App Routerでは上記のようなリクエスト単位のオブジェクトを提供する代わりに、それぞれ必要な情報を参照するためのAPIが提供されています。
+App Routerではリクエストやレスポンスオブジェクトを提供する代わりに、必要な情報を参照するためのAPIが提供されています。
 
 :::message
-Server Componentsでリクエスト時の情報を参照する関数などは[Dynamic Functions](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-functions)と呼ばれ、これらを利用するとRoute全体が[Dynamic Rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)となります。
+Server Componentsでリクエスト時の情報を参照する関数は[Dynamic Functions](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-functions)と呼ばれ、これらを利用するとRoute全体が[Dynamic Rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)となります。
 :::
 
 ### URL情報の参照
@@ -52,6 +48,19 @@ Dynamic RoutesのURLパスの情報は[`params` props](https://nextjs.org/docs/a
 | `/posts/hoge`              | `{ slug: "hoge" }`                   |
 | `/posts/hoge/comments/111` | `{ slug: "hoge", commentId: "111" }` |
 
+```tsx
+export default function Page({
+  params,
+}: {
+  params: {
+    slug: string;
+    commentId: string;
+  };
+}) {
+  // ...
+}
+```
+
 #### `searchParams` props
 
 [`searchParams` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional)は、URLのGETパラメータを参照するためのpropsです。`searchParams` propsでは、GETパラメータのkey-value相当なオブジェクトが提供されます。
@@ -63,13 +72,14 @@ Dynamic RoutesのURLパスの情報は[`params` props](https://nextjs.org/docs/a
 | `/products?id=1&id=2`           | `{ id: ["1", "2"] }`             |
 
 ```tsx
+type SearchParamsValue = string | string[] | undefined;
+
 export default function Page({
-  params,
   searchParams,
 }: {
-  params: { slug: string };
   searchParams: {
-    [key: string]: string | string[] | undefined;
+    sort?: SearchParamsValue;
+    id?: SearchParamsValue;
   };
 }) {
   // ...
@@ -118,7 +128,7 @@ export default function SearchBar() {
 
 ### ヘッダー情報の参照
 
-### `headers()`
+#### `headers()`
 
 [`headers()`](https://nextjs.org/docs/app/api-reference/functions/headers)は、リクエストヘッダーを参照するための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
 
@@ -140,7 +150,7 @@ export default function Page() {
 [`cookies()`](https://nextjs.org/docs/app/api-reference/functions/cookies)は、Cookie情報の参照や変更を担うオブジェクトを取得するための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
 
 :::message
-`cookies().set()`をはじめとしたCookieの操作は、Server ActionsやRoute Handlerでのみ利用でき、**Server Componentsでは利用できません**。
+`cookies().set()`や`cookies().delete()`といったCookieの操作は、Server ActionsやRoute Handlerでのみ利用でき、Server Componentsでは利用できません。詳しくは[_副作用のないレンダリング_](part_4_rendering_without_side_effects)を参照ください。
 :::
 
 ```tsx :app/page.tsx
@@ -165,15 +175,15 @@ async function create(data) {
 }
 ```
 
-### HTTP Status Code（`404`,`307`,`308`など）
+### レスポンスのStatus Code
+
+App RouterはStreamingをサポートしているため、確実にHTTP Status Codeを設定する手段がありません。その代わりに、`notFound()`や`redirect()`といった関数でブラウザに対してリダイレクトやエラーを示すことができます。
+
+これらを呼び出した際には、まだHTTP Status Codeがクライアントに返されてなければ適切設定し、すでにクライアントにStatus Codeが送信されていた場合には`<meta>`タグを挿入してブラウザにこれらの情報を伝えます。
 
 #### `notFound()`
 
 [`notFound()`](https://nextjs.org/docs/app/api-reference/functions/not-found)は、ページが存在しないことをブラウザに示すための関数です。Server Componentsで利用することができます。
-
-:::message
-多くの場合、`notFound()`はHTTP Status Codeとして404 Not Foundを返しますが、`<Suspens>`内などで利用すると200 OKを返すことがあります。この際、`<meta name="robots" content="noindex" />`タグを挿入してGoogleクローラなどに対してIndexingの必要がないことを示します。
-:::
 
 ```tsx
 import { notFound } from "next/navigation";
@@ -195,10 +205,6 @@ export default async function Profile({ params }: { params: { id: string } }) {
 
 [`redirect()`](https://nextjs.org/docs/app/api-reference/functions/redirect)は、リダイレクトを行うための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
 
-:::message
-この関数は必ずしもHTTP Status Codeではなく、`<meta>`タグでリダイレクトをブラウザに指示することがあります。
-:::
-
 ```tsx
 import { redirect } from "next/navigation";
 
@@ -217,10 +223,6 @@ export default async function Profile({ params }: { params: { id: string } }) {
 #### `permanentRedirect()`
 
 [`permanentRedirect()`](https://nextjs.org/docs/app/api-reference/functions/permanentRedirect)は、永続的なリダイレクトを行うための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
-
-:::message
-この関数は必ずしもHTTP Status Codeではなく、`<meta>`タグでリダイレクトをブラウザに指示することがあります。
-:::
 
 ```tsx
 import { permanentRedirect } from "next/navigation";
@@ -247,8 +249,10 @@ https://nextjs.org/docs
 
 ### `req`拡張によるセッション情報の持ち運び
 
-従来`req`オブジェクトは、3rd partyライブラリが拡張して`req.session`にセッション情報を格納するような実装が見られました。App Routerではこのような実装はできず、これに代わるセッション管理の仕組みなどを実装する必要があります。
+従来`req`オブジェクトは、3rd partyライブラリが拡張して`req.session`にセッション情報を格納するような実装がよく見られました。App Routerではこのような実装はできず、これに代わるセッション管理の仕組みなどを実装する必要があります。
 
-以下はGitHub OAuthアプリとして実装したサンプル実装の一部です。`sessionStore.get()`でRedisに格納したセッション情報を取得できます。
+以下は、GitHub OAuthアプリとして実装したサンプル実装の一部です。`sessionStore.get()`でRedisに格納したセッション情報を取得できます。
 
 https://github.com/AkifumiSato/nextjs-book-oauth-app-example/blob/main/app/api/github/callback/route.ts#L12
+
+セッション管理の実装が必要な方は、必要に応じて上記のリポジトリを参考にしてみてください。
