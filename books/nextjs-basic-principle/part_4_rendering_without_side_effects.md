@@ -51,9 +51,9 @@ https://nextjs.org/docs/app/api-reference/functions/cookies
 
 ## トレードオフ
 
-### レンダリングのlog
+### レンダリングのlogging
 
-データフェッチ同様loggingもよく副作用の1つとして扱われます。loggingは他のコンポーネントのレンダリングに影響することはありませんが、Server Componentsで実装したい場合は注意が必要です。Server ComponentsはClient Componentsと違ってレンダリングされる頻度は少ないですが、Suspend（`Promise`の`throw`）によってレンダリングの中断や再開を行う可能性があり、実装次第では意図せず何度もlog出力されてしまう可能性もあります。
+データフェッチ同様、loggingも副作用の1つとして扱われます。loggingは他のコンポーネントのレンダリングに影響することはありませんが、Server Componentsで実装したい場合は注意が必要です。Server ComponentsはClient Componentsと違ってレンダリングされる頻度は少ないですが、Suspend（`Promise`の`throw`）によってレンダリングの中断や再開を行う可能性があり、実装次第では意図せず何度もlog出力されてしまう可能性もあります。
 
 少々極端な例ですが、以下のコンポーネントに`promise={setTimeout(1000)}`を渡すと、2回consoleが出力されます。
 
@@ -67,7 +67,7 @@ function ConcurrentComponent({ promise }: { promise: Promise<void> }) {
 
 `use()`は`Promise`を受け取って未解決の場合`throw`し、`Promise`が解決するとそのSuspense境界を再実行します。そのため、上記実装では`conosle.log()`が2回実行されます。
 
-このように、実装次第ではServer Componentsも再実行される可能性もあるので、logの実装には注意が必要です。`return`の直前に実装するようにしつつ、v15以上なら上述の`after`を利用しましょう。
+このように、実装次第ではServer Componentsも再実行される可能性もあるので、loggingは`return`の直前などに実装して複数回loggingされることのないようにしましょう。
 
 :::message
 Next.js@v15RCで導入された[`after()`](https://nextjs.org/docs/app/api-reference/functions/unstable_after)は、レスポンス完了後に実行されるライフサイクルメソッドです。ただし、`after()`は実行を遅延するのみなので、上記のように`use()`より前に`after()`を実行すると、やはり2回log出力されます。
