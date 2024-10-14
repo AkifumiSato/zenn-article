@@ -38,7 +38,7 @@ export default function Page() {
 ```
 
 :::message
-[dynamic routes](https://nextjs.org/docs/app/building-your-application/routing/dynamic-routes)における[`searchParams` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional)は、関数ではないですがDynamic Functionsの1つとして数えられており、参照するとDynamic Renderingになります。一方[`params` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#params-optional)は、参照するとデフォルトでDynamic Renderingになりますが、[generateStaticParams()](https://nextjs.org/docs/app/api-reference/functions/generate-static-params)を利用するなどするとStatic Renderingになるため、必ずしもDynamic Renderingとは限りません。
+[Dynamic Routes](https://nextjs.org/docs/app/building-your-application/routing/dynamic-routes)における[`searchParams` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional)は、関数ではないですがDynamic Functionsの1つとして数えられており、参照するとDynamic Renderingになります。一方[`params` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#params-optional)は、参照するとデフォルトでDynamic Renderingになりますが、[generateStaticParams()](https://nextjs.org/docs/app/api-reference/functions/generate-static-params)を利用するなどするとStatic Renderingになるため、必ずしもDynamic Renderingになるとは限りません。
 :::
 
 ### `no-store`な`fetch()`
