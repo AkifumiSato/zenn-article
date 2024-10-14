@@ -29,7 +29,7 @@ App Router登場以前のNext.jsやReactアプリケーションに対するバ�
 
 クライアントサイドでデータフェッチを行う場合、クライアント・サーバー間の通信は物理的距離や不安定なネットワーク環境の影響で低速になりがちなため、通信回数はパフォーマンスに大きく影響します。そのため、ページごとに1度の通信で完結するべく粗粒度なAPI設計が採用されることがありました。
 
-一方、Pages Routerの[`getServerSideProps()`](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)などを利用したBFFとAPIのサーバー間通信においては、高速なネットワークを介したサーバー間通信となるため通信回数がパフォーマンスボトルネックになる可能性は減りますが、`getServerSideProps()`はページ単位のため一度にデータフェッチを行う必要がありました。この際冗長な実装を避けるという設計観点から、ページに依存した粗粒度なAPI設計になるケースがよくありました。
+一方、Pages Routerの[`getServerSideProps()`](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)を利用したBFFとAPIのサーバー間においては、高速なネットワークを介した通信となるため、通信回数がパフォーマンスボトルネックになる可能性は低くなります。しかし、`getServerSideProps()`はページ単位で定義するため、APIにページ単位の要求が反映され、粗粒度なAPI設計になるようなケースがよくありました。
 
 ## 設計・プラクティス
 
