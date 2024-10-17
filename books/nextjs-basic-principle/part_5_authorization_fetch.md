@@ -40,7 +40,7 @@ https://zenn.dev/moozaru/articles/0d6c4596425da9
 
 ### Server ComponentsでCookie操作は行えない
 
-React Server Componentsではデータ取得をServer Components、データ変更をServer Actionsという責務分けがされています。[_副作用のないレンダリング_](part_4_rendering_without_side_effects)でも述べたように、Server Componentsにおける並行レンダリングやRequest Memoizationは、レンダリングに副作用が含まれないという前提の元設計されています。
+React Server Componentsではデータ取得をServer Components、データ変更をServer Actionsという責務分けがされています。[_Server Componentsの純粋性_](part_4_pure_server_components)でも述べたように、Server Componentsにおける並行レンダリングやRequest Memoizationは、レンダリングに副作用が含まれないという前提の元設計されています。
 
 Cookie操作は他のコンポーネントのレンダリングに影響する可能性がある副作用です。そのため、App RouterにおけるCookie操作である`cookies().set()`や`cookies().delete()`は、Server ActionsかRoute Handler内でのみ行うことができます。
 

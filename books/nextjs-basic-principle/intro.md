@@ -27,7 +27,7 @@ https://gihyo.jp/book/2024/978-4-297-14061-8
 - [2024/10](https://github.com/AkifumiSato/zenn-article/pull/67/files)
   - 追加
     - 第4部
-      - [副作用のないレンダリング](part_4_rendering_without_side_effects)
+      - [Server Componentsの純粋性](part_4_pure_server_components)
     - 第5部
       - [第5部 その他のプラクティス](part_5)
       - [リクエストの参照とレスポンスの操作](part_5_request_ref)

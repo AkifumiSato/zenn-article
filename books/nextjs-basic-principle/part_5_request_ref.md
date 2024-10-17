@@ -150,7 +150,7 @@ export default function Page() {
 [`cookies()`](https://nextjs.org/docs/app/api-reference/functions/cookies)は、Cookie情報の参照や変更を担うオブジェクトを取得するための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
 
 :::message
-`cookies().set()`や`cookies().delete()`といったCookieの操作は、Server ActionsやRoute Handlerでのみ利用でき、Server Componentsでは利用できません。詳しくは[_副作用のないレンダリング_](part_4_rendering_without_side_effects)を参照ください。
+`cookies().set()`や`cookies().delete()`といったCookieの操作は、Server ActionsやRoute Handlerでのみ利用でき、Server Componentsでは利用できません。詳しくは[_Server Componentsの純粋性_](part_4_pure_server_components)を参照ください。
 :::
 
 ```tsx :app/page.tsx
