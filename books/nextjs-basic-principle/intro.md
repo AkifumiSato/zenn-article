@@ -31,7 +31,7 @@ https://gihyo.jp/book/2024/978-4-297-14061-8
     - 第5部
       - [第5部 その他のプラクティス](part_5)
       - [リクエストの参照とレスポンスの操作](part_5_request_ref)
-      - [認証と認可](part_5_authorization_fetch)
+      - [認証と認可](part_5_auth)
       - [エラーハンドリング](part_5_error_handling)
   - 校正
     - [細粒度のREST API設計](part_1_fine_grained_api_design)

@@ -38,6 +38,10 @@ App Routerでは、Route間で共通となる[レイアウト](https://nextjs.or
 
 https://zenn.dev/moozaru/articles/0d6c4596425da9
 
+:::message
+[v15 RC2](https://nextjs.org/blog/next-15-rc2)においてはレンダリング順が変更され、レイアウトが先にレンダリングされるようになりました。
+:::
+
 ### Server ComponentsでCookie操作は行えない
 
 React Server Componentsではデータ取得をServer Components、データ変更をServer Actionsという責務分けがされています。[_Server Componentsの純粋性_](part_4_pure_server_components)でも述べたように、Server Componentsにおける並行レンダリングやRequest Memoizationは、レンダリングに副作用が含まれないという前提の元設計されています。
@@ -68,7 +72,7 @@ App Routerにおける認証認可は、上述の制約を踏まえて実装す�
 
 https://nextjs.org/docs/app/building-your-application/authentication#session-management
 
-筆者は、拡張されたOAuthやOIDCを用いることが多く、セッションIDをJWTにしてCookieに格納し、セッション自体はRedisに保持する方法をよく利用します。こうすることでアクセストークンやIDトークンをブラウザ側に送信せずに済むので、セキュリティ性の向上やCookieのサイズを節約が得られます。また、Cookieに格納するセッションIDはJWTにすることで、改竄を防止することができます。
+筆者は、拡張されたOAuthやOIDCを用いることが多く、セッションIDをJWTにしてCookieに格納し、セッション自体はRedisに保持する方法をよく利用します。こうすることで、アクセストークンやIDトークンをブラウザ側に送信せずに済み、セキュリティ性の向上やCookieのサイズを節約などのメリットが得られます。また、Cookieに格納するセッションIDはJWTにすることで、改竄を防止することができます。
 
 :::details GitHub OAuthアプリのサンプル実装
 以下はGitHub OAuthアプリとして実装したサンプル実装の一部です。GitHubからリダイレクト後、CSRF攻撃対策のためのstateトークン検証、アクセストークンの取得、セッション保持などを行っています。
@@ -139,22 +143,8 @@ export default async function Page() {
 }
 ```
 
-これに対する回避策として検討されているのが、**Request Interceptors**の機能です。
+これに対する回避策として検討されているのが**Request Interceptors**で、特定のRoute配下に対して一律`interceptor.ts`で定義した処理を差し込むことができるようにするというものです。
 
 https://github.com/vercel/next.js/pull/70961
 
-```ts :interceptor.ts
-// ...
-export default async function intercept(request: NextRequest) {
-  const path = request.nextUrl.pathname;
-  const session = await getSession();
-
-  if (isMatch(path, protectedRoutes) && !session?.userId) {
-    return NextResponse.redirect(new URL("/login", req.nextUrl));
-  }
-}
-```
-
-これは`interceptor.ts`というファイルを定義することで、特定のRoute配下に対して一律で処理を差し込むことができるものです。執筆時点ではDraftのため、v15に取り込まれるかなどについては不明です。
-
-今後の動向に期待しましょう。
+執筆時点ではDraftのため、v15に取り込まれるかなどについては不明です。今後の動向に期待しましょう。
