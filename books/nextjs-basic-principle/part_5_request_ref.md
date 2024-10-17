@@ -37,6 +37,11 @@ App Routerではリクエストやレスポンスオブジェクトを提供す�
 Server Componentsでリクエスト時の情報を参照する関数は[Dynamic Functions](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-functions)と呼ばれ、これらを利用するとRoute全体が[Dynamic Rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)となります。
 :::
 
+:::message
+Next.jsは内部処理の都合で特殊なエラーを`throw`することがあります。そのため、下記のAPIに対し`try {} catch {}`するとNext.jsの動作に影響する可能性があります。
+詳しくはv15で導入予定の[`unstable_rethrow()`](https://nextjs.org/docs/canary/app/api-reference/functions/unstable_rethrow)を参照ください。
+:::
+
 ### URL情報の参照
 
 #### `params` props
