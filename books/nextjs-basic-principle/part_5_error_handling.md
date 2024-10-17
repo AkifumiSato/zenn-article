@@ -84,12 +84,14 @@ https://nextjs.org/docs/canary/app/api-reference/file-conventions/not-found
 
 Server Actionsのエラーは、**予想可能なエラー**と**予期せぬエラー**で分けて考える必要があります。
 
-Server Actionsは多くの場合、データ更新の際に呼び出されます。何かしらの理由でデータ更新に失敗したとしても、ユーザーは再度更新をリクエストできることが望ましいUXと考えられます。しかし、Server Actionsではエラーが`throw`されると、前述の通り`error.tsx`で定義したエラー時UIが表示されます。`error.tsx`が表示され、直前までページで入力してた`<form>`の入力内容などが失われると、ユーザーは操作を最初からやり直すことになりかねません。そのため、Server Actionsでエラーは極力`throw`せず、戻り値でエラーを表現することが推奨されます。
+Server Actionsは多くの場合、データ更新の際に呼び出されます。何かしらの理由でデータ更新に失敗したとしても、ユーザーは再度更新をリクエストできることが望ましいUXと考えられます。しかし、Server Actionsではエラーが`throw`されると、前述の通り`error.tsx`で定義したエラー時UIが表示されます。`error.tsx`が表示され、直前までページで入力してた`<form>`の入力内容などが失われると、ユーザーは操作を最初からやり直すことになりかねません。
+
+そのため、Server Actionsにおける予想可能なエラーは`throw`ではなく、**戻り値でエラーを表現**することが推奨されます。予期せぬエラーに対しては当然ながら予期できない以上対策できないので、予期せぬエラーが発生したら`error.tsx`が表示されることは念頭に置いておきましょう。
 
 以下は[conform](https://ja.conform.guide/integration/nextjs)を使ったServer Actionsにおけるzodバリデーションの実装例です。バリデーションエラー時は`throw`せず、`submission.reply()`を返している点がポイントです。
 
 ```tsx
-"use server"; // action.ts
+"use server";
 
 import { redirect } from "next/navigation";
 import { parseWithZod } from "@conform-to/zod";
@@ -104,24 +106,29 @@ export async function login(prevState: unknown, formData: FormData) {
     return submission.reply();
   }
 
+  // ...
+
   redirect("/dashboard");
 }
 ```
 
-formライブラリを利用しない場合は、以下のように自身で戻り値を定義しましょう。
+formライブラリを利用してない場合は、以下のように自身で戻り値を定義しましょう。
 
 ```tsx
 "use server";
 
 import { redirect } from "next/navigation";
 
-export async function createUser(prevState: any, formData: FormData) {
-  const res = await fetch("https://...");
-  const json = await res.json();
+export async function login(prevState: unknown, formData: FormData) {
+  const submission = parseWithZod(formData, {
+    schema: loginSchema,
+  });
 
-  if (!res.ok) {
-    return { message: "Please enter a valid email" };
+  if (formData.get("email") !== "") {
+    return { message: "メールアドレスは必須です。" };
   }
+
+  // ...
 
   redirect("/dashboard");
 }
