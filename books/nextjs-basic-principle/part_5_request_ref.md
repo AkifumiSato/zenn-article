@@ -8,7 +8,7 @@ App Routerでは他フレームワークにあるようなリクエストオブ�
 
 ## 背景
 
-Pages Router然り従来のNode.jsのフレームーワークでは、リクエストオブジェクト(`req`)やレスポンスオブジェクト(`res`)を参照することで様々な情報にアクセスしたり、レスポンスをカスタマイズするような設計が広く使われてきました。
+Pages Routerなど従来のWebフレームーワークでは、リクエストオブジェクト(`req`)やレスポンスオブジェクト(`res`)を参照することで様々な情報にアクセスしたり、レスポンスをカスタマイズするような設計が広く使われてきました。
 
 ```tsx
 export const getServerSideProps = (async ({ req, res }) => {
@@ -61,9 +61,29 @@ export default function Page({
 }
 ```
 
+#### `useParams()`
+
+[`useParams()`](https://nextjs.org/docs/app/api-reference/functions/use-params)は、Client ComponentsでURLパスに含まれるDynamic Params（e.g. `/posts/[slug]`の`[slug]`部分）を参照するためのhooksです。
+
+```tsx
+"use client";
+
+import { useParams } from "next/navigation";
+
+export default function ExampleClientComponent() {
+  const params = useParams<{ tag: string; item: string }>();
+
+  // Route: /shop/[tag]/[item]
+  // URL  : /shop/shoes/nike-air-max-97
+  console.log(params); // { tag: 'shoes', item: 'nike-air-max-97' }
+
+  // ...
+}
+```
+
 #### `searchParams` props
 
-[`searchParams` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional)は、URLのGETパラメータを参照するためのpropsです。`searchParams` propsでは、GETパラメータのkey-value相当なオブジェクトが提供されます。
+[`searchParams` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional)は、URLのクエリー文字列を参照するためのpropsです。`searchParams` propsでは、クエリー文字列のkey-value相当なオブジェクトが提供されます。
 
 | URL                             | `searchParams` props             |
 | ------------------------------- | -------------------------------- |
@@ -86,29 +106,9 @@ export default function Page({
 }
 ```
 
-#### `useParams()`
-
-[`useParams()`](https://nextjs.org/docs/app/api-reference/functions/use-params)は、Client ComponentsでURLパスに含まれるDynamic Params（e.g. `/posts/[slug]`の`[slug]`部分）を参照するためのhooksです。
-
-```tsx
-"use client";
-
-import { useParams } from "next/navigation";
-
-export default function ExampleClientComponent() {
-  const params = useParams<{ tag: string; item: string }>();
-
-  // Route: /shop/[tag]/[item]
-  // URL  : /shop/shoes/nike-air-max-97
-  console.log(params); // { tag: 'shoes', item: 'nike-air-max-97' }
-
-  // ...
-}
-```
-
 #### `useSearchParams()`
 
-[`useSearchParams()`](https://nextjs.org/docs/app/api-reference/functions/use-search-params)は、Client ComponentsでURLのGETパラメータを参照するためのhooksです。
+[`useSearchParams()`](https://nextjs.org/docs/app/api-reference/functions/use-search-params)は、Client ComponentsでURLのクエリー文字列を参照するためのhooksです。
 
 ```tsx
 "use client";
@@ -175,11 +175,11 @@ async function create(data) {
 }
 ```
 
-### レスポンスのStatus Code
+### レスポンスのステータスコード
 
-App RouterはStreamingをサポートしているため、確実にHTTP Status Codeを設定する手段がありません。その代わりに、`notFound()`や`redirect()`といった関数でブラウザに対してリダイレクトやエラーを示すことができます。
+App RouterはStreamingをサポートしているため、確実にHTTPステータスコードを設定する手段がありません。その代わりに、`notFound()`や`redirect()`といった関数でブラウザに対してエラーやリダイレクトを示すことができます。
 
-これらを呼び出した際には、まだHTTP Status Codeがクライアントに返されてなければ適切設定し、すでにクライアントにStatus Codeが送信されていた場合には`<meta>`タグを挿入してブラウザにこれらの情報を伝えます。
+これらを呼び出した際には、まだHTTPレスポンスの送信がまだ開始されていなければステータスコードが設定され、すでにクライアントにステータスコードが送信されていた場合には`<meta>`タグタグが挿入されてブラウザにこれらの情報が伝えられます。
 
 #### `notFound()`
 

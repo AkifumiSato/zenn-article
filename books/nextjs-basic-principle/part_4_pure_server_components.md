@@ -99,7 +99,7 @@ https://nextjs.org/docs/app/api-reference/functions/cookies
 Request Memoizationは`fetch()`を拡張することで実現しています。`fetch()`の拡張をやめるようなオプトアウト手段は現状ありません。ただし、Request Memoizationは引数次第で都度データフェッチするようにオプトアウトすることも可能です。
 
 ```ts
-// GETパラメータにランダムな値を付与する
+// クエリー文字列にランダムな値を付与する
 fetch(`https://dummyjson.com/todos/random?_hash=${Math.random()}`);
 // 毎回異なるAbortSignalインスタンスを指定する
 const controller = new AbortController();

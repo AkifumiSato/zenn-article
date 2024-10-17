@@ -14,7 +14,7 @@ Pages Routerにおけるエラーハンドリングは大きく分けて、ペ�
 
 ### ページにおけるエラー
 
-Pages Routerにおいてサーバー側エラーが発生すると、エラーページが表示されます。エラーページの定義は、エラーの種類に対応するHTTP Status Codeに応じたファイルで定義することが可能です。
+Pages Routerにおいてサーバー側エラーが発生すると、エラーページが表示されます。エラーページの定義は、エラーの種類に対応するHTTPステータスコードに応じたファイルで定義することが可能です。
 
 - `404.tsx`: 404 Not Found
 - `500.tsx`: 500 Internal Server Error
@@ -23,7 +23,7 @@ Pages Routerにおいてサーバー側エラーが発生すると、エラー�
 
 ### API Routesにおけるエラー
 
-API Routesにおけるエラーハンドリングは、適切なHTTP Status Codeやメッセージの返却が基本となります。API RoutesをGraphQLや[tRPC](https://trpc.io/)などと統合している場合には、エラーハンドリングの実装がライブラリなどに依存することもあります。
+API Routesにおけるエラーハンドリングは、適切なHTTPステータスコードやメッセージの返却が基本となります。API RoutesをGraphQLや[tRPC](https://trpc.io/)などと統合している場合には、エラーハンドリングの実装がライブラリなどに依存することもあります。
 
 ## 設計・プラクティス
 
@@ -77,7 +77,7 @@ App Routerでは特別なエラーをthrowするためのAPIとして`notFound()
 https://nextjs.org/docs/canary/app/api-reference/file-conventions/not-found
 
 :::message
-多くの場合、`notFound()`はHTTP Status Codeとして404 Not Foundを返しますが、`<Suspens>`内などで利用すると200 OKを返すことがあります。この際、`<meta name="robots" content="noindex" />`タグを挿入してGoogleクローラなどに対してIndexingの必要がないことを示します。
+多くの場合、`notFound()`はHTTPステータスコードとして404 Not Foundを返しますが、`<Suspens>`内などで利用すると200 OKを返すことがあります。この際、`<meta name="robots" content="noindex" />`タグを挿入してGoogleクローラなどに対してIndexingの必要がないことを示します。
 :::
 
 ### Server Actionsのエラー
