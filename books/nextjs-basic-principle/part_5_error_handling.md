@@ -4,34 +4,37 @@ title: "エラーハンドリング"
 
 ## 要約
 
-App Routerにおけるエラーハンドリングは主に、Server ComponentsとServer Actionsの2つで発生します。
+App Routerにおけるエラーは主に、Server ComponentsとServer Actionsの2つで発生します。
 
-Server Componentsのエラーは、エラー時UIを`error.tsx`や`not-found.tsx`で定義が可能が可能です。一方Server Actionsにおけるエラーは、基本的に戻り値で表現することが推奨されます。
+Server Componentsのエラーは、エラー時UIを`error.tsx`や`not-found.tsx`で定義します。一方Server Actionsにおけるエラーは、基本的に戻り値で表現することが推奨されます。
 
 ## 背景
 
-Pages Routerにおけるエラーハンドリングは大きく分けて、ページにおけるエラーとRoutesにおけるエラーの2つで考える必要があります。
+App Routerにおけるエラーは、クライアントかサーバーか、データ参照か変更かで分けて考える必要があり、具体的には以下の3つを分けて考えることになります。
 
-### ページにおけるエラー
+- Client Components
+- Server Components
+- Server Actions
 
-Pages Routerにおいてサーバー側エラーが発生すると、エラーページが表示されます。エラーページの定義は、エラーの種類に対応するHTTPステータスコードに応じたファイルで定義することが可能です。
+特に、Server ComponentsとServer Actionsは外部データに対する操作を伴うことが多いため、エラーが発生する可能性が高くハンドリングが重要になります。
 
-- `404.tsx`: 404 Not Found
-- `500.tsx`: 500 Internal Server Error
+### クライアントサイドにおけるレンダリングエラー
 
-`403 Forbidden`など上記定義以外でエラー時UIをカスタマイズしたい場合には、`_error.tsx`でより高度なエラーハンドリングを行うことが可能です。
+後述のApp Routerが提供するエラーハンドリングは、サーバーサイドで発生したエラーにのみ対応しています。クライアントサイドにおけるレンダリングエラーのハンドリングが必要な場合は、開発者が自身で`<ErrorBoundary>`を定義する必要があります。
 
-### API Routesにおけるエラー
+https://ja.react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary
 
-API Routesにおけるエラーハンドリングは、適切なHTTPステータスコードやメッセージの返却が基本となります。API RoutesをGraphQLや[tRPC](https://trpc.io/)などと統合している場合には、エラーハンドリングの実装がライブラリなどに依存することもあります。
+また、クライアントサイドにおいてレンダリングエラーが発生する場合、ブラウザの種類やバージョンなどに依存するエラーの可能性が高く、サーバーサイドとは異なりリトライしても回復しない可能性があります。クライアントサイドのエラーは当然ながらサーバーに記録されないので、開発者はエラーが起きた事実さえ把握が難しくなります。
+
+クライアントサイドのエラー実態を把握したい場合、Datadogなどの[RUM](https://www.datadoghq.com/ja/product/real-user-monitoring/)（Real User Monitoring）導入も同時に検討しましょう。
 
 ## 設計・プラクティス
 
-App Routerにおけるエラーハンドリングは大きく分けて、Server ComponentsとServer Actionsの2つで考える必要があります。
+App Routerにおけるエラーは主に、Server ComponentsとServer Actionsの2つで考える必要があります。
 
 ### Server Componentsのエラー
 
-App Routerでは、サーバー側エラー時のUIをRoute Segment単位の`error.tsx`で定義することができます。Route Segment単位なのでレイアウトはそのまま、ページ部分だけが`error.tsx`で定義したUIが表示されます。以下は[公式ドキュメント](https://nextjs.org/docs/canary/app/api-reference/file-conventions/error#how-errorjs-works)にある図です。
+App Routerでは、サーバーサイドエラー時のUIをRoute Segment単位の`error.tsx`で定義することができます。Route Segment単位なのでレイアウトはそのまま、ページ部分だけが`error.tsx`で定義したUIが表示されます。以下は[公式ドキュメント](https://nextjs.org/docs/canary/app/api-reference/file-conventions/error#how-errorjs-works)にある図です。
 
 ![エラー時のUIイメージ](/images/nextjs-basic-principle/error-ui.png)
 
@@ -72,7 +75,7 @@ export default function ErrorPage({
 
 #### Not Foundエラー
 
-App Routerでは特別なエラーをthrowするためのAPIとして`notFound()`を提供しています。HTTPにおける404 Not Found相当のUIを通常のエラーと分けたいケースは非常によくあるユースケースで、App Routerではこの際のUIを`not-found.tsx`で定義することが可能です。
+HTTPにおける404 Not FoundエラーはSEO影響もあるため、その他のエラーとは特に区別されることが多いエラーです。App Routerでは404相当のエラーをthrowするためのAPIとして`notFound()`を提供しており、`notFound()`が呼び出された際のUIは`not-found.tsx`で定義できます。
 
 https://nextjs.org/docs/canary/app/api-reference/file-conventions/not-found
 
@@ -82,11 +85,11 @@ https://nextjs.org/docs/canary/app/api-reference/file-conventions/not-found
 
 ### Server Actionsのエラー
 
-Server Actionsのエラーは、**予想可能なエラー**と**予期せぬエラー**で分けて考える必要があります。
+Server Actionsのエラーは、**予測可能なエラー**と**予測不能なエラー**で分けて考える必要があります。
 
 Server Actionsは多くの場合、データ更新の際に呼び出されます。何かしらの理由でデータ更新に失敗したとしても、ユーザーは再度更新をリクエストできることが望ましいUXと考えられます。しかし、Server Actionsではエラーが`throw`されると、前述の通り`error.tsx`で定義したエラー時UIが表示されます。`error.tsx`が表示され、直前までページで入力してた`<form>`の入力内容などが失われると、ユーザーは操作を最初からやり直すことになりかねません。
 
-そのため、Server Actionsにおける予想可能なエラーは`throw`ではなく、**戻り値でエラーを表現**することが推奨されます。予期せぬエラーに対しては当然ながら予期できない以上対策できないので、予期せぬエラーが発生したら`error.tsx`が表示されることは念頭に置いておきましょう。
+そのため、Server Actionsにおける予測可能なエラーは`throw`ではなく、**戻り値でエラーを表現**することが推奨されます。予測不能なエラーに対しては当然ながら対策できないので、予測不能なエラーが発生したら`error.tsx`が表示されることは念頭に置いておきましょう。
 
 以下は[conform](https://ja.conform.guide/integration/nextjs)を使ったServer Actionsにおけるzodバリデーションの実装例です。バリデーションエラー時は`throw`せず、`submission.reply()`を返している点がポイントです。
 
@@ -136,12 +139,4 @@ export async function login(prevState: unknown, formData: FormData) {
 
 ## トレードオフ
 
-### クライアントサイドにおけるレンダリングエラー
-
-App Routerが提供する`error.tsx`などは、サーバー側エラー時に利用されます。クライアントサイドにおけるレンダリングエラーのハンドリングが必要な場合は、開発者が自身で`<ErrorBoundary>`を定義する必要があります。
-
-https://ja.react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary
-
-また、クライアントサイドにおいてレンダリングエラーが発生する場合、ブラウザの種類やバージョンなどに依存するエラーの可能性が高く、サーバー側とは異なりリトライしても回復しない可能性があります。クライアントサイドのエラーは当然ながらサーバーに記録されないので、開発者はエラーが起きた事実さえ把握が難しくなります。
-
-クライアントサイドのエラー実態を把握したい場合、RUM（Real User Monitoring）の導入も同時に検討しましょう。
+特になし
