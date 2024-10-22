@@ -34,11 +34,11 @@ App Routerにおけるエラーは主に、Server ComponentsとServer Actionsの
 
 ### Server Componentsのエラー
 
-App Routerでは、サーバーサイドエラー時のUIをRoute Segment単位の`error.tsx`で定義することができます。Route Segment単位なのでレイアウトはそのまま、ページ部分だけが`error.tsx`で定義したUIが表示されます。以下は[公式ドキュメント](https://nextjs.org/docs/canary/app/api-reference/file-conventions/error#how-errorjs-works)にある図です。
+App Routerでは、Server Componentsの実行中にエラーが発生した時のUIを、Route Segment単位の`error.tsx`で定義することができます。Route Segment単位なのでレイアウトはそのまま、ページ部分に`error.tsx`で定義したUIが表示されます。以下は[公式ドキュメント](https://nextjs.org/docs/canary/app/api-reference/file-conventions/error#how-errorjs-works)にある図です。
 
 ![エラー時のUIイメージ](/images/nextjs-basic-principle/error-ui.png)
 
-`error.tsx`は主にServer Components、Server Actionsでエラーが発生した場合に利用されます。
+`error.tsx`は主にServer Componentsでエラーが発生した場合に利用されます。
 
 :::message
 厳密にはSSR時のClient Componentsでエラーが起きた場合にも`error.tsx`が利用されます。
@@ -80,16 +80,16 @@ HTTPにおける404 Not FoundエラーはSEO影響もあるため、その他の
 https://nextjs.org/docs/canary/app/api-reference/file-conventions/not-found
 
 :::message
-多くの場合、`notFound()`はHTTPステータスコードとして404 Not Foundを返しますが、`<Suspens>`内などで利用すると200 OKを返すことがあります。この際、`<meta name="robots" content="noindex" />`タグを挿入してGoogleクローラなどに対してIndexingの必要がないことを示します。
+多くの場合、`notFound()`を呼び出すとHTTPステータスコードとして404 Not Foundが返されますが、`<Suspens>`内などで`notFound()`を利用すると200 OKが返されることがあります。この際Next.jsは、`<meta name="robots" content="noindex" />`タグを挿入してGoogleクローラなどに対してIndexingの必要がないことを示します。
 :::
 
 ### Server Actionsのエラー
 
 Server Actionsのエラーは、**予測可能なエラー**と**予測不能なエラー**で分けて考える必要があります。
 
-Server Actionsは多くの場合、データ更新の際に呼び出されます。何かしらの理由でデータ更新に失敗したとしても、ユーザーは再度更新をリクエストできることが望ましいUXと考えられます。しかし、Server Actionsではエラーが`throw`されると、前述の通り`error.tsx`で定義したエラー時のUIが表示されます。`error.tsx`が表示され、直前までページで入力してた`<form>`の入力内容などが失われると、ユーザーは操作を最初からやり直すことになりかねません。
+Server Actionsは多くの場合、データ更新の際に呼び出されます。何かしらの理由でデータ更新に失敗したとしても、ユーザーは再度更新をリクエストできることが望ましいUXと考えられます。しかし、Server Actionsではエラーが`throw`されると、前述の通り`error.tsx`で定義したエラー時のUIが表示されます。`error.tsx`が表示されることで、直前までページで入力していた`<form>`の入力内容などが失われると、ユーザーは操作を最初からやり直すことになりかねません。
 
-そのため、Server Actionsにおける予測可能なエラーは`throw`ではなく、**戻り値でエラーを表現**することが推奨されます。予測不能なエラーに対しては当然ながら対策できないので、予測不能なエラーが発生したら`error.tsx`が表示されることは念頭に置いておきましょう。
+そのため、Server Actionsにおける予測可能なエラーは`throw`ではなく、**戻り値でエラーを表現**することが推奨されます。予測不能なエラーに対しては当然ながら対策できないので、予測不能なエラーが発生した場合は`error.tsx`が表示されることは念頭に置いておきましょう。
 
 以下は[conform](https://ja.conform.guide/integration/nextjs)を使ったServer Actionsにおけるzodバリデーションの実装例です。バリデーションエラー時は`throw`せず、`submission.reply()`を返している点がポイントです。
 
