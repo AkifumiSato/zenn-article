@@ -6,7 +6,7 @@ title: "エラーハンドリング"
 
 App Routerにおけるエラーは主に、Server ComponentsとServer Actionsの2つで発生します。
 
-Server Componentsのエラーは、エラー時UIを`error.tsx`や`not-found.tsx`で定義します。一方Server Actionsにおけるエラーは、基本的に戻り値で表現することが推奨されます。
+Server Componentsのエラーは、エラー時のUIを`error.tsx`や`not-found.tsx`で定義します。一方Server Actionsにおけるエラーは、基本的に戻り値で表現することが推奨されます。
 
 ## 背景
 
@@ -87,7 +87,7 @@ https://nextjs.org/docs/canary/app/api-reference/file-conventions/not-found
 
 Server Actionsのエラーは、**予測可能なエラー**と**予測不能なエラー**で分けて考える必要があります。
 
-Server Actionsは多くの場合、データ更新の際に呼び出されます。何かしらの理由でデータ更新に失敗したとしても、ユーザーは再度更新をリクエストできることが望ましいUXと考えられます。しかし、Server Actionsではエラーが`throw`されると、前述の通り`error.tsx`で定義したエラー時UIが表示されます。`error.tsx`が表示され、直前までページで入力してた`<form>`の入力内容などが失われると、ユーザーは操作を最初からやり直すことになりかねません。
+Server Actionsは多くの場合、データ更新の際に呼び出されます。何かしらの理由でデータ更新に失敗したとしても、ユーザーは再度更新をリクエストできることが望ましいUXと考えられます。しかし、Server Actionsではエラーが`throw`されると、前述の通り`error.tsx`で定義したエラー時のUIが表示されます。`error.tsx`が表示され、直前までページで入力してた`<form>`の入力内容などが失われると、ユーザーは操作を最初からやり直すことになりかねません。
 
 そのため、Server Actionsにおける予測可能なエラーは`throw`ではなく、**戻り値でエラーを表現**することが推奨されます。予測不能なエラーに対しては当然ながら対策できないので、予測不能なエラーが発生したら`error.tsx`が表示されることは念頭に置いておきましょう。
 
