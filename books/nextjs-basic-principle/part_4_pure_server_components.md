@@ -40,7 +40,7 @@ async function getRandomTodo() {
 
 上記の`getRandomTodo()`は呼び出しごとに異なるTodoを返す可能性が高く、そもそもリクエストに失敗する可能性もあるため戻り値は不安定です。このようなデータフェッチを内部的に呼び出す関数は、同じ入力でも出力が異なる可能性があり、純粋ではありません。
 
-Server Componentsでは、Request Memoizationによって入力に対する出力を一定に保つことで、データフェッチをサポートしつつコンポーネントの純粋性を保てるよう設計されています。
+Server Componentsでは、Request Memoizationによって入力に対する出力を一定に保ち、データフェッチをサポートしつつ、レンダリングの範囲ではコンポーネントの純粋性を保てるよう設計されています。
 
 ```tsx
 export async function ComponentA() {
@@ -96,12 +96,13 @@ https://nextjs.org/docs/app/api-reference/functions/cookies
 
 ### Request Memoizationのオプトアウト
 
-Request Memoizationは`fetch()`を拡張することで実現しています。`fetch()`の拡張をやめるようなオプトアウト手段は現状ありません。ただし、Request Memoizationは引数次第で都度データフェッチするようにオプトアウトすることも可能です。
+Request Memoizationは`fetch()`を拡張することで実現しています。`fetch()`の拡張をやめるようなオプトアウト手段は現状ありません。ただし、`fetch()`に渡す引数次第でRequest Memoizationをオプトアプトして都度データフェッチすることは可能です。
 
 ```ts
 // クエリー文字列にランダムな値を付与する
 fetch(`https://dummyjson.com/todos/random?_hash=${Math.random()}`);
-// 毎回異なるAbortSignalインスタンスを指定する
+// `signal`を指定する
 const controller = new AbortController();
-fetch(`https://dummyjson.com/todos/random`, { signal: controller.signal });
+const signal = controller.signal;
+fetch(`https://dummyjson.com/todos/random`, { signal });
 ```
