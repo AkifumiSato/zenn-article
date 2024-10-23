@@ -15,3 +15,23 @@ https://nextjs.org/learn
 https://gihyo.jp/book/2024/978-4-297-14061-8
 
 本書を通じてNext.jsの考え方を学び、自信を持って実装する方が増えてくれたら幸いです。
+
+:::message alert
+本書は執筆時の最新であるNext.js v14系を前提としています。
+:::
+
+## 変更履歴
+
+- [2024/08](https://github.com/AkifumiSato/zenn-article/pull/65/files)
+  - 初稿
+- [2024/10](https://github.com/AkifumiSato/zenn-article/pull/67/files)
+  - 追加
+    - 第4部
+      - [Server Componentsの純粋性](part_4_pure_server_components)
+    - 第5部
+      - [第5部 その他のプラクティス](part_5)
+      - [リクエストの参照とレスポンスの操作](part_5_request_ref)
+      - [認証と認可](part_5_auth)
+      - [エラーハンドリング](part_5_error_handling)
+  - 校正
+    - [細粒度のREST API設計](part_1_fine_grained_api_design)

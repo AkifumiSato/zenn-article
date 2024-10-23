@@ -21,9 +21,9 @@ Server Componentsは[Soft Navigation](https://nextjs.org/docs/app/building-your-
 
 App Routerは**デフォルトでStatic Rendering**となっており、**Dynamic Renderingはオプトイン**になっています。Dynamic Renderingにオプトインする方法は以下の通りです。
 
-### dynamic functions
+### Dynamic Functions
 
-`cookies()`/`headers()`などの[dynamic functions](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-functions)と呼ばれる関数を呼び出すと、Dynamic Renderingとなります。
+`cookies()`/`headers()`などの[Dynamic Functions](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-functions)と呼ばれる関数を呼び出すと、Dynamic Renderingとなります。
 
 ```ts
 // page.tsx
@@ -38,7 +38,7 @@ export default function Page() {
 ```
 
 :::message
-[dynamic routes](https://nextjs.org/docs/app/building-your-application/routing/dynamic-routes)における[`searchParams` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional)は、関数ではないですがdynamic functionsの1つとして数えられており、参照するとDynamic Renderingになります。一方[`params` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#params-optional)は、参照するとデフォルトでDynamic Renderingになりますが、[generateStaticParams()](https://nextjs.org/docs/app/api-reference/functions/generate-static-params)を利用するなどするとStatic Renderingになるため、必ずしもDynamic Renderingとは限りません。
+[Dynamic Routes](https://nextjs.org/docs/app/building-your-application/routing/dynamic-routes)における[`searchParams` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional)は、関数ではないですがDynamic Functionsの1つとして数えられており、参照するとDynamic Renderingになります。一方[`params` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#params-optional)は、参照するとデフォルトでDynamic Renderingになりますが、[generateStaticParams()](https://nextjs.org/docs/app/api-reference/functions/generate-static-params)を利用するなどするとStatic Renderingになるため、必ずしもDynamic Renderingになるとは限りません。
 :::
 
 ### `no-store`な`fetch()`
@@ -87,7 +87,7 @@ export const revalidate = 0; // 1以上でStatic Rendering
 
 ### `unstable_noStore()`
 
-末端のコンポーネントでDynamic Renderingを強制したいがdynamic functionsや`no-store`な`fetch()`を使っていない場合には、`unstable_noStore()`を呼び出すことでDynamic Renderingに切り替えることができます。具体的には、[Prisma](https://www.prisma.io/)を使ったDBアクセス時などに有用でしょう。
+末端のコンポーネントでDynamic Renderingを強制したいがDynamic Functionsや`no-store`な`fetch()`を使っていない場合には、`unstable_noStore()`を呼び出すことでDynamic Renderingに切り替えることができます。具体的には、[Prisma](https://www.prisma.io/)を使ったDBアクセス時などに有用でしょう。
 
 ```ts
 import { unstable_noStore as noStore } from "next/data-store";
@@ -142,7 +142,7 @@ export const revalidate = 10; // 10s
 
 ### 予期せぬDynamic Renderingとパフォーマンス劣化
 
-Route Segment Configや`unstable_noStore()`によってDynamic Renderingを利用する場合、開発者は明らかにDynamic Renderingを意識して使うのでこれらが及ぼす影響を見誤ることは少ないと考えられます。一方、dynamic functionsは「cookieを利用したい」、`cache: "no-store"`な`fetch`は「Data Cacheを使いたくない」などの主目的が別にあり、これに伴って副次的にDynamic Renderingに切り替わるため、開発者は影響範囲に注意する必要があります。
+Route Segment Configや`unstable_noStore()`によってDynamic Renderingを利用する場合、開発者は明らかにDynamic Renderingを意識して使うのでこれらが及ぼす影響を見誤ることは少ないと考えられます。一方、Dynamic Functionsは「cookieを利用したい」、`cache: "no-store"`な`fetch`は「Data Cacheを使いたくない」などの主目的が別にあり、これに伴って副次的にDynamic Renderingに切り替わるため、開発者は影響範囲に注意する必要があります。
 
 特に、Data Cacheなどを適切に設定できていないとDynamic Renderingに切り替わった際にページ全体のパフォーマンス劣化につながる可能性があります。こちらについての詳細は後述の[_Dynamic RenderingとData Cache_](part_3_dynamic_rendering_data_cache)をご参照ください。
 
