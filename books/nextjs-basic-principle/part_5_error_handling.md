@@ -34,7 +34,7 @@ App Routerにおけるエラーは主に、Server ComponentsとServer Actionsの
 
 ### Server Componentsのエラー
 
-App Routerでは、Server Componentsの実行中にエラーが発生した時のUIを、Route Segment単位の`error.tsx`で定義することができます。Route Segment単位なのでレイアウトはそのまま、ページ部分に`error.tsx`で定義したUIが表示されます。以下は[公式ドキュメント](https://nextjs.org/docs/canary/app/api-reference/file-conventions/error#how-errorjs-works)にある図です。
+App Routerでは、Server Componentsの実行中にエラーが発生した時のUIを、Route Segment単位の`error.tsx`で定義することができます。Route Segment単位なのでレイアウトはそのまま、`page.tsx`部分に`error.tsx`で定義したUIが表示されます。以下は[公式ドキュメント](https://nextjs.org/docs/canary/app/api-reference/file-conventions/error#how-errorjs-works)にある図です。
 
 ![エラー時のUIイメージ](/images/nextjs-basic-principle/error-ui.png)
 
