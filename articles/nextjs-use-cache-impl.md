@@ -39,6 +39,34 @@ dynamicIOは、実験的モードと言われているものの、端的に言�
 
 これらについて、実際のコードを見ながら実装を確認します。
 
-### `"use cache"`の置き換え
+### `"use cache"`に対するトランスパイル
 
-TBW
+Next.js自体はSWCでトランスパイルされ、Server Actionsに対する置き換えの実装はSWC Pluginで実装されています。`"use cache"`の置き換えも、このSWC Pluginに含まれる形で実装されています。
+
+:::message
+Server ActionsのPluginに`"use cache"`の置き換えが含まれるのは違和感がありますが、これは実装初で実験的機能なためかもしれません。
+:::
+
+具体的には、`function`内に`"use cache"`があった時には、以下の`if let Directive::UseCache { cache_kind } = directive { ... }`で`"use client"`を判定しています。
+
+https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/crates/next-custom-transforms/src/transforms/server_actions.rs#L993-L1032
+
+この処理内で`self.maybe_hoist_and_create_proxy_for_cache_function()`が呼ばれることで、`self.has_cache = true`となります。ここで設定された`self.has_cache`により、以下の分岐に入ります。
+
+https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/crates/next-custom-transforms/src/transforms/server_actions.rs#L1979-L2001
+
+ここでは対象コードのアウトプットである`new`に対し、コメントにもあるような`import { cache as $$cache__ } from "private-next-rsc-cache-wrapper";`が挿入されるような処理がされています。
+
+さらに`self.maybe_hoist_and_create_proxy_for_cache_function()`の後続処理で、対象の`function`に対し`export var cache_ident = async function() {}`の形に置き換える処理がされます。
+
+https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/crates/next-custom-transforms/src/transforms/server_actions.rs#L836-L863
+
+上記の`init`で呼ばれる`wrap_cache_expr()`にて、対象の`function`は`$$cache__("name", "id", 0, func)`のような形に置き換えられます。
+
+https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/crates/next-custom-transforms/src/transforms/server_actions.rs#L2217-L2236
+
+これで、`"use cache"`の対象関数は`private-next-rsc-cache-wrapper`の`cache`関数を介して定義される形になりました。上記は`function`に関する実装ですが、アロー関数にも同様の処理がされます。
+
+### `private-next-rsc-cache-wrapper`
+
+### `use-cache-wrapper.ts`
