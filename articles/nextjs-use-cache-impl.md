@@ -6,7 +6,7 @@ topics: ["nextjs", "swc"]
 published: false
 ---
 
-`"use cache"`はNext.jsにおける新たなディレクティブで、dynamicIOという実験的なモードで利用することができます。本稿は、2024年12月現在における`"use cache"`の仕様や内部実装について解説します。
+`"use cache"`はNext.jsにおける新たなディレクティブで、dynamicIOという実験的なモードで利用することができます。本稿では、2024年12月現在における`"use cache"`の仕様や内部実装について解説します。
 
 :::message alert
 本稿における調査はNext.jsリポジトリの[564794d](https://github.com/vercel/next.js/tree/564794df56e421d6d4c2575b466a8be3a96dd39a)を参照しています。最新のコミットでは仕様や実装が変更されている可能性があります。
@@ -38,7 +38,7 @@ dynamicIOは現状実験的モードですが、未来のNext.jsのあり方の1
 
 ## `"use cache"`
 
-`"use cache"`はdynamicIOにおける最も重要なコンセプトです。`"use cache"`はファイルや関数の先頭につけることができ、これによりNext.jsに関数やファイルスコープがキャッシュ可能であることを明示します。
+`"use cache"`はdynamicIOにおける最も重要なコンセプトです。`"use cache"`はファイルや関数の先頭につけることができ、これによりNext.jsは関数やファイルスコープがキャッシュ可能であることを理解します。
 
 ```tsx
 // File level
@@ -62,7 +62,7 @@ export async function getData() {
 }
 ```
 
-`"use cache"`は基本的に引数や参照してるスコープ内の変数などを自動的にキャッシュのキーとして認識しますが、`children`のような一部キーに不適切な値は自動的に除外されます。
+`"use cache"`は引数や参照してる変数などを自動的にキャッシュのキーとして認識しますが、`children`のような一部キーに不適切な値は自動的に除外されます。
 
 より詳細に知りたい方は、以下公式ドキュメントを参照ください。
 
@@ -72,7 +72,7 @@ https://nextjs.org/docs/canary/app/api-reference/directives/use-cache
 
 `"use cache"`によるキャッシュは、内部的に以下2つに分類されます。
 
-- オンデマンドキャッシュ: オンデマンド（`next start`以降）で利用されるキャッシュ
+- オンデマンドキャッシュ^[「`CacheHandler`由来のキャッシュ」では冗長なため、本稿において筆者が命名したものです。]: オンデマンド（`next start`以降）で利用されるキャッシュ
 - `ResumeDataCache`: [PPR](https://nextjs.org/docs/app/building-your-application/rendering/partial-prerendering)のPrerenderから引き継がれるキャッシュ
 
 オンデマンドキャッシュは、現時点ではシンプルなLRUキャッシュです。内部的には`CacheHandler`という抽象化がされており、将来的には開発者がカスタマイズ可能になることが示唆されています。
@@ -81,7 +81,7 @@ https://nextjs.org/docs/canary/app/api-reference/directives/use-cache
 
 将来的にこれらは変更されている可能性もありますが、`"use cache"`の振る舞いで悩んだ際には、PPRのために特別なキャッシュが内部的に存在することは注意しておく必要があるかもしれません。
 
-:::message
+:::message alert
 上記`CacheHandler`は、[`incrementalCacheHandlerPath`](https://nextjs.org/docs/app/api-reference/next-config-js/incrementalCacheHandlerPath)で設定可能なカスタムキャッシュハンドラーとは別物です。
 :::
 
@@ -208,6 +208,4 @@ https://zenn.dev/akfm/articles/nextjs-revalidate
 
 従来のキャッシュに対するネガティブな意見はデフォルト挙動などが大きかったとは思いますが、それに加え、キャッシュ構造自体があまりに複雑で、利用者側にまでその影響が及んで深い理解を必要としていたことも大きな要因だったのではないかと個人的には考えています。
 
-dynamicIOはシンプルな設計、シンプルな実装の上に成り立っているように感じており、調査を進めるほど期待感が高まりました。
-
-この記事がdynamicIOの理解の参考になれば幸いです。
+dynamicIOはシンプルな設計、シンプルな実装の上に成り立っているように感じており、調査を進めるほど期待感が高まりました。今後のdynamicIOの開発に期待したいところです。
