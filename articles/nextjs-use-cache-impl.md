@@ -1,9 +1,9 @@
 ---
-title: '"use cache"の仕様と実装'
+title: '"use cache"の仕組み'
 emoji: "🚀"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["nextjs", "swc"]
-published: false
+published: true
 ---
 
 `"use cache"`はNext.jsにおける新たなディレクティブで、dynamicIOという実験的なモードで利用することができます。本稿では、2024年12月現在における`"use cache"`の仕様や内部実装について解説します。
@@ -26,9 +26,9 @@ dynamicIOはその名の通り、動的なI/O処理に対する振る舞いを�
 - **Static**: データフェッチがキャッシュ可能な場合やbuild時に実行可能な場合、ファイルや関数の先頭で`"use cache"`宣言します。
 - **Partial**: 上記は組み合わせて利用することもできます。
 
-開発者はデータフェッチをいつ実行するべきか選択する必要があるため、従来のようなキャッシュのデフォルト挙動に起因する混乱はおおよそ解消されることが予想されます。一方、ユーザーへのレスポンスをブロックしてデータフェッチを即座に実行する手段がなくなったことで、Next.jsはユーザーに対し効率的にレスポンスを配信することができます。
+開発者はデータフェッチをいつ実行するべきか選択する必要があるため、従来のようなキャッシュのデフォルト挙動に起因する混乱はおおよそ解消されることが予想されます。一方、ユーザーへのレスポンスをブロックしてデータフェッチを即座に実行する手段がなくなったことで、Next.jsはユーザーに対し常に効率的なレスポンス配信が可能となります。
 
-dynamicIOは高いパフォーマンスを実現すると同時に、シンプルで明確な開発者体験を提供する意欲的なコンセプトであると言えます。
+dynamicIOはシンプルで明確な開発者体験を提供すると同時に、高いパフォーマンスを実現する意欲的なコンセプトであると言えます。
 
 ### 私見: キャッシュの混乱とNext.jsへの評価
 
@@ -38,7 +38,7 @@ dynamicIOは現状実験的モードですが、未来のNext.jsのあり方の1
 
 ## `"use cache"`
 
-`"use cache"`はdynamicIOにおける最も重要なコンセプトです。`"use cache"`はファイルや関数の先頭につけることができ、これによりNext.jsは関数やファイルスコープがキャッシュ可能であることを理解します。
+`"use cache"`はdynamicIOにおける最も重要なコンセプトです。`"use cache"`はファイルや関数の先頭につけることができ、Next.jsはこれにより関数やファイルスコープがキャッシュ可能であることを理解します。
 
 ```tsx
 // File level
@@ -79,9 +79,9 @@ https://nextjs.org/docs/canary/app/api-reference/directives/use-cache
 
 `ResumeDataCache`はPPRのPrerenderから引き継がれる特殊なキャッシュで、現時点では`CacheHandler`とは別物になっています。
 
-将来的にこれらは変更されている可能性もありますが、`"use cache"`の振る舞いで悩んだ際には、PPRのために特別なキャッシュが内部的に存在することは注意しておく必要があるかもしれません。
+将来的にこれらは変更される可能性もありますが、PPRのために特別なキャッシュが存在するということは注意しておく必要があるかもしれません。
 
-:::message alert
+:::message
 上記`CacheHandler`は、[`incrementalCacheHandlerPath`](https://nextjs.org/docs/app/api-reference/next-config-js/incrementalCacheHandlerPath)で設定可能なカスタムキャッシュハンドラーとは別物です。
 :::
 
@@ -98,7 +98,7 @@ SWC Pluginの置き換え部分から実装を確認していきましょう。
 
 ### `"use cache"`に対するトランスパイル
 
-Next.js自体は[SWC](https://swc.rs/)でトランスパイルされ、Server Actions用の`"use server"`に対する置き換えの実装は[SWC Plugin](https://swc.rs/docs/plugin/ecmascript/getting-started)で実装されています。`"use cache"`の置き換えも、このSWC Pluginに含まれる形で実装されています。`"use server"`用のPluginで`"use cache"`に関する処理をしているのはだいぶ違和感がありますが、現状はそうなっているようです。
+Next.jsアプリケーションは[SWC](https://swc.rs/)でトランスパイルされ、Server Actions用の`"use server"`に対する置き換え処理は[SWC Plugin](https://swc.rs/docs/plugin/ecmascript/getting-started)で実装されています。`"use cache"`の置き換えも、このSWC Pluginに含まれる形で実装されています。`"use server"`用のPluginで`"use cache"`に関する処理をしているのはだいぶ違和感がありますが、現状はそうなっているようです。
 
 以下は`function() {}`の先頭に`"use cache"`があった時の処理です。`if let Directive::UseCache { cache_kind } = directive { ... }`で`"use cache"`を判定しています。
 
@@ -122,7 +122,7 @@ https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/
 
 https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/crates/next-custom-transforms/src/transforms/server_actions.rs#L2217-L2236
 
-これで、`"use cache"`の対象関数は`private-next-rsc-cache-wrapper`の`cache`関数を介して定義される形になりました。具体的には、以下のようなコードが出力されることになります。
+これらの処理により、`"use cache"`の対象関数は`private-next-rsc-cache-wrapper`の`cache`関数を介して定義される形に置き換えられます。具体的には、以下のようなコードが出力されることになります。
 
 ```js
 // fixtureから抜粋
@@ -161,10 +161,10 @@ https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/
 
 `cache()`関数は数百行程度ありますが、ここでは特にキャッシュの永続化の仕組みについて確認します。キャッシュの永続化は前述の通り以下2つに分けられています。
 
-- `CacheHandler`由来のキャッシュ
+- オンデマンドキャッシュ（`CacheHandler`由来）
 - `ResumeDataCache`
 
-#### `CacheHandler`
+#### オンデマンドキャッシュ（`CacheHandler`由来）
 
 `CacheHandler`は以下で定義されます。
 
@@ -190,7 +190,7 @@ Prerenderでシードされなかった`"use cache"`のキャッシュは、`Res
 
 `CacheHandler`で永続化されるキャッシュも`ResumeDataCache`も、実態はRSC Payloadです。つまり`"use cache"`を適用するとコンポーネントも関数も同様に、RSC Payloadとして内部的に処理されます。
 
-`"use cache"`のキャッシュのキーや関数の戻り値はシリアル化可能であるという制約は、内部的にRSC Payloadで扱うことや外部に保存することを考慮しての制約だと考えられます。
+`"use cache"`のキャッシュのキーや関数の戻り値はシリアル化可能であるという制約は、内部的にRSC Payloadで扱うことや、外部に保存することを考慮しての制約だと考えられます。
 
 おおよそ`"use cache"`を実現するための実装が理解できたので、調査はここまでとしました。
 
@@ -206,6 +206,6 @@ https://zenn.dev/akfm/articles/nextjs-revalidate
 
 上記の記事を執筆してる時にはいつも「複雑さ」を感じていました。しかし今回、`"use cache"`について調査している時に感じたのは「シンプルさ」です。
 
-従来のキャッシュに対するネガティブな意見はデフォルト挙動などが大きかったとは思いますが、それに加え、キャッシュ構造自体があまりに複雑で、利用者側にまでその影響が及んで深い理解を必要としていたことも大きな要因だったのではないかと個人的には考えています。
+従来のキャッシュに対するネガティブな意見はデフォルト挙動などが大きかったとは思います。それに加え、キャッシュの実装や仕様が複雑で利用者側も深い理解を必要としたことも、ネガティブ要因として大きかったのではないかと個人的には考えています。
 
 dynamicIOはシンプルな設計、シンプルな実装の上に成り立っているように感じており、調査を進めるほど期待感が高まりました。今後のdynamicIOの開発に期待したいところです。
