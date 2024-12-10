@@ -1,44 +1,78 @@
 ---
-title: '"use cache"の仕組み'
-emoji: "🚀"
+title: 'Dynamic IOの成り立ちと"use cache"の深層'
+emoji: "🌍"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["nextjs", "swc"]
 published: true
 ---
 
-`"use cache"`はNext.jsにおける新たなディレクティブで、dynamicIOという実験的なモードで利用することができます。本稿では、2024年12月現在における`"use cache"`の仕様や内部実装について解説します。
+`"use cache"`はNext.jsにおける新たなディレクティブで、Dynamic IOという実験的なモードで利用することができます。本稿では、2024年12月現在における`"use cache"`の成り立ちや内部実装について解説します。
 
-:::message alert
-本稿における調査はNext.jsリポジトリの[564794d](https://github.com/vercel/next.js/tree/564794df56e421d6d4c2575b466a8be3a96dd39a)を参照しています。最新のコミットでは仕様や実装が変更されている可能性があります。
+:::message
+本稿の対象読者は、[_Our Journey with Caching_](https://nextjs.org/blog/our-journey-with-caching)などでDynamic IOについて概要をすでに理解しており、Dynamic IOや`"use cache"`の成り立ちや内部実装について興味のある方です。
 :::
 
-## dynamicIO
+:::message alert
+本稿における調査は、Next.jsリポジトリの[564794d](https://github.com/vercel/next.js/tree/564794df56e421d6d4c2575b466a8be3a96dd39a)を参照しています。最新のコミットでは仕様や実装が変更されている可能性があります。
+:::
 
-[dynamicIO](https://nextjs.org/docs/canary/app/api-reference/config/next-config-js/dynamicIO)は2024年10月のNext Confで発表された、Next.jsにおける新しいコンセプトを実証するための実験的モードです。
+## Dynamic IOの成り立ち
 
-https://nextjs.org/blog/our-journey-with-caching
+[Dynamic IO](https://nextjs.org/docs/canary/app/api-reference/config/next-config-js/dynamicIO)は2024年10月のNext Confで発表された、Next.jsにおける新しいコンセプトを実証するための実験的モードです。Dynamic IOはその名の通り、主に動的I/O処理に対する振る舞いを大きく変更するものです。
 
-dynamicIOはその名の通り、動的なI/O処理に対する振る舞いを大きく変更するものです。
+具体的には、以下のような処理を扱う際の振る舞いが変更されます。
 
-具体的には、Server Componentsにおける`fetch()`をはじめとしたデータフェッチが**デフォルトでは実行できなくなります**。データフェッチを扱う際には、以下いずれかの対応が必要になります。
+- `fetch()`をはじめとしたデータフェッチ
+- [Dynamic APIs](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-apis)
+- Next.jsがラップするモジュール（`Date`、`Math`、Node.jsの`crypto`モジュールなど）
+- 任意の非同期関数 (マイクロタスクを除く)
 
-- **Dynamic**: 動的にデータフェッチを実行する場合、対象のServer Componentsを`<Suspense>`境界内に配置します。従来同様`<Suspense>`境界内はStreamingで配信されます。
-- **Static**: データフェッチがキャッシュ可能な場合やbuild時に実行可能な場合、ファイルや関数の先頭で`"use cache"`宣言します。
-- **Partial**: 上記は組み合わせて利用することもできます。
+これらを扱う際、特にデータフェッチを扱う際には、`<Suspense>`境界内に配置するか`"use cache"`でキャッシュ可能であることを宣言することが必須となります。
 
-開発者はデータフェッチをいつ実行するべきか選択する必要があるため、従来のようなキャッシュのデフォルト挙動に起因する混乱はおおよそ解消されることが予想されます。一方、ユーザーへのレスポンスをブロックしてデータフェッチを即座に実行する手段がなくなったことで、Next.jsはユーザーに対し常に効率的なレスポンス配信が可能となります。
+- `<Suspense>`: 動的にデータフェッチを実行する場合、対象のServer Componentsを`<Suspense>`境界内に配置します。従来同様`<Suspense>`境界内はStreamingで配信されます。
+- `"use cache"`: データフェッチがキャッシュ可能な場合、`"use cache"`を宣言することで、Next.jsにキャッシュ可能であることを指示します。
 
-dynamicIOはシンプルで明確な開発者体験を提供すると同時に、高いパフォーマンスを実現する意欲的なコンセプトであると言えます。
+**Partial Pre-Rendering**（PPR）を理解してる方であれば、[Static Rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#static-rendering-default)と[Dynamic Rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)が1つのページで混在し`<Suspense>`境界単位でレンダリングを分離していく設計については馴染み深いことでしょう。
+
+![ppr shell](/images/nextjs-partial-pre-rendering/ppr-shell.png)
+
+https://zenn.dev/akfm/articles/nextjs-partial-pre-rendering
+
+Dynamic IOではさらにこれを発展させ、Dynamic RenderingにStatic Renderingを入れ子にすることが可能となります。
+
+```tsx
+export default function Page() {
+  return (
+    <>
+      ...
+      {/* Static Rendering */}
+      <Suspense fallback={<Loading />}>
+        {/* Dynamic Rendering */}
+        <DynamicComponent>
+          {/* Static Rendering */}
+          <StaticComponent />
+        </DynamicComponent>
+      </Suspense>
+    </>
+  );
+}
+```
+
+開発者はデータフェッチを扱う際、`<Suspense>`境界内で常に実行するか、`"use cache"`でキャッシュ可能にするか選択する必要があります。これにより、従来のデフォルトで強力なキャッシュに起因する混乱は、解消されることが予想されます。
+
+また、即座にデータフェッチを実行してユーザーへのレスポンスがブロックされることもないため、Next.jsはユーザーに対し常に効率的なレスポンス配信が可能となります。
+
+Dynamic IOはシンプルで明確な開発者体験を提供すると同時に、高いパフォーマンスを実現する意欲的なコンセプトであると言えます。
 
 ### 私見: キャッシュの混乱とNext.jsへの評価
 
-dynamicIOは現状実験的モードですが、未来のNext.jsのあり方の1つとも考えられます。前述の通り、dynamicIOによってキャッシュのデフォルト挙動にまつわる多くの混乱を根本的に解決する可能性があります。
+Dynamic IOは現状実験的モードですが、未来のNext.jsのあり方の1つとも考えられます。前述の通り、Dynamic IOによってキャッシュのデフォルト挙動にまつわる多くの混乱を根本的に解決する可能性があります。
 
-キャッシュの複雑さはNext.jsに対する最も大きなネガティブ要素だったと言っても過言ではありません。dynamicIOの開発が進むにつれ、**Next.jsに対する評価も大きく改める必要がある**のではないかと筆者は考えています。
+キャッシュの複雑さはNext.jsに対する最も大きなネガティブ要素だったと言っても過言ではありません。Dynamic IOの開発が進むにつれ、**Next.jsに対する評価も大きく改める必要がある**のではないかと筆者は考えています。
 
-## `"use cache"`
+### `"use cache"`
 
-`"use cache"`はdynamicIOにおける最も重要なコンセプトです。`"use cache"`はファイルや関数の先頭につけることができ、Next.jsはこれにより関数やファイルスコープがキャッシュ可能であることを理解します。
+`"use cache"`はDynamic IOにおける最も重要なコンセプトです。`"use cache"`はファイルや関数の先頭につけることができ、Next.jsはこれにより関数やファイルスコープがキャッシュ可能であることを理解します。
 
 ```tsx
 // File level
@@ -73,7 +107,7 @@ https://nextjs.org/docs/canary/app/api-reference/directives/use-cache
 `"use cache"`によるキャッシュは、内部的に以下2つに分類されます。
 
 - オンデマンドキャッシュ^[「`CacheHandler`由来のキャッシュ」では冗長なため、本稿において筆者が命名したものです。]: オンデマンド（`next start`以降）で利用されるキャッシュ
-- `ResumeDataCache`: [PPR](https://nextjs.org/docs/app/building-your-application/rendering/partial-prerendering)のPrerenderから引き継がれるキャッシュ
+- `ResumeDataCache`: PPRのPrerenderから引き継がれるキャッシュ
 
 オンデマンドキャッシュは、現時点ではシンプルなLRUキャッシュです。内部的には`CacheHandler`という抽象化がされており、将来的には開発者がカスタマイズ可能になることが示唆されています。
 
@@ -87,7 +121,7 @@ https://nextjs.org/docs/canary/app/api-reference/directives/use-cache
 
 ## `"use cache"`の内部実装
 
-ここまではdynamicIOや`"use cache"`について解説してきましたが、以降は`"use cache"`がどう実現されているのか、Next.jsの内部実装について解説します。
+ここまではDynamic IOや`"use cache"`について解説してきましたが、以降は`"use cache"`がどう実現されているのか、Next.jsの内部実装について解説します。
 
 `"use cache"`は大まかに以下のような仕組みで実現されています。
 
@@ -204,8 +238,8 @@ https://zenn.dev/akfm/articles/next-app-router-client-cache
 
 https://zenn.dev/akfm/articles/nextjs-revalidate
 
-上記の記事を執筆してる時にはいつも「複雑さ」を感じていました。しかし今回、`"use cache"`について調査している時に感じたのは「シンプルさ」です。
+上記の記事を執筆してる時にはいつも利用者目線での「複雑さ」を感じていました。しかし今回、`"use cache"`について調査している時に感じたのは「シンプルさ」です。SWC Pluginに依存する実装をすることは黒魔術やMagicなどと称され忌避されることも多いので、実装がシンプルとは言い難いかも知れませんが、少なくとも利用者目線ではシンプルだと感じました。
 
 従来のキャッシュに対するネガティブな意見はデフォルト挙動などが大きかったとは思います。それに加え、キャッシュの実装や仕様が複雑で利用者側も深い理解を必要としたことも、ネガティブ要因として大きかったのではないかと個人的には考えています。
 
-dynamicIOはシンプルな設計、シンプルな実装の上に成り立っているように感じており、調査を進めるほど期待感が高まりました。今後のdynamicIOの開発に期待したいところです。
+Dynamic IOはシンプルな設計、シンプルな実装の上に成り立っているように感じており、調査を進めるほど期待感が高まりました。今後のDynamic IOの開発に期待したいところです。
