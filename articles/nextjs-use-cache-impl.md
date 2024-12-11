@@ -96,7 +96,7 @@ export async function getData() {
 }
 ```
 
-`"use cache"`は引数や参照してる変数などを自動的にキャッシュのキーとして認識しますが、`children`のような一部キーに不適切な値は自動的に除外されます。
+`"use cache"`は引数や参照してる変数などを自動的にキャッシュのキーとして認識しますが、`children`のようなキーに不適切な一部の値は自動的に除外されます。
 
 より詳細に知りたい方は、以下公式ドキュメントを参照ください。
 
@@ -109,7 +109,7 @@ https://nextjs.org/docs/canary/app/api-reference/directives/use-cache
 - オンデマンドキャッシュ^[「`CacheHandler`由来のキャッシュ」では冗長なため、本稿において筆者が命名したものです。]: オンデマンド（`next start`以降）で利用されるキャッシュ
 - `ResumeDataCache`: PPRのPrerenderから引き継がれるキャッシュ
 
-オンデマンドキャッシュは、現時点ではシンプルなLRUキャッシュです。内部的には`CacheHandler`という抽象化がされており、将来的には開発者がカスタマイズ可能になることが示唆されています。
+オンデマンドキャッシュは、現時点ではシンプルなLRUのインメモリキャッシュです。内部的には`CacheHandler`という抽象化がされており、将来的には開発者がカスタマイズ可能になることが示唆されています。
 
 `ResumeDataCache`はPPRのPrerenderから引き継がれる特殊なキャッシュで、現時点では`CacheHandler`とは別物になっています。
 
@@ -156,15 +156,31 @@ https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/
 
 https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/crates/next-custom-transforms/src/transforms/server_actions.rs#L2217-L2236
 
-これらの処理により、`"use cache"`の対象関数は`private-next-rsc-cache-wrapper`の`cache`関数を介して定義される形に置き換えられます。具体的には、以下のようなコードが出力されることになります。
+これらの処理により、`"use cache"`の対象関数は`private-next-rsc-cache-wrapper`の`cache()`関数を介して定義される形に置き換えられます。
 
-```js
-// fixtureから抜粋
-// https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/crates/next-custom-transforms/tests/fixture/next-font-with-directive/use-cache/output.js
+その他にもいくつか処理はありますが、`cache()`関数の振る舞いが重要なので、残り部分の処理は割愛します。これらの処理を経て最終的には以下のような入出力が得られます。
+
+```tsx :input
+"use cache";
+import React from "react";
+import { Inter } from "@next/font/google";
+
+const inter = Inter();
+
+export async function Cached({ children }) {
+  return <div className={inter.className}>{children}</div>;
+}
+```
+
+```js :output
+/* __next_internal_action_entry_do_not_use__ {"c0dd5bb6fef67f5ab84327f5164ac2c3111a159337":"$$RSC_SERVER_CACHE_0"} */ import { registerServerReference } from "private-next-rsc-server-reference";
+import {
+  encryptActionBoundArgs,
+  decryptActionBoundArgs,
+} from "private-next-rsc-action-encryption";
 import { cache as $$cache__ } from "private-next-rsc-cache-wrapper";
-
-// ...
-
+import React from "react";
+import inter from '@next/font/google/target.css?{"path":"app/test.tsx","import":"Inter","arguments":[],"variableName":"inter"}';
 export var $$RSC_SERVER_CACHE_0 = $$cache__(
   "default",
   "c0dd5bb6fef67f5ab84327f5164ac2c3111a159337",
@@ -174,6 +190,15 @@ export var $$RSC_SERVER_CACHE_0 = $$cache__(
   }) {
     return <div className={inter.className}>{children}</div>;
   },
+);
+Object.defineProperty($$RSC_SERVER_CACHE_0, "name", {
+  value: "Cached",
+  writable: false,
+});
+export var Cached = registerServerReference(
+  $$RSC_SERVER_CACHE_0,
+  "c0dd5bb6fef67f5ab84327f5164ac2c3111a159337",
+  null,
 );
 ```
 
@@ -210,19 +235,19 @@ https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/
 
 #### `ResumeDataCache`
 
-`ResumeDataCache`は少々命名からはわかりづらいですが、PPRのPrerenderとキャッシュを共有するための仕組みです。
+`ResumeDataCache`は、文字通りレンダリングをResume=再開するためのキャッシュです。これはPPR有効時に利用される共有キャッシュで、`next build`時に生成したキャッシュをそのまま`next start`で再利用することができます。
 
 https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/packages/next/src/server/use-cache/use-cache-wrapper.ts#L552-L557
 
-これらは以下のPRで追加されたようです。
+`ResumeDataCache`は以下のPRで追加されました。
 
 https://github.com/vercel/next.js/pull/72161
 
-Prerenderでシードされなかった`"use cache"`のキャッシュは、`ResumeDataCache`ではなく`CacheHandler`でハンドリングされます。
+Prerender時にアクセスされなかった`"use cache"`な関数は、`ResumeDataCache`ではなく`CacheHandler`でハンドリングされます。
 
-#### キャッシュの実態
+#### キャッシュデータの実態
 
-`CacheHandler`で永続化されるキャッシュも`ResumeDataCache`も、実態はRSC Payloadです。つまり`"use cache"`を適用するとコンポーネントも関数も同様に、RSC Payloadとして内部的に処理されます。
+`CacheHandler`で永続化されるキャッシュも`ResumeDataCache`も、データの実態はRSC Payloadです。つまり`"use cache"`を適用するとコンポーネントも関数も同様に、RSC Payloadとして内部的に処理されます。
 
 `"use cache"`のキャッシュのキーや関数の戻り値はシリアル化可能であるという制約は、内部的にRSC Payloadで扱うことや、外部に保存することを考慮しての制約だと考えられます。
 
@@ -238,7 +263,7 @@ https://zenn.dev/akfm/articles/next-app-router-client-cache
 
 https://zenn.dev/akfm/articles/nextjs-revalidate
 
-上記の記事を執筆してる時にはいつも利用者目線での「複雑さ」を感じていました。しかし今回、`"use cache"`について調査している時に感じたのは「シンプルさ」です。SWC Pluginに依存する実装をすることは黒魔術やMagicなどと称され忌避されることも多いので、実装がシンプルとは言い難いかも知れませんが、少なくとも利用者目線ではシンプルだと感じました。
+上記の記事を執筆してる時にはいつも利用者目線での「複雑さ」を感じていました。しかし今回、`"use cache"`について調査している時に感じたのは「シンプルさ」です。SWC Pluginに依存する実装をすることは、黒魔術やMagicと称され忌避されることも多いので、実装がシンプルとは言い難いかも知れませんが、少なくとも利用者目線ではシンプルだと感じました。
 
 従来のキャッシュに対するネガティブな意見はデフォルト挙動などが大きかったとは思います。それに加え、キャッシュの実装や仕様が複雑で利用者側も深い理解を必要としたことも、ネガティブ要因として大きかったのではないかと個人的には考えています。
 
