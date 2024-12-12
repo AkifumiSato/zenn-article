@@ -6,10 +6,10 @@ topics: ["nextjs", "swc"]
 published: true
 ---
 
-`"use cache"`はNext.jsのDynamic IOで利用することができる、新たなディレクティブです。本稿では、`"use cache"`の成り立ちや内部実装について解説します。
+`"use cache"`は、Next.jsのDynamic IOで利用することができる新たなディレクティブです。本稿は筆者の備忘録を兼ねて、Dynamic IOの成り立ちや`"use cache"`の内部実装について解説するものです。
 
 :::message
-本稿の対象読者は、Dynamic IOや`"use cache"`の成り立ちであったり、内部実装に興味のある方です。Dynamic IOのコンセプトが語られている[_Our Journey with Caching_](https://nextjs.org/blog/our-journey-with-caching)を未読の方は、まずこちらから読むことをお勧めします。
+[_Our Journey with Caching_](https://nextjs.org/blog/our-journey-with-caching)を未読の方は、まずこちらから読むことをお勧めします。
 :::
 
 :::message alert
@@ -20,14 +20,14 @@ published: true
 
 [Dynamic IO](https://nextjs.org/docs/canary/app/api-reference/config/next-config-js/dynamicIO)は2024年10月のNext Confで発表された、Next.jsにおける新しいコンセプトを実証するための実験的モードです。Dynamic IOはその名の通り、主に動的I/O処理に対する振る舞いを大きく変更するものです。
 
-具体的には、以下のような処理を扱う際の振る舞いが変更されます。
+具体的には、以下の処理に対する振る舞いが変更されます。
 
-- `fetch()`をはじめとしたデータフェッチ
-- [Dynamic APIs](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-apis)
-- Next.jsがラップするモジュール（`Date`、`Math`、Node.jsの`crypto`モジュールなど）
-- 任意の非同期関数 (マイクロタスクを除く)
+- データフェッチ: `fetch()`やDBアクセスなど
+- [Dynamic APIs](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-apis): `headers()`や`cookies()`など
+- Next.jsがラップするモジュール: `Date`、`Math`、Node.jsの`crypto`モジュールなど
+- 任意の非同期関数(マイクロタスクを除く)
 
-これらを扱う際、特にデータフェッチを扱う際には、`<Suspense>`境界内に配置するか`"use cache"`でキャッシュ可能であることを宣言することが必須となります。
+Dynamic IOでこれらを扱う際には`<Suspense>`境界内に配置、もしくは`"use cache"`でキャッシュ可能であることを宣言する必要があります^[Dynamic APIsはリクエスト時の情報を基本としているため、`"use cache"`することはできません。]。
 
 - `<Suspense>`: 動的にデータフェッチを実行する場合、対象のServer Componentsを`<Suspense>`境界内に配置します。従来同様`<Suspense>`境界内はStreamingで配信されます。
 - `"use cache"`: データフェッチがキャッシュ可能な場合、`"use cache"`を宣言することで、Next.jsにキャッシュ可能であることを指示します。
@@ -58,15 +58,11 @@ export default function Page() {
 }
 ```
 
-開発者はデータフェッチを扱う際、`<Suspense>`境界内で常に実行するか、`"use cache"`でキャッシュ可能にするか選択する必要があります。これにより、従来のデフォルトで強力なキャッシュに起因する混乱は、解消されることが予想されます。
-
-また、即座にデータフェッチを実行してユーザーへのレスポンスがブロックされることもないため、Next.jsはユーザーに対し常に効率的なレスポンス配信が可能となります。
-
-Dynamic IOはシンプルで明確な開発者体験を提供すると同時に、高いパフォーマンスを実現する意欲的なコンセプトであると言えます。
+Dynamic IOではレスポンスの開始がデータフェッチによってブロックされることがないため、効率的な配信が可能となります。
 
 ### 私見: キャッシュの混乱とNext.jsへの評価
 
-Dynamic IOは現状実験的モードですが、未来のNext.jsのあり方の1つとも考えられます。前述の通り、Dynamic IOによってキャッシュのデフォルト挙動にまつわる多くの混乱を根本的に解決する可能性があります。
+Dynamic IOは現状実験的モードですが、未来のNext.jsのあり方の1つとも考えられます。従来のNext.jsのデフォルトで強力なキャッシュは、開発者に多くの混乱をもたらしました。Dynamic IOにおいて開発者は、`<Suspense>`境界内で常に実行するか`"use cache"`でキャッシュ可能にするか明示的に選択することになるため、従来の混乱は解消されると考えられます。
 
 キャッシュの複雑さはNext.jsに対する最も大きなネガティブ要素だったと言っても過言ではありません。Dynamic IOの開発が進むにつれ、**Next.jsに対する評価も大きく改める必要がある**のではないかと筆者は考えています。
 
@@ -113,26 +109,24 @@ https://nextjs.org/docs/canary/app/api-reference/directives/use-cache
 
 `ResumeDataCache`はPPRのPrerenderから引き継がれる特殊なキャッシュで、現時点では`CacheHandler`とは別物になっています。
 
-将来的にこれらは変更される可能性もありますが、PPRのために特別なキャッシュが存在するということは注意しておく必要があるかもしれません。
-
 :::message
 上記`CacheHandler`は、[`incrementalCacheHandlerPath`](https://nextjs.org/docs/app/api-reference/next-config-js/incrementalCacheHandlerPath)で設定可能なカスタムキャッシュハンドラーとは別物です。
 :::
 
 ## `"use cache"`の内部実装
 
-ここまではDynamic IOや`"use cache"`について解説してきましたが、以降は`"use cache"`がどう実現されているのか、Next.jsの内部実装について解説します。
+以降は`"use cache"`がどう実現されているのか、Next.jsの内部実装について解説します。
 
 `"use cache"`は大まかに以下のような仕組みで実現されています。
 
-1. SWC Pluginで`"use cache"`対象となる関数を、Next.js内部定義の`cache()`を通して定義する形に置き換える
+1. SWC Pluginで`"use cache"`対象となる関数を、Next.js内部定義の`cache()`を通して定義する形に変換する
 2. `cache()`は引数にキャッシュのIDや元となる関数などを含み、このIDなどをもとにキャッシュの取得や保存を行う
-
-SWC Pluginの置き換え部分から実装を確認していきましょう。
 
 ### `"use cache"`に対するトランスパイル
 
-Next.jsアプリケーションは[SWC](https://swc.rs/)でトランスパイルされ、Server Actions用の`"use server"`に対する置き換え処理は[SWC Plugin](https://swc.rs/docs/plugin/ecmascript/getting-started)で実装されています。`"use cache"`の置き換えも、このSWC Pluginに含まれる形で実装されています。`"use server"`用のPluginで`"use cache"`に関する処理をしているのはだいぶ違和感がありますが、現状はそうなっているようです。
+Next.jsアプリケーションは[SWC](https://swc.rs/)でトランスパイルされ、Server Actionsをマークする`"use server"`に対しては[SWC Plugin](https://swc.rs/docs/plugin/ecmascript/getting-started)によって独自の変換処理が適用されます。`"use cache"`の変換も、このSWC Pluginに含まれる形で実装されています。
+
+`"use server"`用のPluginで`"use cache"`に関する処理をしているのはだいぶ違和感がありますが、実験的モードですし実装速度を優先したのかもしれません。
 
 以下は`function() {}`の先頭に`"use cache"`があった時の処理です。`if let Directive::UseCache { cache_kind } = directive { ... }`で`"use cache"`を判定しています。
 
@@ -148,17 +142,17 @@ https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/
 
 ここでは対象コードのアウトプットである`new`に対し、コメントにもあるような`import { cache as $$cache__ } from "private-next-rsc-cache-wrapper";`が挿入されるような処理がされています。
 
-さらに`self.maybe_hoist_and_create_proxy_for_cache_function()`の後続処理で、対象の`function() {}`に対し`export var {cache_ident} = ...`の形に置き換える処理がされます。
+さらに`self.maybe_hoist_and_create_proxy_for_cache_function()`の後続処理で、対象の`function() {}`に対し`export var {cache_ident} = ...`の形に変換処理が適用されます。
 
 https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/crates/next-custom-transforms/src/transforms/server_actions.rs#L836-L863
 
-上記の`init`で呼ばれる`wrap_cache_expr()`にて、対象の`function() {}`は`$$cache__("name", "id", 0, function() {})`のような形に置き換えられます。
+上記の`init`で呼ばれる`wrap_cache_expr()`にて、対象の`function() {}`は`$$cache__("name", "id", 0, function() {})`のような形に変換されます。
 
 https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/crates/next-custom-transforms/src/transforms/server_actions.rs#L2217-L2236
 
-これらの処理により、`"use cache"`の対象関数は`private-next-rsc-cache-wrapper`の`cache()`関数を介して定義される形に置き換えられます。
+これらの処理により、`"use cache"`の対象関数は`private-next-rsc-cache-wrapper`の`cache()`関数を介して定義される形に変換されます。
 
-その他にもいくつか処理はありますが、`cache()`関数の振る舞いが重要なので、残り部分の処理は割愛します。これらの処理を経て最終的には以下のような入出力が得られます。
+その他にもいくつか処理はありますが、残り部分の処理は割愛します。これらの処理を経て最終的には以下のような入出力が得られます。
 
 ```tsx :input
 "use cache";
@@ -204,7 +198,7 @@ export var Cached = registerServerReference(
 
 ### `private-next-rsc-cache-wrapper`
 
-上記の置き換えで挿入された`private-next-rsc-cache-wrapper`は、webpackのaliasです。
+上記の変換で挿入された`private-next-rsc-cache-wrapper`は、webpackのaliasです。
 
 https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/packages/next/src/build/create-compiler-aliases.ts#L165-L166
 
@@ -263,8 +257,6 @@ https://zenn.dev/akfm/articles/next-app-router-client-cache
 
 https://zenn.dev/akfm/articles/nextjs-revalidate
 
-上記の記事を執筆してる時にはいつも利用者目線での「複雑さ」を感じていました。しかし今回、`"use cache"`について調査している時に感じたのは「シンプルさ」です。SWC Pluginに依存する実装をすることは、黒魔術やMagicと称され忌避されることも多いので、実装がシンプルとは言い難いかも知れませんが、少なくとも利用者目線ではシンプルだと感じました。
+上記の記事を執筆してる時に何度も、注意すべき制約が多いことが気がかりでした。今回`"use cache"`について調査している時には、利用者側の制約については少ないような印象を受けました。SWC Pluginによる実装は黒魔術やMagicと称され忌避されることも多いですが、実際利用する観点においてはシンプルに設計されていると思います。
 
-従来のキャッシュに対するネガティブな意見はデフォルト挙動などが大きかったとは思います。それに加え、キャッシュの実装や仕様が複雑で利用者側も深い理解を必要としたことも、ネガティブ要因として大きかったのではないかと個人的には考えています。
-
-Dynamic IOはシンプルな設計、シンプルな実装の上に成り立っているように感じており、調査を進めるほど期待感が高まりました。今後のDynamic IOの開発に期待したいところです。
+従来のキャッシュに対するネガティブな意見は、デフォルト挙動に関するものが大きかったとは思います。Dynamic IOはシンプルな設計の上に成り立っているように感じており、調査を進めるほど期待感が高まりました。今後のDynamic IOの開発に期待したいところです。
