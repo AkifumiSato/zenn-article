@@ -223,7 +223,7 @@ https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/
 
 https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/packages/next/src/server/use-cache/use-cache-wrapper.ts#L57-L60
 
-設定可能なCacheHandlerのように見えますが、[導入時のPR](https://github.com/vercel/next.js/pull/71505)や筆者が実装を確認した限りでは設定できるような手段は見つかりませんでした。そのため、現状は必ず`DefaultCacheHandler`が利用されるものと考えられます。なお、`DefaultCacheHandler`は内省のLRUCacheです。
+設定可能なCacheHandlerのように見えますが、[導入時のPR](https://github.com/vercel/next.js/pull/71505)や筆者が実装を確認した限りでは設定できるような手段は見つかりませんでした。そのため、現状は必ず`DefaultCacheHandler`が利用されるものと考えられます。なお、`DefaultCacheHandler`はLRUのインメモリキャッシュです。
 
 https://github.com/vercel/next.js/blob/564794df56e421d6d4c2575b466a8be3a96dd39a/packages/next/src/server/lib/cache-handlers/default.ts#L33
 
