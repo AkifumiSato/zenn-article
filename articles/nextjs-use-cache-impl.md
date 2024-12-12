@@ -6,10 +6,10 @@ topics: ["nextjs", "swc"]
 published: true
 ---
 
-`"use cache"`はNext.jsにおける新たなディレクティブで、Dynamic IOという実験的なモードで利用することができます。本稿では、2024年12月現在における`"use cache"`の成り立ちや内部実装について解説します。
+`"use cache"`はNext.jsのDynamic IOで利用することができる、新たなディレクティブです。本稿では、`"use cache"`の成り立ちや内部実装について解説します。
 
 :::message
-本稿の対象読者は、[_Our Journey with Caching_](https://nextjs.org/blog/our-journey-with-caching)などでDynamic IOについて概要をすでに理解しており、Dynamic IOや`"use cache"`の成り立ちや内部実装について興味のある方です。
+本稿の対象読者は、Dynamic IOや`"use cache"`の成り立ちであったり、内部実装に興味のある方です。Dynamic IOのコンセプトが語られている[_Our Journey with Caching_](https://nextjs.org/blog/our-journey-with-caching)を未読の方は、まずこちらから読むことをお勧めします。
 :::
 
 :::message alert
