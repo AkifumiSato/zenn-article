@@ -17,7 +17,7 @@ https://gihyo.jp/book/2024/978-4-297-14061-8
 本書を通じてNext.jsの考え方を学び、自信を持って実装する方が増えてくれたら幸いです。
 
 :::message alert
-本書は執筆時の最新であるNext.js v14系を前提としています。
+本書は執筆時の最新であるNext.js v15系を前提としています。
 :::
 
 ## 変更履歴
@@ -35,3 +35,4 @@ https://gihyo.jp/book/2024/978-4-297-14061-8
       - [エラーハンドリング](part_5_error_handling)
   - 校正
     - [細粒度のREST API設計](part_1_fine_grained_api_design)
+- [2025/01/xx](TBW)
