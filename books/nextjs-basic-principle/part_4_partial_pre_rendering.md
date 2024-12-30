@@ -1,5 +1,5 @@
 ---
-title: "Partial Pre Rendering(PPR)"
+title: "[Experimental] Partial Pre Rendering(PPR)"
 ---
 
 ## 要約
