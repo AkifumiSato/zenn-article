@@ -4,7 +4,7 @@ title: "[Experimental] Dynamic IO"
 
 ## 要約
 
-Next.jsは現在、キャッシュの仕組みの大幅な刷新に取り組んでいます。これにより、本書で紹介してきたキャッシュに関する知識の多くは**過去のものとなる可能性**があります。
+Next.jsは現在、キャッシュの大幅な刷新に取り組んでいます。これにより、本書で紹介してきたキャッシュに関する知識の多くは**過去のものとなる**可能性があります。
 
 これからのNext.jsでキャッシュがどう変わるのか理解して、将来の変更に備えましょう。
 
@@ -14,32 +14,30 @@ Next.jsは現在、キャッシュの仕組みの大幅な刷新に取り組ん�
 
 ## 背景
 
-[_第3部_](./part_3)ではApp Routerにおけるキャッシュの理解が重要であるとし、ここまで解説してきましたが、多層のキャッシュや複数の概念が登場し、難しいと感じた方も多かったのではないでしょうか。実際、App Router登場当初から現在に至るまでキャッシュに関する批判的意見は多く、現在のNext.jsにおける最も大きなネガティブ要素と言っても過言ではありません。
+[_第3部_](./part_3)ではApp Routerにおけるキャッシュの理解が重要であるとし、ここまで解説してきましたが、多層のキャッシュや複数の概念が登場し、難しいと感じた方も多かったのではないでしょうか。実際、App Router登場当初から現在に至るまでキャッシュに関する批判的意見^[[Next.jsのDiscussion](https://github.com/vercel/next.js/discussions/54075)では、批判的な意見や改善要望が多く寄せられました。]は多く、現在のNext.jsにおける最も大きなネガティブ要素と言っても過言ではありません。
 
-https://github.com/vercel/next.js/discussions/54075
+では、開発者の混乱を解決するためにキャッシュは全てオプトインにすればよいかというと、そう単純な話ではありません。キャッシュの扱いを変更するには、Next.jsが**デフォルトで高いパフォーマンス**を実現できることを重視したフレームワークであることも同時に考慮する必要があります。単にキャッシュをオプトインにするような変更は、このコンセプトに反します。
 
-一方Next.jsは、**デフォルトで高いパフォーマンス**を実現できることを重視したフレームワークです。開発者のフィードバックを優先してキャッシュは全てオプトインにすることはデフォルトで高いパフォーマンスというコンセプトを蔑ろにすることにつながってしまうため、キャッシュに関する批判への対応は非常に難しい問題でした。
+破壊的変更は当然ながら何度も行うわけにもいかないので、理想は1度の変更で「デフォルトで高いパフォーマンス」というコンセプトを維持しつつ、開発者の混乱を解決することです。Next.jsコアチームにとってこれは非常に難しい問題で、慎重な検討が必要でした。
 
 ## 設計・プラクティス
 
-**Dynamic IO**は文字通り、Next.jsにおける動的I/O処理の振る舞いを大きく変更するものです。
+**Dynamic IO**は、前述の問題に対しNext.jsコアチームが検討を重ねて生まれた1つの解決案で、文字通りNext.jsにおける動的I/O処理の振る舞いを大きく変更するものです。
 
 https://nextjs.org/docs/app/api-reference/config/next-config-js/dynamicIO
 
-具体的には、動的I/O処理とは以下を指します。
+ここで言う動的I/O処理にはデータフェッチや`headers()`や`cookies()`などの[Dynamic APIs](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-apis)が含まれ^[動的I/O処理には`Date`、`Math`といったNext.jsが拡張してるモジュールや、任意の非同期関数なども含まれます]、Dynamic IOではこれらの処理を含む場合以下いずれかの対応が必要となります。
 
-- データフェッチ: `fetch()`やDBアクセスなど
-- [Dynamic APIs](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-apis): `headers()`や`cookies()`など
-- Next.jsがラップするモジュール: `Date`、`Math`、Node.jsの`crypto`モジュールなど
-- 任意の非同期関数(マイクロタスクを除く)
+- `<Suspense>`: 非同期コンポーネントを`<Suspense>`境界内に配置し、Streaming配信する
+- `"use cache"`: 非同期関数やコンポーネントに`"use cache"`を指定してキャッシュする
 
-Dynamic IOでは、これらの処理を含む場合には`<Suspense>`でレンダリングを遅延させるか`"use cache"`でキャッシュするか選択する必要があり、デフォルトではこれらの動的I/O処理は扱うことはできません。
+ここで重要なのは、従来のようにデフォルトで非同期処理を扱えるわけではなく、**上記いずれかの選択が必ず必要**であると言う点です。これは、従来のデフォルトキャッシュがもたらした混乱に対し、明示的な選択を強制するというアプローチによって、高いパフォーマンスを実現しやすい形をとりつつも開発者の混乱を解消することを目指したもので、筆者はシンプルかつ柔軟な設計だと評価しています。
 
-これは、デフォルトキャッシュがもたらした混乱に対し、デフォルトでキャッシュするかしないかではなく、**明示的な選択を強制する**というアプローチによって、高いパフォーマンスを実現しやすい形をとりつつも開発者の混乱を解消することを目指したもので、筆者はシンプルかつ柔軟な設計だと評価しています。このようなアプローチが可能となったのは、`"use cache"`による**キャッシュ境界を指定可能にする発明**が大きく寄与しています。
+以降は`<Suspense>`と`"use cache"`の使い方について解説します。
 
-### `<Suspense>`境界内の遅延実行
+### `<Suspense>`によるStreaming
 
-Dynamic IOで動的I/O処理を扱いたい場合、1つ目の選択肢として挙げられるのが`<Suspense>`によってStreamingで段階的にレンダリング結果を配信する方法です。
+ECサイトのカートやダッシュボードなど、リアルタイム性や細かい認可などが必要な場面では非キャッシュなデータフェッチが必須です。このように非常に動的な要素を実装する場合、Dynamic IOでは`<Suspense>`境界内で動的I/O処理を扱うことができます。`<Suspense>`境界内は従来同様、Streamingで段階的にレンダリング結果が配信されます。
 
 ```tsx
 async function Profile({ id, children }: { id: string; children: ReactNode }) {
@@ -69,7 +67,7 @@ export default async function Page() {
 
 ### `"use cache"`によるキャッシュ
 
-Dynamic IOでは、`"use client"`のようにキャッシュの境界を`"use cache"`で指定します。前述の通り、デフォルトではキャッシュされないので`"use cache"`による明示的なオプトインが必要です。
+一方キャッシュ可能な要素を実装する場合には、Dynamic IOではキャッシュの境界に`"use cache"`を指定します。`"use cache"`のキャッシュ境界は`"use client"`同様、Compositionパターンが利用できるので`children`を渡すことも可能です。
 
 以下は前述の`<Profile>`をキャッシュする例です。
 
@@ -152,20 +150,67 @@ async function getBlogPosts(page: number) {
 }
 ```
 
+### `<Suspense>`と`"use cache"`の併用
+
+`<Suspense>`と`"use cache"`は併用が可能である点が、従来と比較して非常に優れている点です。以下のように、動的な要素とキャッシュ可能な静的な要素を組み合わせることができます。
+
+```tsx
+export default function Page() {
+  return (
+    <>
+      ...
+      {/* Static Rendering */}
+      <Suspense fallback={<Loading />}>
+        {/* Dynamic Rendering */}
+        <DynamicComponent>
+          {/* Static Rendering */}
+          <StaticComponent />
+        </DynamicComponent>
+      </Suspense>
+    </>
+  );
+}
+```
+
 ## トレードオフ
-
-### Experimental期間
-
-TBW
 
 ### キャッシュの永続化
 
-TBW
+Dynamic IOにおけるキャッシュの永続化は`next.config.js`を通じてカスタマイズ可能ですが、従来からある[Custom Cache Handler](https://nextjs.org/docs/app/api-reference/config/next-config-js/incrementalCacheHandlerPath)とは別物になります。かなりややこしいですが、従来のものが`cacheHandler`で設定できたのに対し、Dynamic IOのキャッシュハンドラーは`experimental.cacheHandlers`で設定します。
+
+```js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    dynamicIO: true,
+    cacheHandlers: {
+      // ref: https://github.com/vercel/next.js/blob/c228a6e65d4b7973aa502544f9f8e025a6f97066/packages/next/src/server/config-shared.ts#L240-L245
+      default: require.resolve("..."),
+      remote: require.resolve("..."),
+      static: require.resolve("..."),
+    },
+  },
+};
+
+module.exports = nextConfig;
+```
+
+これらの利用方法などもまだドキュメントが見当たらないので、Next.jsコアチームの対応を待つ必要があります。
 
 ### キャッシュに関する制約
 
-TBW
+`"use cache"`のキャッシュのキーは自動でコンパイラが識別してくれるので、非常に便利ですが、一方[シリアル化](https://ja.react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)不可能なものはキャッシュのキーに含まれないため注意が必要です。以下のように関数を引数にとる場合、`"use cache"`しないよう設計した方が予期せぬ挙動を防げます。
+
+```tsx
+async function cachedFunctionWithCallback(callback: () => void) {
+  "use cache";
+
+  // ...
+}
+```
+
+また、`"use cache"`を指定した関数の戻り値は必ずシリアル化可能である必要があります。
 
 ### `<Suspense>`利用時には`fallback`のレンダリングが必至
 
-TBW
+非キャッシュで動的I/O処理を扱う際には`<Suspense>`を利用する必要があるため、`fallback`のレンダリングが必至です。未指定の場合にも[Cumulative Layout Shift](https://web.dev/articles/cls?hl=ja)（CLS）が発生するため、`fallback`の指定を忘れないようにしましょう。
