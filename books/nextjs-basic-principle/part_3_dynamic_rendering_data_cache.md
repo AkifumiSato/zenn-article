@@ -84,7 +84,8 @@ export default async function Component({ userID }) {
 ```
 
 :::message alert
-`unstable_cache()`はAPI名の通り安定版ではなく、今後変更される可能性があります。
+`unstable_cache()`はv15で非推奨となりました。ただし、移行先である`"use cache"`は[Dynamic IO](https://nextjs.org/docs/app/api-reference/config/next-config-js/dynamicIO)でのみ有効で、Dynamic IO自体がまだ実験的機能の段階です。
+今後Dynamic IOが安定化したら以降を考えましょう。
 :::
 
 ### オンデマンドrevalidate

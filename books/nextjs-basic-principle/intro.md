@@ -36,3 +36,8 @@ https://gihyo.jp/book/2024/978-4-297-14061-8
   - 校正
     - [細粒度のREST API設計](part_1_fine_grained_api_design)
 - [2025/01/xx](TBW)
+  - 追加
+    - 第3部
+      - [[Experimental] Dynamic IO](part_3_dynamicio)
+  - 校正
+    - Next.js v15対応
