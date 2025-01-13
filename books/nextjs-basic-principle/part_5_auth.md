@@ -101,9 +101,11 @@ CookieにJWTを格納している場合は、middlewareでJWTの検証を行う�
 例えばVercelのようなSaaSにおいて、有償プランユーザーのみが利用可能なデータアクセスがあった場合、データフェッチ層に以下のような認可チェックを実装すべきでしょう。
 
 ```ts
+import { unauthorized } from "next/navigation";
+
 export async function fetchPaidOnlyData() {
   if (!(await isPaidUser())) {
-    throw new Unauthorized("Unauthorized paid user");
+    unauthorized();
   }
 
   // ...
@@ -113,12 +115,12 @@ export async function fetchPaidOnlyData() {
 X（旧Twitter）のようにブロックやミュートなど、きめ細かいアクセス制御（Fine-Grained Access Control）が必要な場合は、バックエンドAPIにアクセス制御を隠蔽する場合もあります。
 
 ```ts
+import { forbidden } from "next/navigation";
+
 export async function fetchPost(postId: string) {
   const res = await fetch(`https://dummyjson.com/posts/${postId}`);
   if (res.status === 401) {
-    const { reason } = (await res.json()) as PostApiError;
-    // e.g. reason: 「投稿者からブロックされています」など
-    throw new Forbidden(reason);
+    forbidden();
   }
 
   return (await res.json()) as Post;
@@ -147,4 +149,4 @@ export default async function Page() {
 
 https://github.com/vercel/next.js/pull/70961
 
-執筆時点ではDraftのため、v15に取り込まれるかなどについては不明です。今後の動向に期待しましょう。
+執筆時点ではDraftのため、実際に取り込まれるのかどうかや時期などについては不明です。今後の動向に期待しましょう。

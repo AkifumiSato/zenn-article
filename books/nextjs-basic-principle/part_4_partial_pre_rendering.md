@@ -7,7 +7,7 @@ title: "[Experimental] Partial Pre Rendering(PPR)"
 PPRは従来のレンダリングモデルのメリットを組み合わせて、シンプルに整理した新しいアプローチです。`<Suspense>`境界の外側をStatic Rendering、内側をDynamic Renderingとすることが可能で、既存のモデルを簡素化しつつも高いパフォーマンスを実現します。PPRの使い方・考え方・実装状況を理解しておきましょう。
 
 :::message alert
-本稿はNext.js v15.0.0-rc.0時点の情報を元に執筆しており、PPRはさらにexperimentalな機能です。v15.0.0のリリース時や、PPRがstableな機能として提供される際には機能の一部が変更されてる可能性がありますので、ご注意下さい。
+本稿はNext.js v15.1.x時点の情報を元に執筆しており、PPRはさらにexperimentalな機能です。PPRがstableな機能として提供される際には機能の一部が変更されてる可能性がありますので、ご注意下さい。
 :::
 
 :::message
@@ -59,7 +59,7 @@ https://zenn.dev/akfm/articles/nextjs-partial-pre-rendering#ppr%E3%81%AE%E6%8C%9
 
 ### PPRの使い方
 
-PPRは、本書執筆時点における最新のRC(v15.0.0-rc.0)でまだexperimentalな機能という位置付けです。そのため、PPRを利用するには`next.config.ts`に以下の設定を追加する必要があります。
+PPRは、本書執筆時点でまだexperimentalな機能という位置付けです。そのため、PPRを利用するには`next.config.ts`に以下の設定を追加する必要があります。
 
 ```ts :next.config.ts
 import type { NextConfig } from "next";
@@ -103,9 +103,9 @@ export default function Page() {
 
 ### PPRの今後
 
-前述の通り、PPRはv14.x~v15.0.0(RC)においてまだexperimentalな機能です。PPRに伴うNext.js内部の変更は大規模なもので、バグや変更される挙動もあるかもしれません。現時点では、実験的利用以上のことは避けておくのが無難でしょう。
+前述の通り、PPRはまだexperimentalな機能です。PPRに伴うNext.js内部の変更は大規模なもので、バグや変更される挙動もあるかもしれません。現時点では、実験的利用以上のことは避けておくのが無難でしょう。
 
-ただし、PPRはNext.jsコアチームが本書執筆時点で最も意欲的に取り組んでいる機能です。将来的には主要な機能となる可能性が高いので、先行して学んでおく価値はあると筆者は考えます。
+ただし、PPRはNext.jsコアチームが最も意欲的に取り組んでいる機能の1つです。将来的には主要な機能となる可能性が高いので、先行して学んでおく価値はあると筆者は考えます。
 
 ### CDNキャッシュとの相性の悪さ
 

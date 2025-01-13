@@ -83,6 +83,10 @@ https://nextjs.org/docs/canary/app/api-reference/file-conventions/not-found
 多くの場合、`notFound()`を呼び出すとHTTPステータスコードとして404 Not Foundが返されますが、`<Suspens>`内などで`notFound()`を利用すると200 OKが返されることがあります。この際Next.jsは、`<meta name="robots" content="noindex" />`タグを挿入してGoogleクローラなどに対してIndexingの必要がないことを示します。
 :::
 
+:::message
+Next.jsには[`unauthorized()`](https://nextjs.org/docs/app/api-reference/functions/unauthorized)や[`forbidden()`](https://nextjs.org/docs/app/api-reference/functions/forbidden)も提供されていますが、執筆時現在これらは実験的機能となっています。今後変更される可能性もあるので注意しましょう。
+:::
+
 ### Server Actionsのエラー
 
 Server Actionsのエラーは、**予測可能なエラー**と**予測不能なエラー**で分けて考える必要があります。
