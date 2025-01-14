@@ -14,24 +14,24 @@ Next.jsは現在、キャッシュの大幅な刷新に取り組んでいます�
 
 ## 背景
 
-[_第3部_](./part_3)ではApp Routerにおけるキャッシュの理解が重要であるとし、ここまで解説してきましたが、多層のキャッシュや複数の概念が登場し、難しいと感じた方も多かったのではないでしょうか。実際、App Router登場当初から現在に至るまでキャッシュに関する批判的意見^[[Next.jsのDiscussion](https://github.com/vercel/next.js/discussions/54075)では、批判的な意見や改善要望が多く寄せられました。]は多く、現在のNext.jsにおける最も大きな課題の一つと言えるでしょう。
+[_第3部_](./part_3)ではApp Routerにおけるキャッシュの理解が重要であるとし、解説してきましたが、多層のキャッシュや複数の概念が登場し、難しいと感じた方も多かったのではないでしょうか。実際、App Router登場当初から現在に至るまでキャッシュに関する批判的意見^[[Next.jsのDiscussion](https://github.com/vercel/next.js/discussions/54075)では、批判的な意見や改善要望が多く寄せられました。]は多く、現在のNext.jsにおける最も大きな課題の一つと言えるでしょう。
 
-開発者の混乱を解決する最もシンプルな方法はキャッシュをオプトイン方式に変更することです。ただしこの変更は、Next.jsが**デフォルトで高いパフォーマンス**を実現できることを重視したフレームワークであるというコンセプトに反します。また、破壊的変更は頻繁に行うべきではないため、理想としては一度の変更で「デフォルトで高いパフォーマンス」というコンセプトを維持しつつ、開発者の混乱を解決することです。
+開発者の混乱を解決する最もシンプルな方法は、キャッシュをデフォルトで有効化する形をやめて、オプトイン方式に変更することです。ただし、Next.jsは**デフォルトで高いパフォーマンス**を実現することを重視したフレームワークであるため、このような変更はコンセプトに反します。
 
-Next.jsコアチームにとってこれは非常に難しい問題で、慎重な検討が必要でした。
+Next.jsは、キャッシュにまつわる混乱の解決とデフォルトで高いパフォーマンスの両立という、非常に難しい課題に取り組んできました。
 
 ## 設計・プラクティス
 
-**Dynamic IO**は、前述の問題に対しNext.jsコアチームが検討を重ねて生まれた1つの解決案で、文字通りNext.jsにおける動的I/O処理の振る舞いを大きく変更するものです。
+**Dynamic IO**は、前述の課題に対しNext.jsコアチームが検討を重ねて生まれた1つの解決案で、文字通りNext.jsにおける動的I/O処理の振る舞いを大きく変更するものです。
 
 https://nextjs.org/docs/app/api-reference/config/next-config-js/dynamicIO
 
-ここで言う動的I/O処理にはデータフェッチや`headers()`や`cookies()`などの[Dynamic APIs](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-apis)が含まれ^[動的I/O処理には`Date`、`Math`といったNext.jsが拡張してるモジュールや、任意の非同期関数なども含まれます]、Dynamic IOではこれらの処理を含む場合以下いずれかの対応が必要となります。
+ここで言う動的I/O処理にはデータフェッチや`headers()`や`cookies()`などの[Dynamic APIs](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-apis)が含まれ^[動的I/O処理には`Date`、`Math`といったNext.jsが拡張してるモジュールや、任意の非同期関数なども含まれます]、Dynamic IOではこれらの処理を含む場合、以下いずれかの対応が必要となります。
 
-- `<Suspense>`: 非同期コンポーネントを`<Suspense>`境界内に配置し、Streaming配信する
-- `"use cache"`: 非同期関数やコンポーネントに`"use cache"`を指定してキャッシュする
+- **`<Suspense>`**: 非同期コンポーネントを`<Suspense>`境界内に配置し、Streaming配信する
+- **`"use cache"`**: 非同期関数やコンポーネントに`"use cache"`を指定してキャッシュする
 
-ここで重要なのは、従来のようにデフォルトで非同期処理を扱えるわけではなく、**上記いずれかの対応が必須となる**点です。これは、従来のデフォルトキャッシュがもたらした混乱に対し、明示的な選択を強制することで、高いパフォーマンスを実現しやすい形をとりつつも開発者の混乱を解消することを目指したもので、筆者はシンプルかつ柔軟な設計だと評価しています。
+ここで重要なのは、従来のようにデフォルトで非同期処理を扱えるわけではなく、**上記いずれかの対応が必須となる**点です。これは、従来のデフォルトキャッシュがもたらした混乱に対し明示的な選択を強制することで、高いパフォーマンスを実現しやすい形をとりつつも開発者の混乱を解消することを目指したもので、筆者はシンプルかつ柔軟な設計だと評価しています。
 
 ### `<Suspense>`によるStreaming
 
@@ -61,11 +61,11 @@ export default async function Page() {
 }
 ```
 
-上記の場合、ユーザーには`Your Profile`というタイトルと`<Loading />`が表示され、その後に`<Profile>`の内容が表示されます。`<Page>`はリクエストごとにレンダリングされますが、動的I/O処理を含まないため非常に高速な表示が期待できます。
+上記の場合、ユーザーには`Your Profile`というタイトルと`<Loading />`が表示され、その後に`<Profile>`の内容が表示されます。これは、`<Page>`は`fallback`を即座にレンダリングしつつ、`<Profile>`が並行レンダリングされ、完了次第ユーザーに配信されるためです。
 
 ### `"use cache"`によるキャッシュ
 
-キャッシュ可能な要素を実装する場合、Dynamic IOではキャッシュの境界に`"use cache"`を明示します。`"use cache"`のキャッシュ境界は`"use client"`同様、Compositionパターンが利用できるので`children`を渡すことも可能です。
+一方、商品情報やブログ記事などのキャッシュ可能な要素を実装する場合、Dynamic IOではキャッシュしたい関数やコンポーネントなどの境界に`"use cache"`を指定します。`"use cache"`のキャッシュ境界は`"use client"`同様、Compositionパターンが利用できるので`children`を渡すことも可能です。
 
 以下は前述の`<Profile>`をキャッシュする例です。
 
@@ -84,9 +84,9 @@ async function Profile({ id, children }: { id: string; children: ReactNode }) {
 }
 ```
 
-キャッシュは通常キーが必要になりますが、`"use cache"`ではコンパイラがキャッシュのキーを自動で生成します。引数や参照してる変数などをキーとして認識されますが、`children`のような直接シリアル化できないものは**キーに含まれません**。これにより、`children`のようなコンポーネントの計算に直接影響がないものを含んでいても、キャッシュがしっかりと有効になるように設計されています。
+キャッシュは通常キーが必要になりますが、`"use cache"`ではコンパイラがキャッシュのキーを自動で生成します。引数や参照してる変数などをキーとして認識されますが、`children`のような直接シリアル化できないものは**キーに含まれません**。これにより、`children`のようなコンポーネントの計算に直接影響がないものを含んでいても、キャッシュがしっかりと有効になるように設計されています。また、Client Components同様`"use cache"`によって生成されるキャッシュ境界も[_Compositionパターン_](./part_2_composition_pattern)が適用できます。
 
-`"use cache"`はファイルやコンポーネントを含む関数レベルで指定することができます。ファイルに指定した場合には、すべての`export`される関数に対し`"use cache"`が適用されます。
+`"use cache"`はコンポーネントを含む関数やファイルレベルで指定することができます。ファイルに指定した場合には、すべての`export`される関数に対し`"use cache"`が適用されます。
 
 ```tsx
 // File level
@@ -114,7 +114,7 @@ export async function getData() {
 
 ### キャッシュの詳細な指定
 
-`"use cache"`の世界では従来より自由度の高いキャッシュ戦略が可能になります。具体的には、キャッシュのタグや有効期間の指定方法がより柔軟になりました。
+`"use cache"`を使ったキャッシュでは、従来より自由度の高いキャッシュ戦略が可能となります。具体的には、キャッシュのタグや有効期間の指定方法がより柔軟になりました。
 
 従来は`fetch()`のオプションでタグを指定するなどしていたため、データフェッチ後にタグをつけることができませんでしたが、Dynamic IOでは`cacheTag()`で関数にタグを付与することができるので、より柔軟な指定が可能になりました。
 
@@ -126,6 +126,7 @@ async function getBlogPosts(page: number) {
 
   const posts = await fetchPosts(page);
   posts.forEach((post) => {
+    // 🚨従来は`fetch()`時に指定する必要があったため、`posts`などを参照できなかった
     cacheTag("blog-post-" + post.id);
   });
 
@@ -141,7 +142,7 @@ import { unstable_cacheLife as cacheLife } from "next/cache";
 async function getBlogPosts(page: number) {
   "use cache";
 
-  cacheLife("minutes");
+  cacheLife("minutes"); // 1min
 
   const posts = await fetchPosts(page);
   return posts;
@@ -150,7 +151,7 @@ async function getBlogPosts(page: number) {
 
 ### `<Suspense>`と`"use cache"`の併用
 
-`<Suspense>`と`"use cache"`は併用が可能である点が、従来と比較して非常に優れている点です。以下のように、動的な要素とキャッシュ可能な静的な要素を組み合わせることができます。
+`<Suspense>`と`"use cache"`は併用が可能である点も、従来と比較して非常に優れている点です。以下のように、動的な要素とキャッシュ可能な静的な要素を組み合わせることができます。
 
 ```tsx
 export default function Page() {
@@ -193,7 +194,7 @@ const nextConfig = {
 module.exports = nextConfig;
 ```
 
-これらの利用方法などもまだドキュメントが見当たらないので、Next.jsコアチームの対応を待つ必要があります。
+執筆時現在、これらの利用方法などもまだドキュメントが見当たらないので、Next.jsコアチームの対応を待つ必要があります。
 
 ### キャッシュに関する制約
 
