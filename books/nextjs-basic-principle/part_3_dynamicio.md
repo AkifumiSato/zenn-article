@@ -65,9 +65,9 @@ export default async function Page() {
 
 ### `"use cache"`によるStatic Rendering
 
-一方、商品情報やブログ記事などのキャッシュ可能な要素を実装する場合、Dynamic IOではキャッシュしたい関数やコンポーネントなどの境界に`"use cache"`を指定します。`"use cache"`のキャッシュ境界は`"use client"`同様、Compositionパターンが利用できるので`children`を渡すことも可能です。
+一方、商品情報やブログ記事などのキャッシュ可能なコンポーネントを実装する場合、Dynamic IOではキャッシュしたい関数やコンポーネントに`"use cache"`を指定します。`"use cache"`はStatic Renderingな境界を生成し、子孫コンポーネントまで含めてStatic Renderingとなります。
 
-以下は前述の`<Profile>`をキャッシュする例です。
+以下は前述の`<Profile>`をキャッシュ可能なStatic Renderingにする例です。
 
 ```tsx
 async function Profile({ id, children }: { id: string; children: ReactNode }) {
@@ -84,9 +84,9 @@ async function Profile({ id, children }: { id: string; children: ReactNode }) {
 }
 ```
 
-キャッシュは通常キーが必要になりますが、`"use cache"`ではコンパイラがキャッシュのキーを自動で生成します。引数や参照してる変数などをキーとして認識されますが、`children`のような直接シリアル化できないものは**キーに含まれません**。これにより、`children`のようなコンポーネントの計算に直接影響がないものを含んでいても、キャッシュがしっかりと有効になるように設計されています。また、Client Components同様`"use cache"`によって生成されるキャッシュ境界も[_Compositionパターン_](./part_2_composition_pattern)が適用できます。
+キャッシュは通常キーが必要になりますが、`"use cache"`ではコンパイラがキャッシュのキーを自動で識別します。具体的には、引数やクロージャが参照してる外側のスコープの変数などをキーとして認識します。一方で、`children`のような直接シリアル化できないものは**キーに含まれません**。これにより、`"use cache"`のキャッシュ境界は`"use client"`同様、[_Compositionパターン_](./part_2_composition_pattern)が適用できます。
 
-`"use cache"`はコンポーネントを含む関数やファイルレベルで指定することができます。ファイルに指定した場合には、すべての`export`される関数に対し`"use cache"`が適用されます。
+なお、`"use cache"`はコンポーネントを含む関数やファイルレベルで指定することができます。ファイルに指定した場合には、すべての`export`される関数に対し`"use cache"`が適用されます。
 
 ```tsx
 // File level
