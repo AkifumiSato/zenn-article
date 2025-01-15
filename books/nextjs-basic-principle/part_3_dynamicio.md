@@ -35,7 +35,7 @@ https://nextjs.org/docs/app/api-reference/config/next-config-js/dynamicIO
 
 ### `<Suspense>`によるDynamic Rendering
 
-ECサイトのカートやダッシュボードなど、リアルタイム性や細かい認可制御などが必要な場面では、非キャッシュなデータフェッチが必須です。このように非常に動的な要素を実装する場合、Dynamic IOでは`<Suspense>`境界内で動的I/O処理を扱うことができます。`<Suspense>`境界内は従来同様、Streamingで段階的にレンダリング結果が配信されます。
+ECサイトのカートやダッシュボードなど、リアルタイム性や細かい認可制御などが必要な場面では、キャッシュされないデータフェッチが必須です。これらで扱うような非常に動的なコンポーネントを実装する場合、Dynamic IOでは`<Suspense>`境界内で動的I/O処理を扱うことができます。`<Suspense>`境界内は従来同様、Streamingで段階的にレンダリング結果が配信されます。
 
 ```tsx
 async function Profile({ id, children }: { id: string; children: ReactNode }) {
@@ -61,7 +61,7 @@ export default async function Page() {
 }
 ```
 
-上記の場合、ユーザーには`Your Profile`というタイトルと`<Loading />`が表示され、その後に`<Profile>`の内容が表示されます。これは、`<Page>`は`fallback`を即座にレンダリングしつつ、`<Profile>`が並行レンダリングされ、完了次第ユーザーに配信されるためです。
+上記の場合、ユーザーにはまず`Your Profile`というタイトルと`fallback`の`<Loading />`が表示され、その後に`<Profile>`の内容が`fallback`に置き換わって表示されます。これは`<Profile>`が並行レンダリングされ、完了次第ユーザーに配信されるためにこのような挙動になります。
 
 ### `"use cache"`によるStatic Rendering
 
@@ -216,4 +216,4 @@ async function cachedFunctionWithCallback(callback: () => void) {
 
 ### `<Suspense>`利用時には`fallback`のレンダリングが必至
 
-非キャッシュで動的I/O処理を扱う際には`<Suspense>`を利用する必要があるため、`fallback`のレンダリングが必至です。未指定の場合にも[Cumulative Layout Shift](https://web.dev/articles/cls?hl=ja)（CLS）が発生するため、`fallback`の指定を忘れないようにしましょう。
+Dynamic Renderingで動的I/O処理を扱う際には`<Suspense>`を利用する必要があるため、`fallback`のレンダリングが必至です。未指定の場合にも[Cumulative Layout Shift](https://web.dev/articles/cls?hl=ja)（CLS）が発生するため、`fallback`の指定を忘れないようにしましょう。
