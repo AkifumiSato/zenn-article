@@ -26,7 +26,7 @@ Data Cacheができるだけキャッシュヒットするよう、データフ�
 
 ### Next.jsサーバー上の`fetch()`
 
-サーバー上で実行される`fetch()`は[Next.jsによって拡張](https://nextjs.org/docs/app/api-reference/functions/fetch#fetchurl-options)されており、Data Cacheに関するオプションが組み込まれています。デフォルトではキャッシュは永続化されますが、第2引数のオプション指定によってキャッシュ挙動を変更することが可能です。
+サーバー上で実行される`fetch()`は[Next.jsによって拡張](https://nextjs.org/docs/app/api-reference/functions/fetch#fetchurl-options)されており、Data Cacheに関するオプションが組み込まれています。デフォルトではキャッシュは無効ですが、第2引数のオプション指定によってキャッシュ挙動を変更することが可能です。
 
 ```ts
 fetch(`https://...`, {
@@ -34,10 +34,8 @@ fetch(`https://...`, {
 });
 ```
 
-`cache`はデフォルトで`"force-cache"`となっており、`"no-store"`を指定することでキャッシュを無効化することができます。
-
-:::message
-Next.jsのv15では`fetch`の[デフォルトが`no-store`](https://nextjs.org/blog/next-15-rc#caching-updates)に変更されました。
+:::message alert
+v14以前において、[`cache`オプション](https://nextjs.org/docs/app/api-reference/functions/fetch#optionscache)のデフォルトは`"force-cache"`でした。v15ではデフォルトでキャッシュが無効になるよう変更されていますが、`"no-store"`を明示的に指定しないと**Dynamic Renderingにならない**という仕様なので、注意しましょう。
 :::
 
 ```ts

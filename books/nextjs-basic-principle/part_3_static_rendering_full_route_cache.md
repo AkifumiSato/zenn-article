@@ -41,9 +41,9 @@ export default async function Page() {
 [Dynamic Routes](https://nextjs.org/docs/app/building-your-application/routing/dynamic-routes)における[`searchParams` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional)はDynamic APIsの1つとして数えられており、参照するとDynamic Renderingになります。一方[`params` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#params-optional)は、参照するとデフォルトでDynamic Renderingになりますが、[generateStaticParams()](https://nextjs.org/docs/app/api-reference/functions/generate-static-params)を利用するなどするとStatic Renderingになるため、必ずしもDynamic Renderingになるとは限りません。
 :::
 
-### `no-store`な`fetch()`
+### `cache: "no-store"`もしくは`next.revalidate: 0`な`fetch()`
 
-`fetch()`のオプションで[Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)を明示的にオプトアウトした場合、Dynamic Renderingとなります。具体的には、`fetch()`の第二引数のオプションで`cache: "no-store"`か`next: { revalidate: 0 }`を指定する必要があります。
+[`fetch()`のオプション](https://nextjs.org/docs/app/api-reference/functions/fetch#optionscache)で`cache: "no-store"`を指定した場合や、`next: { revalidate: 0 }`を指定した場合、Dynamic Renderingとなります。
 
 :::message alert
 v14以前において、`cache`オプションのデフォルトは`"force-cache"`でした。v15ではデフォルトが`"no-store"`に変更されていますが、明示的に指定しないと**Dynamic Renderingにならない**という仕様なので、注意しましょう。
