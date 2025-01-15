@@ -28,12 +28,12 @@ https://nextjs.org/docs/app/api-reference/config/next-config-js/dynamicIO
 
 ここで言う動的I/O処理にはデータフェッチや`headers()`や`cookies()`などの[Dynamic APIs](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-apis)が含まれ^[動的I/O処理には`Date`、`Math`といったNext.jsが拡張してるモジュールや、任意の非同期関数なども含まれます]、Dynamic IOではこれらの処理を含む場合、以下いずれかの対応が必要となります。
 
-- **`<Suspense>`**: 非同期コンポーネントを`<Suspense>`境界内に配置し、Streaming配信する
-- **`"use cache"`**: 非同期関数やコンポーネントに`"use cache"`を指定してキャッシュする
+- **`<Suspense>`**: 非同期コンポーネントを`<Suspense>`境界内に配置し、Dynamic Renderingにする
+- **`"use cache"`**: 非同期関数や非同期コンポーネントに`"use cache"`を指定して、Static Renderingにする
 
-ここで重要なのは、従来のようにデフォルトで非同期処理を扱えるわけではなく、**上記いずれかの対応が必須となる**点です。これは、従来のデフォルトキャッシュがもたらした混乱に対し明示的な選択を強制することで、高いパフォーマンスを実現しやすい形をとりつつも開発者の混乱を解消することを目指したもので、筆者はシンプルかつ柔軟な設計だと評価しています。
+ここで重要なのは、従来のように非同期処理を自由に扱えるわけではなく、**上記いずれかの対応が必須となる**点です。これは、従来のデフォルトキャッシュがもたらした混乱に対し明示的な選択を強制することで、高いパフォーマンスを実現しやすい形をとりつつも開発者の混乱を解消することを目指したもので、筆者はシンプルかつ柔軟な設計だと評価しています。
 
-### `<Suspense>`によるStreaming
+### `<Suspense>`によるDynamic Rendering
 
 ECサイトのカートやダッシュボードなど、リアルタイム性や細かい認可制御などが必要な場面では、非キャッシュなデータフェッチが必須です。このように非常に動的な要素を実装する場合、Dynamic IOでは`<Suspense>`境界内で動的I/O処理を扱うことができます。`<Suspense>`境界内は従来同様、Streamingで段階的にレンダリング結果が配信されます。
 
@@ -63,7 +63,7 @@ export default async function Page() {
 
 上記の場合、ユーザーには`Your Profile`というタイトルと`<Loading />`が表示され、その後に`<Profile>`の内容が表示されます。これは、`<Page>`は`fallback`を即座にレンダリングしつつ、`<Profile>`が並行レンダリングされ、完了次第ユーザーに配信されるためです。
 
-### `"use cache"`によるキャッシュ
+### `"use cache"`によるStatic Rendering
 
 一方、商品情報やブログ記事などのキャッシュ可能な要素を実装する場合、Dynamic IOではキャッシュしたい関数やコンポーネントなどの境界に`"use cache"`を指定します。`"use cache"`のキャッシュ境界は`"use client"`同様、Compositionパターンが利用できるので`children`を渡すことも可能です。
 
@@ -111,6 +111,10 @@ export async function getData() {
   return data;
 }
 ```
+
+:::message
+`"use cache"`が適用される関数は非同期関数である必要があります。
+:::
 
 ### キャッシュの詳細な指定
 
