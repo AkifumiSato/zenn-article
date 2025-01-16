@@ -46,13 +46,14 @@ export default async function Page() {
 [`fetch()`のオプション](https://nextjs.org/docs/app/api-reference/functions/fetch#optionscache)で`cache: "no-store"`を指定した場合や、`next: { revalidate: 0 }`を指定した場合、Dynamic Renderingとなります。
 
 :::message alert
-v14以前において、`cache`オプションのデフォルトは`"force-cache"`でした。v15ではデフォルトが`"no-store"`に変更されていますが、明示的に指定しないと**Dynamic Renderingにならない**という仕様なので、注意しましょう。
+v14以前において、[`cache`オプション](https://nextjs.org/docs/app/api-reference/functions/fetch#optionscache)のデフォルトは`"force-cache"`でした。v15ではデフォルトでキャッシュが無効になるよう変更されていますが、デフォルトではStatic Renderingとなっています。Dynamic Renderingに切り替えるには明示的に`"no-store"`を指定する必要があるので、注意しましょう。
 :::
 
 ```ts
 // page.tsx
 export default async function Page() {
   const res = await fetch("https://dummyjson.com/todos/random", {
+    // 🚨Dynamic Renderingにするために`"no-store"`を明示
     cache: "no-store",
   });
   const todoItem: TodoItem = await res.json();

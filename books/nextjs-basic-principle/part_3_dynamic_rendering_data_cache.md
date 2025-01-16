@@ -35,7 +35,7 @@ fetch(`https://...`, {
 ```
 
 :::message alert
-v14以前において、[`cache`オプション](https://nextjs.org/docs/app/api-reference/functions/fetch#optionscache)のデフォルトは`"force-cache"`でした。v15ではデフォルトでキャッシュが無効になるよう変更されていますが、`"no-store"`を明示的に指定しないと**Dynamic Renderingにならない**という仕様なので、注意しましょう。
+v14以前において、[`cache`オプション](https://nextjs.org/docs/app/api-reference/functions/fetch#optionscache)のデフォルトは`"force-cache"`でした。v15ではデフォルトでキャッシュが無効になるよう変更されていますが、デフォルトではStatic Renderingとなっています。Dynamic Renderingに切り替えるには明示的に`"no-store"`を指定する必要があるので、注意しましょう。
 :::
 
 ```ts
