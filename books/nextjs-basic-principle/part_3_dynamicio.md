@@ -222,16 +222,15 @@ Client Components同様慣れが必要な部分になるので、以下のルー
 
 Dynamic IOにおけるキャッシュの永続化は`next.config.js`を通じてカスタマイズ可能ですが、従来からある[Custom Cache Handler](https://nextjs.org/docs/app/api-reference/config/next-config-js/incrementalCacheHandlerPath)とは別物になります。少々複雑ですが、従来のものが`cacheHandler`で設定できたのに対し、Dynamic IOのキャッシュハンドラーは`experimental.cacheHandlers`で設定します。
 
-```js
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+```ts
+const nextConfig: NextConfig = {
   experimental: {
     dynamicIO: true,
     cacheHandlers: {
       // ref: https://github.com/vercel/next.js/blob/c228a6e65d4b7973aa502544f9f8e025a6f97066/packages/next/src/server/config-shared.ts#L240-L245
-      default: require.resolve("..."),
-      remote: require.resolve("..."),
-      static: require.resolve("..."),
+      default: path.join(import.meta.dirname, "..."),
+      remote: path.join(import.meta.dirname, "..."),
+      static: path.join(import.meta.dirname, "..."),
     },
   },
 };
@@ -239,7 +238,9 @@ const nextConfig = {
 module.exports = nextConfig;
 ```
 
+:::message
 執筆時現在、これらの利用方法などもまだドキュメントが見当たらないので、Next.jsコアチームの対応を待つ必要があります。
+:::
 
 ### キャッシュに関する制約
 
