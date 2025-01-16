@@ -244,7 +244,7 @@ module.exports = nextConfig;
 
 ### キャッシュに関する制約
 
-`"use cache"`のキャッシュのキーは自動でコンパイラが識別してくれるので、非常に便利ですが、一方[シリアル化](https://ja.react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)不可能なものはキャッシュのキーに含まれないため注意が必要です。下記のように関数を引数に取る場合は、`"use cache"`を使用しない方が意図しない動作を防ぐことができます。
+`"use cache"`のキャッシュのキーは自動でコンパイラが識別してくれるので非常に便利ですが、一方[シリアル化](https://ja.react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)不可能なものはキャッシュのキーに含まれないため注意が必要です。下記のように関数を引数に取る場合は、`"use cache"`を使用しない方が意図しない動作を防ぐことができます。
 
 ```tsx
 async function cachedFunctionWithCallback(callback: () => void) {
@@ -254,8 +254,8 @@ async function cachedFunctionWithCallback(callback: () => void) {
 }
 ```
 
-また、`"use cache"`を指定した関数の戻り値は必ずシリアル化可能である必要があります。
+また、`"use cache"`を指定した非同期関数の戻り値は必ずシリアル化可能である必要があります。
 
-### `<Suspense>`利用時には`fallback`のレンダリングが必至
+### `<Suspense>`利用時には`fallback`のレンダリングが不可避
 
 Dynamic Renderingで動的I/O処理を扱う際には`<Suspense>`を利用する必要があるため、`fallback`のレンダリングが必至です。未指定の場合にも[Cumulative Layout Shift](https://web.dev/articles/cls?hl=ja)（CLS）が発生するため、`fallback`の指定を忘れないようにしましょう。
