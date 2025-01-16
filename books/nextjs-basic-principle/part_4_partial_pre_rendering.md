@@ -57,29 +57,9 @@ _約 3 秒後_
 https://zenn.dev/akfm/articles/nextjs-partial-pre-rendering#ppr%E3%81%AE%E6%8C%99%E5%8B%95%E8%A6%B3%E5%AF%9F
 :::
 
-### PPRの使い方
+### PPR実装
 
-PPRは、本書執筆時点でまだexperimentalな機能という位置付けです。そのため、PPRを利用するには`next.config.ts`に以下の設定を追加する必要があります。
-
-```ts :next.config.ts
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  experimental: {
-    ppr: "incremental", // v14.xではboolean
-  },
-};
-
-export default nextConfig;
-```
-
-上記を設定した上で、ページやレイアウトなどPPRを有効化したいモジュールで`experimental_ppr`をexportします。
-
-```tsx
-export const experimental_ppr = true;
-```
-
-あとは`<Suspense>`で囲むことにより、Dynamic Renderingの境界を定義することができます。
+開発者がPPRを利用するには、Dynamic Renderingの境界を`<Suspense>`で囲むのみです。非常にシンプルかつReactのAPIを用いた実装であることも、PPRの優れている点です。
 
 ```tsx
 import { Suspense } from "react";
@@ -100,6 +80,28 @@ export default function Page() {
 ```
 
 ## トレードオフ
+
+### Experimental
+
+PPRは、本書執筆時点でまだexperimentalな機能という位置付けです。そのため、PPRを利用するにはNext.jsの`canary`バージョンと、`next.config.ts`に以下の設定を追加する必要があります。
+
+```ts :next.config.ts
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  experimental: {
+    ppr: "incremental", // v14.xではboolean
+  },
+};
+
+export default nextConfig;
+```
+
+上記を設定した上で、ページやレイアウトなどPPRを有効化したいモジュールで`experimental_ppr`をexportします。
+
+```tsx
+export const experimental_ppr = true;
+```
 
 ### PPRの今後
 

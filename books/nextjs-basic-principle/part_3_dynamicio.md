@@ -218,11 +218,30 @@ Client Components同様慣れが必要な部分になるので、以下のルー
 
 ## トレードオフ
 
+### Experimental
+
+Dynamic IOは、本書執筆時点でまだexperimentalな機能という位置付けです。そのため、Dynamic IOを利用するにはNext.jsの`canary`バージョンと、`next.config.ts`に以下の設定を追加する必要があります。
+
+```ts :next.config.ts
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  experimental: {
+    dynamicIO: true,
+  },
+};
+
+export default nextConfig;
+```
+
 ### キャッシュの永続化
 
-Dynamic IOにおけるキャッシュの永続化は`next.config.js`を通じてカスタマイズ可能ですが、従来からある[Custom Cache Handler](https://nextjs.org/docs/app/api-reference/config/next-config-js/incrementalCacheHandlerPath)とは別物になります。少々複雑ですが、従来のものが`cacheHandler`で設定できたのに対し、Dynamic IOのキャッシュハンドラーは`experimental.cacheHandlers`で設定します。
+Dynamic IOにおけるキャッシュの永続化は`next.config.ts`を通じてカスタマイズ可能ですが、従来からある[Custom Cache Handler](https://nextjs.org/docs/app/api-reference/config/next-config-js/incrementalCacheHandlerPath)とは別物になります。少々複雑ですが、従来のものが`cacheHandler`で設定できたのに対し、Dynamic IOのキャッシュハンドラーは`experimental.cacheHandlers`で設定します。
 
-```ts
+```ts :next.config.ts
+import type { NextConfig } from "next";
+import path from "path";
+
 const nextConfig: NextConfig = {
   experimental: {
     dynamicIO: true,
@@ -235,7 +254,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;
 ```
 
 :::message
