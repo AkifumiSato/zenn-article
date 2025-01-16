@@ -179,8 +179,8 @@ async function getBlogPosts(page: number) {
 export default function Page() {
   return (
     <>
-      ...
       {/* Static Rendering */}
+      ...
       <Suspense fallback={<Loading />}>
         {/* Dynamic Rendering */}
         <DynamicComponent>
@@ -192,6 +192,29 @@ export default function Page() {
   );
 }
 ```
+
+ただし、`"use cache"`は`"use client"`同様境界を示すものなので、`children`を除きDynamic Renderingなコンポーネントを含むことができません。これは`<Suspense>`も例外ではないので、以下のような実装はできません。
+
+```tsx
+async function StaticComponent() {
+  "use cache";
+
+  return (
+    <>
+      ...
+      {/* 🚨Dynamic Renderingなコンポーネントは含むことができない */}
+      <Suspense>
+        <DynamicComponent />
+      </Suspense>
+    </>
+  );
+}
+```
+
+Client Components同様慣れが必要な部分になるので、以下のルールをしっかり覚えておきましょう。
+
+- Dynamic RenderingはStatic Renderingを含むことができる
+- Static RenderingはDynamic Renderingを`children`でなら含むことができる
 
 ## トレードオフ
 
