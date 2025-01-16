@@ -30,8 +30,6 @@ const nextConfig = {
 export default nextConfig;
 ```
 
-これまでのDiscussionでの議論を踏まえると、この機能が変更されることはあれど、削除されることはないと筆者は考えています。
-
 ### `staleTimes`の設定
 
 `staleTimes`の設定は[ドキュメント](https://nextjs.org/docs/app/api-reference/next-config-js/staleTimes)によると以下のように対応していることになります。
