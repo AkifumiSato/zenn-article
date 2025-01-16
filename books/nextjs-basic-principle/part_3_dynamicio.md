@@ -120,7 +120,7 @@ export async function getData() {
 
 `"use cache"`を使ったキャッシュでは、従来より自由度の高いキャッシュ戦略が可能となります。具体的には、キャッシュのタグや有効期間の指定方法がより柔軟になりました。
 
-従来は`fetch()`のオプションでタグを指定するなどしていたため、データフェッチ後にタグをつけることができませんでしたが、Dynamic IOでは`cacheTag()`で関数にタグを付与することができるので、より柔軟な指定が可能になりました。
+従来は`fetch()`のオプションでタグを指定するなどしていたため、データフェッチ後にタグをつけることができませんでしたが、Dynamic IOでは[`cacheTag()](https://nextjs.org/docs/app/api-reference/functions/cacheTag)`で関数にタグを付与することができるので、より柔軟な指定が可能になりました。
 
 ```tsx
 import { unstable_cacheTag as cacheTag } from "next/cache";
@@ -130,7 +130,7 @@ async function getBlogPosts(page: number) {
 
   const posts = await fetchPosts(page);
   posts.forEach((post) => {
-    // 🚨従来は`fetch()`時に指定する必要があったため、`posts`などを参照できなかった
+    // 🚨従来はタグを`fetch()`時に指定する必要があったため、`posts`などを参照できなかった
     cacheTag("blog-post-" + post.id);
   });
 
@@ -138,7 +138,7 @@ async function getBlogPosts(page: number) {
 }
 ```
 
-同様に、キャッシュの有効期限も`cacheLife()`で指定できます。
+同様に、キャッシュの有効期限も[`cacheLife()`](https://nextjs.org/docs/app/api-reference/functions/cacheLife)で指定できます。`cacheLife()`は`"minutes"`などの`profile`と呼ばれる時間指定に関するラベル文字列を引数にとり、`"use cache"`指定時に`cacheLife()`を明示的に指定することを推奨されています。
 
 ```tsx
 import { unstable_cacheLife as cacheLife } from "next/cache";
@@ -146,12 +146,30 @@ import { unstable_cacheLife as cacheLife } from "next/cache";
 async function getBlogPosts(page: number) {
   "use cache";
 
-  cacheLife("minutes"); // 1min
+  cacheLife("minutes");
 
   const posts = await fetchPosts(page);
   return posts;
 }
 ```
+
+`profile`の値はStale・Revalidate・Expireの3つの振る舞いに対応し、カスタマイズも可能です。
+
+- Stale: クライアントサイドのキャッシュ期間。
+- Revalidate: サーバー上でキャッシュを更新する頻度。Revalidate中は古い値が提供される場合があります。
+- Expire: 値が古いままでいられる最大期間。Revalidateより長くする必要があります。
+
+以下はデフォルトで指定可能な`profile`です。
+
+| `profile` | Stale     | Revalidate | Expire         |
+| --------- | --------- | ---------- | -------------- |
+| default   | undefined | 15 minutes | INFINITE_CACHE |
+| seconds   | undefined | 1 second   | 1 minute       |
+| minutes   | 5 minutes | 1 minute   | 1 hour         |
+| hours     | 5 minutes | 1 hour     | 1 day          |
+| days      | 5 minutes | 1 day      | 1 week         |
+| weeks     | 5 minutes | 1 week     | 1 month        |
+| max       | 5 minutes | 1 month    | INFINITE_CACHE |
 
 ### `<Suspense>`と`"use cache"`の併用
 
