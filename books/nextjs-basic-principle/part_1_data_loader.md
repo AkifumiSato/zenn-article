@@ -164,7 +164,7 @@ async function batchGetUser(keys: readonly number[]) {
 ポイントは`getUserLoader`が`React.cache()`を利用していることです。DataLoaderはキャッシュ機能があるため、ユーザーからのリクエストを跨いでインスタンスを共有してしまうと予期せぬデータ共有につながります。そのため、**ユーザーからのリクエスト単位でDataLoaderのインスタンスを生成**する必要があり、これを実現するために[React Cache](https://nextjs.org/docs/app/building-your-application/caching#react-cache-function)を利用しています。
 
 :::message alert
-Next.jsやReactのコアメンテナである[Sebastian Markbåge](https://bsky.app/profile/sebmarkbage.calyptus.eu)の過去ツイート（削除済み）によると、React Cacheがリクエスト単位で保持される仕様は将来的に保障されたものではないようです。執筆時点では他に情報がないため、上記実装を参考にする場合には必ず動作確認を行ってください。
+Next.jsやReactのコアメンテナである[Sebastian Markbåge氏](https://bsky.app/profile/sebmarkbage.calyptus.eu)の過去ツイート（アカウントごと削除済み）によると、React Cacheがリクエスト単位で保持される仕様は将来的に保障されたものではないようです。執筆時点では他に情報がないため、上記実装を参考にする場合には必ず動作確認を行ってください。
 :::
 
 上記のように実装することで、`getUser()`のインターフェースは変えずにN+1データフェッチを解消することができます。
