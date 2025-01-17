@@ -206,7 +206,7 @@ async function StaticComponent() {
   return (
     <>
       ...
-      {/* 🚨Dynamic Renderingなコンポーネントは含むことができない */}
+      {/* 🚨Dynamic Renderingな`<DynamicComponent />`は含むことができない */}
       <Suspense>
         <DynamicComponent />
       </Suspense>
