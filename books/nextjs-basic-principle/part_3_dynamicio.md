@@ -31,11 +31,11 @@ https://nextjs.org/docs/app/api-reference/config/next-config-js/dynamicIO
 - **`<Suspense>`**: 非同期コンポーネントを`<Suspense>`境界内に配置し、Dynamic Renderingにする
 - **`"use cache"`**: 非同期関数や非同期コンポーネントに`"use cache"`を指定して、Static Renderingにする
 
-ここで重要なのは、従来のように非同期処理を自由に扱えるわけではなく、**上記いずれかの対応が必須となる**点です。これは、従来のデフォルトキャッシュがもたらした混乱に対し明示的な選択を強制することで、高いパフォーマンスを実現しやすい形をとりつつも開発者の混乱を解消することを目指したもので、筆者はシンプルかつ柔軟な設計だと評価しています。
+ここで重要なのは、Dynamic IO以前のように非同期処理を自由に扱えるわけではなく、**上記いずれかの対応が必須となる**点です。これは、Dynamic IO以前のデフォルトキャッシュがもたらした混乱に対し明示的な選択を強制することで、高いパフォーマンスを実現しやすい形をとりつつも開発者の混乱を解消することを目指したもので、筆者はシンプルかつ柔軟な設計だと評価しています。
 
 ### `<Suspense>`によるDynamic Rendering
 
-ECサイトのカートやダッシュボードなど、リアルタイム性や細かい認可制御などが必要な場面では、キャッシュされないデータフェッチが必須です。これらで扱うような非常に動的なコンポーネントを実装する場合、Dynamic IOでは`<Suspense>`境界内で動的I/O処理を扱うことができます。`<Suspense>`境界内は従来同様、Streamingで段階的にレンダリング結果が配信されます。
+ECサイトのカートやダッシュボードなど、リアルタイム性や細かい認可制御などが必要な場面では、キャッシュされないデータフェッチが必須です。これらで扱うような非常に動的なコンポーネントを実装する場合、Dynamic IOでは`<Suspense>`境界内で動的I/O処理を扱うことができます。`<Suspense>`境界内はDynamic IO以前同様、Streamingで段階的にレンダリング結果が配信されます。
 
 ```tsx
 async function Profile({ id, children }: { id: string; children: ReactNode }) {
@@ -67,7 +67,7 @@ export default async function Page() {
 
 一方、商品情報やブログ記事などのキャッシュ可能なコンポーネントを実装する場合、Dynamic IOではキャッシュしたい関数やコンポーネントに`"use cache"`を指定します。`"use cache"`はStatic Renderingな境界を生成し、子孫コンポーネントまで含めてStatic Renderingとなります。
 
-以下は前述の`<Profile>`をキャッシュ可能なStatic Renderingにする例です。
+以下は前述の`<Profile>`に`"use cache"`を指定してStatic Renderingにする例です。
 
 ```tsx
 async function Profile({ id, children }: { id: string; children: ReactNode }) {
@@ -85,6 +85,10 @@ async function Profile({ id, children }: { id: string; children: ReactNode }) {
 ```
 
 キャッシュは通常キーが必要になりますが、`"use cache"`ではコンパイラがキャッシュのキーを自動で識別します。具体的には、引数やクロージャが参照してる外側のスコープの変数などをキーとして認識します。一方で、`children`のような直接シリアル化できないものは**キーに含まれません**。これにより、`"use cache"`のキャッシュ境界は`"use client"`同様、[_Compositionパターン_](./part_2_composition_pattern)が適用できます。
+
+より詳細な説明についてはNext.jsの公式ブログに解説記事があるので、こちらをご参照ください。
+
+https://nextjs.org/blog/composable-caching#how-does-it-work
 
 なお、`"use cache"`はコンポーネントを含む関数やファイルレベルで指定することができます。ファイルに指定した場合には、すべての`export`される関数に対し`"use cache"`が適用されます。
 
@@ -118,9 +122,9 @@ export async function getData() {
 
 ### キャッシュの詳細な指定
 
-`"use cache"`を使ったキャッシュでは、従来より自由度の高いキャッシュ戦略が可能となります。具体的には、キャッシュのタグや有効期間の指定方法がより柔軟になりました。
+`"use cache"`を使ったキャッシュでは、Dynamic IO以前より自由度の高いキャッシュ戦略が可能となります。具体的には、キャッシュのタグや有効期間の指定方法がより柔軟になりました。
 
-従来は`fetch()`のオプションでタグを指定するなどしていたため、データフェッチ後にタグをつけることができませんでしたが、Dynamic IOでは[`cacheTag()](https://nextjs.org/docs/app/api-reference/functions/cacheTag)`で関数にタグを付与することができるので、より柔軟な指定が可能になりました。
+Dynamic IO以前は`fetch()`のオプションでタグを指定するなどしていたため、データフェッチ後にタグをつけることができませんでしたが、Dynamic IOでは[`cacheTag()](https://nextjs.org/docs/app/api-reference/functions/cacheTag)でタグを指定するため、`fetch()`後にタグを付与するなどより柔軟な指定が可能になりました。
 
 ```tsx
 import { unstable_cacheTag as cacheTag } from "next/cache";
@@ -130,7 +134,7 @@ async function getBlogPosts(page: number) {
 
   const posts = await fetchPosts(page);
   posts.forEach((post) => {
-    // 🚨従来はタグを`fetch()`時に指定する必要があったため、`posts`などを参照できなかった
+    // 🚨Dynamic IO以前はタグを`fetch()`時に指定する必要があったため、`posts`などを参照できなかった
     cacheTag("blog-post-" + post.id);
   });
 
@@ -173,7 +177,7 @@ async function getBlogPosts(page: number) {
 
 ### `<Suspense>`と`"use cache"`の併用
 
-`<Suspense>`と`"use cache"`は併用が可能である点も、従来と比較して非常に優れている点です。以下のように、動的な要素とキャッシュ可能な静的な要素を組み合わせることができます。
+`<Suspense>`と`"use cache"`は併用が可能である点も、Dynamic IO以前と比較して非常に優れている点です。以下のように、動的な要素とキャッシュ可能な静的な要素を組み合わせることができます。
 
 ```tsx
 export default function Page() {
@@ -236,7 +240,7 @@ export default nextConfig;
 
 ### キャッシュの永続化
 
-Dynamic IOにおけるキャッシュの永続化は`next.config.ts`を通じてカスタマイズ可能ですが、従来からある[Custom Cache Handler](https://nextjs.org/docs/app/api-reference/config/next-config-js/incrementalCacheHandlerPath)とは別物になります。少々複雑ですが、従来のものが`cacheHandler`で設定できたのに対し、Dynamic IOのキャッシュハンドラーは`experimental.cacheHandlers`で設定します。
+Dynamic IOにおけるキャッシュの永続化は`next.config.ts`を通じてカスタマイズ可能ですが、Dynamic IO以前からある[Custom Cache Handler](https://nextjs.org/docs/app/api-reference/config/next-config-js/incrementalCacheHandlerPath)とは別物になります。少々複雑ですが、Dynamic IO以前のものが`cacheHandler`で設定できたのに対し、Dynamic IOのキャッシュハンドラーは`experimental.cacheHandlers`で設定します。
 
 ```ts :next.config.ts
 import type { NextConfig } from "next";
