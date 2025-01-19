@@ -124,7 +124,7 @@ export async function getData() {
 
 `"use cache"`を使ったキャッシュでは、Dynamic IO以前より自由度の高いキャッシュ戦略が可能となります。具体的には、キャッシュのタグや有効期間の指定方法がより柔軟になりました。
 
-Dynamic IO以前は`fetch()`のオプションでタグを指定するなどしていたため、データフェッチ後にタグをつけることができませんでしたが、Dynamic IOでは[`cacheTag()](https://nextjs.org/docs/app/api-reference/functions/cacheTag)でタグを指定するため、`fetch()`後にタグを付与するなどより柔軟な指定が可能になりました。
+Dynamic IO以前は`fetch()`のオプションでタグを指定するなどしていたため、データフェッチ後にタグをつけることができませんでしたが、Dynamic IOでは[`cacheTag()](https://nextjs.org/docs/app/api-reference/functions/cacheTag)でタグを指定するため、`fetch()`後にタグを付与するなど柔軟な指定が可能になりました。
 
 ```tsx
 import { unstable_cacheTag as cacheTag } from "next/cache";
@@ -206,7 +206,7 @@ async function StaticComponent() {
   return (
     <>
       ...
-      {/* 🚨Dynamic Renderingな`<DynamicComponent />`は含むことができない */}
+      {/* 🚨Dynamic Renderingなコンポーネントは含むことができない */}
       <Suspense>
         <DynamicComponent />
       </Suspense>
@@ -278,7 +278,3 @@ async function cachedFunctionWithCallback(callback: () => void) {
 ```
 
 また、`"use cache"`を指定した非同期関数の戻り値は必ずシリアル化可能である必要があります。
-
-### `<Suspense>`利用時には`fallback`のレンダリングが不可避
-
-Dynamic Renderingで動的I/O処理を扱う際には`<Suspense>`を利用する必要があるため、`fallback`のレンダリングが必至です。未指定の場合にも[Cumulative Layout Shift](https://web.dev/articles/cls?hl=ja)（CLS）が発生するため、`fallback`の指定を忘れないようにしましょう。
