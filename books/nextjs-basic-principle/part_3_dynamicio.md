@@ -38,13 +38,13 @@ https://nextjs.org/docs/app/api-reference/config/next-config-js/dynamicIO
 ECサイトのカートやダッシュボードなど、リアルタイム性や細かい認可制御などが必要な場面では、キャッシュされないデータフェッチが必須です。これらで扱うような非常に動的なコンポーネントを実装する場合、Dynamic IOでは`<Suspense>`境界内で動的I/O処理を扱うことができます。`<Suspense>`境界内はDynamic IO以前同様、Streamingで段階的にレンダリング結果が配信されます。
 
 ```tsx
-async function Profile({ id, children }: { id: string; children: ReactNode }) {
+async function Profile({ id }: { id: string }) {
   const user = await getUser(id);
 
   return (
     <>
       <h2>{user.name}</h2>
-      {children}
+      ...
     </>
   );
 }
@@ -54,7 +54,7 @@ export default async function Page() {
     <>
       <h1>Your Profile</h1>
       <Suspense fallback={<Loading />}>
-        <Profile>...</Profile>
+        <Profile />
       </Suspense>
     </>
   );
@@ -70,15 +70,15 @@ export default async function Page() {
 以下は前述の`<Profile>`に`"use cache"`を指定してStatic Renderingにする例です。
 
 ```tsx
-async function Profile({ id, children }: { id: string; children: ReactNode }) {
+async function Profile({ id }: { id: string }) {
   "use cache";
 
   const user = await getUser(id);
 
   return (
     <>
-      <h1>{user.name}</h1>
-      {children}
+      <h2>{user.name}</h2>
+      ...
     </>
   );
 }
