@@ -124,7 +124,7 @@ export async function getData() {
 
 `"use cache"`を使ったキャッシュでは、Dynamic IO以前より自由度の高いキャッシュ戦略が可能となります。具体的には、キャッシュのタグや有効期間の指定方法がより柔軟になりました。
 
-Dynamic IO以前は`fetch()`のオプションでタグを指定するなどしていたため、データフェッチ後にタグをつけることができませんでしたが、Dynamic IOでは[`cacheTag()](https://nextjs.org/docs/app/api-reference/functions/cacheTag)でタグを指定するため、`fetch()`後にタグを付与するなど柔軟な指定が可能になりました。
+Dynamic IO以前は`fetch()`のオプションでタグを指定するなどしていたため、データフェッチ後にタグをつけることができませんでしたが、Dynamic IOでは[`cacheTag()`](https://nextjs.org/docs/app/api-reference/functions/cacheTag)でタグを指定するため、`fetch()`後にタグを付与するなど柔軟な指定が可能になりました。
 
 ```tsx
 import { unstable_cacheTag as cacheTag } from "next/cache";
