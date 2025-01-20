@@ -167,13 +167,13 @@ async function getBlogPosts(page: number) {
 
 | `profile` | Stale     | Revalidate | Expire         |
 | --------- | --------- | ---------- | -------------- |
-| default   | undefined | 15 minutes | INFINITE_CACHE |
-| seconds   | undefined | 1 second   | 1 minute       |
-| minutes   | 5 minutes | 1 minute   | 1 hour         |
-| hours     | 5 minutes | 1 hour     | 1 day          |
-| days      | 5 minutes | 1 day      | 1 week         |
-| weeks     | 5 minutes | 1 week     | 1 month        |
-| max       | 5 minutes | 1 month    | INFINITE_CACHE |
+| `default` | undefined | 15 minutes | INFINITE_CACHE |
+| `seconds` | undefined | 1 second   | 1 minute       |
+| `minutes` | 5 minutes | 1 minute   | 1 hour         |
+| `hours`   | 5 minutes | 1 hour     | 1 day          |
+| `days`    | 5 minutes | 1 day      | 1 week         |
+| `weeks`   | 5 minutes | 1 week     | 1 month        |
+| `max`     | 5 minutes | 1 month    | INFINITE_CACHE |
 
 ### `<Suspense>`と`"use cache"`の併用
 
