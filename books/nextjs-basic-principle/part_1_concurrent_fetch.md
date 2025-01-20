@@ -26,10 +26,12 @@ App Routerにおけるデータフェッチの並行化にはいくつかの実�
 
 データ間に依存関係がなく参照単位も異なる場合には、データフェッチを行うコンポーネント自体分割することを検討しましょう。
 
-非同期コンポーネントはそれ自体が非同期コンポーネントを返すような場合に直列実行になりえますが、それ以外では並行にレンダリングされます。言い換えると、非同期コンポーネントは兄弟もしくは兄弟の子孫コンポーネントとして配置されてる場合、並行にレンダリングされます。
+非同期コンポーネントがネストしている場合はコンポーネントの実行が直列になりますが、それ以外では並行にレンダリングされます。言い換えると、非同期コンポーネントは兄弟もしくは兄弟の子孫コンポーネントとして配置されてる場合、並行にレンダリングされます。
 
 ```tsx
-function Page({ params: { id } }: { params: { id: string } }) {
+function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
   return (
     <>
       <PostBody postId={id} />
@@ -80,6 +82,7 @@ async function Page() {
 import "server-only";
 
 export const preloadCurrentUser = () => {
+  // preloadなので`await`しない
   void getCurrentUser();
 };
 
@@ -90,7 +93,9 @@ export async function getCurrentUser() {
 ```
 
 ```tsx :app/products/[id]/page.tsx
-export default function Page({ params: { id } }: { params: { id: string } }) {
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
   // `<Product>`や`<Comments>`のさらに子孫で`user`を利用するため、親コンポーネントでpreloadする
   preloadCurrentUser();
 

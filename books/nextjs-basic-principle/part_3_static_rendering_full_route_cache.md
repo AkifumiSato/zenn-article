@@ -21,16 +21,16 @@ Server Componentsは[Soft Navigation](https://nextjs.org/docs/app/building-your-
 
 App Routerは**デフォルトでStatic Rendering**となっており、**Dynamic Renderingはオプトイン**になっています。Dynamic Renderingにオプトインする方法は以下の通りです。
 
-### Dynamic Functions
+### Dynamic APIs
 
-`cookies()`/`headers()`などの[Dynamic Functions](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-functions)と呼ばれる関数を呼び出すと、Dynamic Renderingとなります。
+`cookies()`/`headers()`などの[Dynamic APIs](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-apis)と呼ばれるAPIを利用すると、Dynamic Renderingとなります。
 
 ```ts
 // page.tsx
 import { cookies } from "next/headers";
 
-export default function Page() {
-  const cookieStore = cookies();
+export default async function Page() {
+  const cookieStore = await cookies();
   const sessionId = cookieStore.get("session-id");
 
   return "...";
@@ -38,34 +38,29 @@ export default function Page() {
 ```
 
 :::message
-[Dynamic Routes](https://nextjs.org/docs/app/building-your-application/routing/dynamic-routes)における[`searchParams` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional)は、関数ではないですがDynamic Functionsの1つとして数えられており、参照するとDynamic Renderingになります。一方[`params` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#params-optional)は、参照するとデフォルトでDynamic Renderingになりますが、[generateStaticParams()](https://nextjs.org/docs/app/api-reference/functions/generate-static-params)を利用するなどするとStatic Renderingになるため、必ずしもDynamic Renderingになるとは限りません。
+[Dynamic Routes](https://nextjs.org/docs/app/building-your-application/routing/dynamic-routes)における[`searchParams` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional)はDynamic APIsの1つとして数えられており、参照するとDynamic Renderingになります。一方[`params` props](https://nextjs.org/docs/app/api-reference/file-conventions/page#params-optional)は、参照するとデフォルトでDynamic Renderingになりますが、[generateStaticParams()](https://nextjs.org/docs/app/api-reference/functions/generate-static-params)を利用するなどするとStatic Renderingになるため、必ずしもDynamic Renderingになるとは限りません。
 :::
 
-### `no-store`な`fetch()`
+### `cache: "no-store"`もしくは`next.revalidate: 0`な`fetch()`
 
-`fetch()`のオプションで[Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)をオプトアウトした場合、Dynamic Renderingとなります。キャッシュをオプトアウトするには`fetch()`の第二引数のオプションで`cache: "no-store"`か`next: { revalidate: 0 }`を指定する必要があります。
+[`fetch()`のオプション](https://nextjs.org/docs/app/api-reference/functions/fetch#optionscache)で`cache: "no-store"`を指定した場合や、`next: { revalidate: 0 }`を指定した場合、Dynamic Renderingとなります。
+
+:::message alert
+v14以前において、[`cache`オプション](https://nextjs.org/docs/app/api-reference/functions/fetch#optionscache)のデフォルトは`"force-cache"`でした。v15ではデフォルトでキャッシュが無効になるよう変更されていますが、デフォルトではStatic Renderingとなっています。Dynamic Renderingに切り替えるには明示的に`"no-store"`を指定する必要があるので、注意しましょう。
+:::
 
 ```ts
 // page.tsx
-export default async function Page({
-  params: { id },
-}: {
-  params: { id: string };
-}) {
-  const res = await fetch(`https://dummyjson.com/products/${id}`, {
+export default async function Page() {
+  const res = await fetch("https://dummyjson.com/todos/random", {
+    // 🚨Dynamic Renderingにするために`"no-store"`を明示
     cache: "no-store",
   });
-  const product = await res.json();
+  const todoItem: TodoItem = await res.json();
 
   return "...";
 }
 ```
-
-:::message
-v14以前において、`cache`オプションのデフォルトは`"force-cache"`でした。`v15.0.0-rc.0`では、デフォルトが`"no-store"`に変更されていますが、明示的に指定しないとDynamic Renderingにならないという仕様になっています。
-
-これらの仕様については[v15のリリースまでに変更される可能性](https://x.com/feedthejim/status/1794778189354705190)が示唆されていますが、本書執筆時点では変更されるかは不明です。
-:::
 
 ### Route Segment Config
 
@@ -85,15 +80,15 @@ export const revalidate = 0; // 1以上でStatic Rendering
 `layout.tsx`に設定したRoute Segment ConfigはLayoutが利用される下層ページにも適用されるため、注意しましょう。
 :::
 
-### `unstable_noStore()`
+### `connection()`
 
-末端のコンポーネントでDynamic Renderingを強制したいがDynamic Functionsや`no-store`な`fetch()`を使っていない場合には、`unstable_noStore()`を呼び出すことでDynamic Renderingに切り替えることができます。具体的には、[Prisma](https://www.prisma.io/)を使ったDBアクセス時などに有用でしょう。
+末端のコンポーネントから利用者側にDynamic Renderingを強制したいが、`headers()`や`no-store`な`fetch()`を使っていない場合には、[`connection()`](https://nextjs.org/docs/app/api-reference/functions/connection)でDynamic Renderingに切り替えることができます。具体的には、[Prisma](https://www.prisma.io/)を使ったDBアクセス時などに有用でしょう。
 
 ```ts
-import { unstable_noStore as noStore } from "next/data-store";
+import { connection } from "next/server";
 
-export function LeafComponent() {
-  noStore();
+export async function LeafComponent() {
+  await connection();
 
   // DBアクセスなど
 
@@ -142,7 +137,7 @@ export const revalidate = 10; // 10s
 
 ### 予期せぬDynamic Renderingとパフォーマンス劣化
 
-Route Segment Configや`unstable_noStore()`によってDynamic Renderingを利用する場合、開発者は明らかにDynamic Renderingを意識して使うのでこれらが及ぼす影響を見誤ることは少ないと考えられます。一方、Dynamic Functionsは「cookieを利用したい」、`cache: "no-store"`な`fetch`は「Data Cacheを使いたくない」などの主目的が別にあり、これに伴って副次的にDynamic Renderingに切り替わるため、開発者は影響範囲に注意する必要があります。
+Route Segment Configや`unstable_noStore()`によってDynamic Renderingを利用する場合、開発者は明らかにDynamic Renderingを意識して使うのでこれらが及ぼす影響を見誤ることは少ないと考えられます。一方、Dynamic APIsは「cookieを利用したい」、`cache: "no-store"`な`fetch`は「Data Cacheを使いたくない」などの主目的が別にあり、これに伴って副次的にDynamic Renderingに切り替わるため、開発者は影響範囲に注意する必要があります。
 
 特に、Data Cacheなどを適切に設定できていないとDynamic Renderingに切り替わった際にページ全体のパフォーマンス劣化につながる可能性があります。こちらについての詳細は後述の[_Dynamic RenderingとData Cache_](part_3_dynamic_rendering_data_cache)をご参照ください。
 

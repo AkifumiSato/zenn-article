@@ -26,7 +26,7 @@ Data Cacheができるだけキャッシュヒットするよう、データフ�
 
 ### Next.jsサーバー上の`fetch()`
 
-サーバー上で実行される`fetch()`は[Next.jsによって拡張](https://nextjs.org/docs/app/api-reference/functions/fetch#fetchurl-options)されており、Data Cacheに関するオプションが組み込まれています。デフォルトではキャッシュは永続化されますが、第2引数のオプション指定によってキャッシュ挙動を変更することが可能です。
+サーバー上で実行される`fetch()`は[Next.jsによって拡張](https://nextjs.org/docs/app/api-reference/functions/fetch#fetchurl-options)されており、Data Cacheに関するオプションが組み込まれています。デフォルトではキャッシュは無効ですが、第2引数のオプション指定によってキャッシュ挙動を変更することが可能です。
 
 ```ts
 fetch(`https://...`, {
@@ -34,10 +34,8 @@ fetch(`https://...`, {
 });
 ```
 
-`cache`はデフォルトで`"force-cache"`となっており、`"no-store"`を指定することでキャッシュを無効化することができます。
-
-:::message
-Next.jsの`v15.0.0-rc.0`では`fetch`の[デフォルトが`no-store`](https://nextjs.org/blog/next-15-rc#caching-updates)に変更されました。
+:::message alert
+v14以前において、[`cache`オプション](https://nextjs.org/docs/app/api-reference/functions/fetch#optionscache)のデフォルトは`"force-cache"`でした。v15ではデフォルトでキャッシュが無効になるよう変更されていますが、デフォルトではStatic Renderingとなっています。Dynamic Renderingに切り替えるには明示的に`"no-store"`を指定する必要があるので、注意しましょう。
 :::
 
 ```ts
@@ -84,7 +82,8 @@ export default async function Component({ userID }) {
 ```
 
 :::message alert
-`unstable_cache()`はAPI名の通り安定版ではなく、今後変更される可能性があります。
+`unstable_cache()`はv15で非推奨となりました。ただし、移行先である`"use cache"`は[Dynamic IO](https://nextjs.org/docs/app/api-reference/config/next-config-js/dynamicIO)でのみ有効で、Dynamic IO自体がまだ実験的機能の段階です。
+今後Dynamic IOが安定化したら移行を考えましょう。
 :::
 
 ### オンデマンドrevalidate

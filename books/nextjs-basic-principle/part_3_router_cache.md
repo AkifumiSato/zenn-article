@@ -21,8 +21,8 @@ Next.jsの[v14.2](https://nextjs.org/blog/next-14-2#caching-improvements)にて�
 const nextConfig = {
   experimental: {
     staleTimes: {
-      dynamic: 0, // default: 30
-      static: 180, // default: 300
+      dynamic: 10,
+      static: 180,
     },
   },
 };
@@ -30,24 +30,20 @@ const nextConfig = {
 export default nextConfig;
 ```
 
-これまでのDiscussionでの議論を踏まえると、この機能が変更されることはあれど、削除されることはないと筆者は考えています。
-
-Router CacheはApp Routerの中でも混乱が多く見られる部分なので、この設定については**必ず検討すること**を筆者はお勧めします。検討した上で初期値のままにすることも良いと思います。重要なのはアプリケーション特性に応じた選択と、現在の設定値に対する認識です。
-
 ### `staleTimes`の設定
 
 `staleTimes`の設定は[ドキュメント](https://nextjs.org/docs/app/api-reference/next-config-js/staleTimes)によると以下のように対応していることになります。
 
-| 項目    | `<Link prefetch=?>` | デフォルト |
-| ------- | ------------------- | ---------- |
-| dynamic | `undefined`         | 30s        |
-| static  | `true`              | 5m         |
+| 項目    | `<Link prefetch=?>` | デフォルト(v14) | デフォルト(v15) |
+| ------- | ------------------- | --------------- | --------------- |
+| dynamic | `undefined`         | 30s             | 0s              |
+| static  | `true`              | 5m              | 5m              |
 
 :::message
 [トレードオフ](#トレードオフ)にて後述しますが、実際にはRouter Cacheの動作は非常に複雑なためこの対応の限りではありません。
 :::
 
-多くの場合、変更を考えるべくは`dynamic`の方になります。クライアントサイドで動的なコンテンツをキャッシュ保持する際、どこまで許容できるか考えましょう。
+多くの場合、変更を考えるべくは`dynamic`の方になります。v14では特に、デフォルトだと30sとなっているために多くの混乱が見られました。利用するNext.jsのバージョンごとの挙動に注意して、キャッシュの有効期限としてどこまで許容できるか考えて適切に設定しましょう。
 
 ### 任意のタイミングでrevalidate
 

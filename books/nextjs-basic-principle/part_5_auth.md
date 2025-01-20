@@ -39,7 +39,7 @@ App Routerでは、Route間で共通となる[レイアウト](https://nextjs.or
 https://zenn.dev/moozaru/articles/0d6c4596425da9
 
 :::message
-[v15 RC2](https://nextjs.org/blog/next-15-rc2)においてはレンダリング順が変更され、レイアウトが先にレンダリングされるようになりました。
+v15でレンダリング順が変更され、レイアウトが先にレンダリングされるようになりました。
 :::
 
 ### Server ComponentsでCookie操作は行えない
@@ -101,9 +101,12 @@ CookieにJWTを格納している場合は、middlewareでJWTの検証を行う�
 例えばVercelのようなSaaSにおいて、有償プランユーザーのみが利用可能なデータアクセスがあった場合、データフェッチ層に以下のような認可チェックを実装すべきでしょう。
 
 ```ts
+// 🚨`unauthorized()`はv15時点でExperimental
+import { unauthorized } from "next/navigation";
+
 export async function fetchPaidOnlyData() {
   if (!(await isPaidUser())) {
-    throw new Unauthorized("Unauthorized paid user");
+    unauthorized();
   }
 
   // ...
@@ -113,12 +116,13 @@ export async function fetchPaidOnlyData() {
 X（旧Twitter）のようにブロックやミュートなど、きめ細かいアクセス制御（Fine-Grained Access Control）が必要な場合は、バックエンドAPIにアクセス制御を隠蔽する場合もあります。
 
 ```ts
+// 🚨`forbidden()`はv15時点でExperimental
+import { forbidden } from "next/navigation";
+
 export async function fetchPost(postId: string) {
   const res = await fetch(`https://dummyjson.com/posts/${postId}`);
   if (res.status === 401) {
-    const { reason } = (await res.json()) as PostApiError;
-    // e.g. reason: 「投稿者からブロックされています」など
-    throw new Forbidden(reason);
+    forbidden();
   }
 
   return (await res.json()) as Post;
@@ -127,6 +131,11 @@ export async function fetchPost(postId: string) {
 
 :::message
 [公式ドキュメント](https://nextjs.org/docs/app/building-your-application/authentication#creating-a-data-access-layer-dal)やVercelの[SaaS参考実装](https://github.com/vercel/nextjs-subscription-payments)では、認可エラーで`redirect("/login")`のようにリダイレクトするのみのものが多いですが、認可エラー=必ずしもリダイレクトではありません。
+:::
+
+:::message
+App RouterはStreamingをサポートしているため、確実にHTTPステータスコードを設定する手段がありません。そのため、上記参考実装の`unauthorized()`や`forbidden()`利用時もHTTPステータスコードが200になる可能性があります。
+詳しくは[_リクエストの参照とレスポンスの操作_](part_5_request_ref)を参照ください。
 :::
 
 ## トレードオフ
@@ -147,4 +156,4 @@ export default async function Page() {
 
 https://github.com/vercel/next.js/pull/70961
 
-執筆時点ではDraftのため、v15に取り込まれるかなどについては不明です。今後の動向に期待しましょう。
+執筆時点ではDraftのため、実際に取り込まれるのかどうかや時期などについては不明です。今後の動向に期待しましょう。

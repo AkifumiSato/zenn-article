@@ -34,12 +34,12 @@ export const getServerSideProps = (async ({ req, res }) => {
 App Routerではリクエストやレスポンスオブジェクトを提供する代わりに、必要な情報を参照するためのAPIが提供されています。
 
 :::message
-Server Componentsでリクエスト時の情報を参照する関数は[Dynamic Functions](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-functions)と呼ばれ、これらを利用するとRoute全体が[Dynamic Rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)となります。
+Server Componentsでリクエスト時の情報を参照する関数の一部は[Dynamic APIs](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-apis)と呼ばれ、これらを利用するとRoute全体が[Dynamic Rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)となります。
 :::
 
 :::message
 Next.jsは内部処理の都合で特殊なエラーを`throw`することがあります。そのため、下記のAPIに対し`try {} catch {}`するとNext.jsの動作に影響する可能性があります。
-詳しくはv15で導入予定の[`unstable_rethrow()`](https://nextjs.org/docs/canary/app/api-reference/functions/unstable_rethrow)を参照ください。
+詳しくは[`unstable_rethrow()`](https://nextjs.org/docs/canary/app/api-reference/functions/unstable_rethrow)を参照ください。
 :::
 
 ### URL情報の参照
@@ -54,14 +54,15 @@ Dynamic RoutesのURLパスの情報は[`params` props](https://nextjs.org/docs/a
 | `/posts/hoge/comments/111` | `{ slug: "hoge", commentId: "111" }` |
 
 ```tsx
-export default function Page({
+export default async function Page({
   params,
 }: {
-  params: {
+  params: Promise<{
     slug: string;
     commentId: string;
-  };
+  }>;
 }) {
+  const { slug, commentId } = await params;
   // ...
 }
 ```
@@ -99,14 +100,15 @@ export default function ExampleClientComponent() {
 ```tsx
 type SearchParamsValue = string | string[] | undefined;
 
-export default function Page({
+export default async function Page({
   searchParams,
 }: {
-  searchParams: {
+  searchParams: Promise<{
     sort?: SearchParamsValue;
     id?: SearchParamsValue;
-  };
+  }>;
 }) {
+  const { sort, id } = await searchParams;
   // ...
 }
 ```
@@ -140,11 +142,11 @@ export default function SearchBar() {
 ```tsx
 import { headers } from "next/headers";
 
-export default function Page() {
-  const headersList = headers();
-  const referer = headersList.get("referer");
+export default async function Page() {
+  const headersList = await headers();
+  const referrer = headersList.get("referrer");
 
-  return <div>Referer: {referer}</div>;
+  return <div>Referrer: {referrer}</div>;
 }
 ```
 
@@ -161,8 +163,8 @@ export default function Page() {
 ```tsx :app/page.tsx
 import { cookies } from "next/headers";
 
-export default function Page() {
-  const cookieStore = cookies();
+export default async function Page() {
+  const cookieStore = await cookies();
   const theme = cookieStore.get("theme");
   return "...";
 }
@@ -174,7 +176,8 @@ export default function Page() {
 import { cookies } from "next/headers";
 
 async function create(data) {
-  cookies().set("name", "lee");
+  const cookieStore = await cookies();
+  cookieStore.set("name", "lee");
 
   // ...
 }
@@ -188,7 +191,7 @@ App RouterはStreamingをサポートしているため、確実にHTTPステー
 
 #### `notFound()`
 
-[`notFound()`](https://nextjs.org/docs/app/api-reference/functions/not-found)は、ページが存在しないことをブラウザに示すための関数です。Server Componentsで利用することができます。
+[`notFound()`](https://nextjs.org/docs/app/api-reference/functions/not-found)は、ページが存在しないことをブラウザに示すための関数です。Server Componentsで利用することができます。この関数が呼ばれた際には、該当Routeの`not-found.tsx`が表示されます。
 
 ```tsx
 import { notFound } from "next/navigation";
@@ -238,6 +241,50 @@ export default async function Profile({ params }: { params: { id: string } }) {
   const team = await fetchTeam(params.id);
   if (!team) {
     permanentRedirect("/login");
+  }
+
+  // ...
+}
+```
+
+### `unauthorized()`
+
+[`unauthorized()`](https://nextjs.org/docs/app/api-reference/functions/unauthorized)は認証エラーを示すための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
+
+:::message
+このAPIは執筆時現在、実験的機能です。
+:::
+
+```tsx
+import { verifySession } from "@/app/lib/dal";
+import { unauthorized } from "next/navigation";
+
+export default async function DashboardPage() {
+  const session = await verifySession();
+  if (!session) {
+    unauthorized();
+  }
+
+  // ...
+}
+```
+
+### `forbidden()`
+
+[`forbidden()`](https://nextjs.org/docs/app/api-reference/functions/forbidden)は認可エラーを示すための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
+
+:::message
+このAPIは執筆時現在、実験的機能です。
+:::
+
+```tsx
+import { verifySession } from "@/app/lib/dal";
+import { forbidden } from "next/navigation";
+
+export default async function AdminPage() {
+  const session = await verifySession();
+  if (session.role !== "admin") {
+    forbidden();
   }
 
   // ...

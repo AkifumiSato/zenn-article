@@ -57,10 +57,12 @@ React Server Componentsでは特に、Compositionパターンを後から適用�
 
 ```tsx
 export default async function Page({
-  params: { postId },
+  params,
 }: {
-  params: { postId: string };
+  params: Promise<{ postId: string }>;
 }) {
+  const { postId } = await params;
+
   return (
     <>
       <PostContainer postId={postId} />
