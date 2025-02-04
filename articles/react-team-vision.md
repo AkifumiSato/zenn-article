@@ -10,10 +10,14 @@ published: false
 この記事は、[React Tokyo#2](https://react-tokyo.connpass.com/event/343757/)で公演した[スライド](https://akifumisato.github.io/slide-of-react-tokyo-202502/1)を元に執筆したものです。
 :::
 
+Reactは小規模でシンプルなサイトから複雑で大規模なアプリケーションまで、非常に幅広く採用されている人気のフレームワークです。OSS化から10年以上の歴史もありながら、昨今もReact Server Componentsなど革新的な進化を我々に提案し続けています。
+
+一方で、React Server Componentsへの批判的意見やReact19 RCで判明した[Boomer fetching問題](https://github.com/facebook/react/issues/29898)を見ていると、Reactチームと多くのReactユーザーの間に多くの齟齬があるように感じました。
+
 - 序文
-  - Reactがどのように機能するか理解することは、使いこなす上で非常に重要
-  - 同じくらい、Reactが何を課題としどうやって課題解決を試みたのか理解することも重要
-  - RSCへの批判やBoomer fetchingの炎上など、昨今ReactチームとReactユーザーの間で多くの齟齬があることがずっと気になっていた
+  - 昨今RSCへの批判的意見やBoomer fetchingの炎上など、
+  - Reactの歴史を振り返ると、一貫してシンプルな解決策を出してきたように見えるが、どこかに
+  - 昨今ReactチームとReactユーザーの間で多くの齟齬があることに気づきました
   - この記事を通じて、Reactチームのコンテキストや、Reactの意思決定について読者の理解を深められたら幸いです。
 - 概要
   - Metaは非常に大規模な開発体制で、フレームワーク開発も厭わない
