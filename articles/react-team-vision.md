@@ -54,13 +54,54 @@ Instagramで一定の成功が見えた後は、ReactのOSS化が進められま
 
 ### Reactの拡大
 
-JS Conf EU以降、ReactはNetflixやAirbnbなど、多くの企業で採用されます。関連ライブラリも発展し、Reactのエコシステムと人気は急速に拡大していきます。
+JS Conf EU以降、ReactはNetflixやAirbnbなど多くの企業で採用されました。関連ライブラリも発展し、Reactのエコシステムと人気は急速に拡大していきます。
 
 その後も、hooksの発明や並行レンダリングなど様々な改善が取り込まれますが、破壊的変更は最小限にとどめられ、Reactの人気は確固たるものになっていきます。
 
 ## ReactとGraphQL
 
-TBW
+React同様、Metaが開発し現在でも広く使われている技術の1つにGraphQLがあります。
+
+Metaでは昔からクライアントサイド・BFF・バックエンドの3層構成を基本としており、クライアントサイドBFF間にREST APIを採用すると発生する以下のような課題を解決すべく開発されたのがGraphQLです。
+
+- 複数エンドポイントからデータ取得するとネットワーク効率が悪い
+- Over-fetching: 取得するデータが過剰になる場合がある
+- Under-fetching: 取得するデータが不足する場合がある
+
+2013年、Reactが本格的に採用されるとReactとGraphQLを統合する必要が出てきました。これを実現すべく開発が開始されたのが[Relay](https://relay.dev/)です。RelayはGraphQL co-locationを用いて、Reactコンポーネントが必要とするデータを自身で定義できる^[[Thinking in Relay
+](https://relay.dev/docs/principles-and-architecture/thinking-in-relay/)]ような自立分散的なアーキテクチャを採用しています。
+
+GraphQLとRelayは2015年にOSS化され、Meta社内ではReact&Relay(GraphQL)の構成がスタンダードとなりました。
+
+### Metaの考えるGraphQL
+
+前述の通りMetaにとってGraphQLはBFFに対する通信、つまりフロントエンドの問題を解決する技術です。BFFバックエンド間の通信は、**Thrift**というRPCが別途開発・採用されています。
+
+一方、Meta以外でGraphQLを採用してるケースでは、バックエンドへの通信プロトコルとして採用されることも多く見られます。
+
+![Metaの考えるGraphQL](/images/react-team-vision/graphql.png)
+
+ここでも、「見てる世界」の違いが見て取れます。GraphQL自体はBFF構成に依存する技術ではないのでバックエンド側でも採用は可能ですが、開発元であるMetaのモチベーションはあくまでフロントエンドの問題を解決することです。
+
+## 自立分散的アーキテクチャ
+
+ReactやGraphQLの歴史的経緯を振り返ると、Metaは一貫して**自立分散的アーキテクチャ**を重視していることがわかります。Reactはコンポーネント指向なフレームワークであり、GraphQLとRelayはコンポーネントが自身で必要なデータを宣言するような設計になっています。
+
+自立分散的でないアーキテクチャとして考えられるのは、**中央集権的アーキテクチャ**です。中央集権的アーキテクチャはWeb MVCやReduxなどが該当すると考えられます。
+
+中央集権的アーキテクチャで考えると、Reactにおけるデータフェッチはトップダウン式になります。
+
+![Top-down Data Fetching](/images/react-team-vision/top-level-data-fetching.png)
+
+一方RelayではGraphQL co-locationを用いて、必要なデータを自身で定義できます。さらに言えば、GraphQLの各Resolverも自律的にデータフェッチを行います。
+
+![GraphQL co-location](/images/react-team-vision/graphql-co-location.png)
+
+### ReduxとMeta
+
+自立分散的アーキテクチャを重視していることを象徴しているのが、ReduxとMetaの関係です。2016年、Redux作者である[Dan Abramov](https://bsky.app/profile/did:plc:fpruhuo22xkm5o7ttr2ktxdo)氏と[Andrew Clark](https://x.com/acdlite)氏がMetaに入社、Reactチームに参画しhooksやReact Fiberなど多くの発展に貢献しています。しかし、彼らが開発したReduxはMeta社内では採用されていません。
+
+Reduxは典型的な中央集権的アーキテクチャです。Metaが抱える大規模開発では、中央集権的アーキテクチャはスケールしないと見なされ、避けられる傾向にあるようです。
 
 ## React Server Components
 
