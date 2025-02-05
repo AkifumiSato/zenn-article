@@ -40,6 +40,7 @@ Metaにおいても上述の状況は同様で、Meta版`Backbone.js`に相当�
 
 - 関数型指向
 - 更新に伴う再レンダリング
+- コンポーネント指向
 - JSX
 
 ここで重要なのは、上述のアイディアを持って**シンプルなフレームワーク**を目指していたことです。最も重視していたのは覚えやすさやパフォーマンスではありません、アプリケーション開発をスケールするシンプルなフレームワークこそ、Reactが目指した姿です。
@@ -62,30 +63,51 @@ JS Conf EU以降、ReactはNetflixやAirbnbなど多くの企業で採用され�
 
 React同様、Metaが開発し現在でも広く使われている技術の1つにGraphQLがあります。
 
-Metaでは昔からクライアントサイド・BFF・バックエンドの3層構成を基本としており、クライアントサイドBFF間にREST APIを採用すると発生する以下のような課題を解決すべく開発されたのがGraphQLです。
+Metaでは昔からクライアントサイド・BFF・バックエンドの3層構成を基本としており、クライアントサイド〜BFF間にREST APIを採用すると発生する以下のような課題を抱えていました。
 
 - 複数エンドポイントからデータ取得するとネットワーク効率が悪い
 - Over-fetching: 取得するデータが過剰になる場合がある
 - Under-fetching: 取得するデータが不足する場合がある
 
-2013年、Reactが本格的に採用されるとReactとGraphQLを統合する必要が出てきました。これを実現すべく開発が開始されたのが[Relay](https://relay.dev/)です。RelayはGraphQL co-locationを用いて、Reactコンポーネントが必要とするデータを自身で定義できる^[[Thinking in Relay
-](https://relay.dev/docs/principles-and-architecture/thinking-in-relay/)]ような自立分散的なアーキテクチャを採用しています。
+これらを解決すべく開発されたのがGraphQLです。
+
+2013年、Reactが本格的に採用されるとReactとGraphQLを統合する必要が出てきました。これを実現すべく開発されたのが[Relay](https://relay.dev/)です。RelayはGraphQL Colocationを用いて、Reactコンポーネントが必要とするデータを自身で定義できるような自立分散的なアーキテクチャを採用しています。
+
+```tsx: author-details.tsx
+const authorDetailsFragment = graphql`
+  fragment AuthorDetails_author on Author {
+    name
+    photo {
+      url
+    }
+  }
+`;
+
+export default function AuthorDetails({ author }: Props) {
+  const data = useFragment(authorDetailsFragment, author);
+  // ...
+}
+```
+
+このことは以下*Thinking in Relay*でも述べられています。
+
+https://relay.dev/docs/principles-and-architecture/thinking-in-relay/
 
 GraphQLとRelayは2015年にOSS化され、Meta社内ではReact&Relay(GraphQL)の構成がスタンダードとなりました。
 
 ### Metaの考えるGraphQL
 
-前述の通りMetaにとってGraphQLはBFFに対する通信、つまりフロントエンドの問題を解決する技術です。BFFバックエンド間の通信は、**Thrift**というRPCが別途開発・採用されています。
+前述の通りMetaにとってGraphQLはBFFに対する通信、つまりフロントエンドの問題を解決する技術です。BFF〜バックエンド間の通信は、**Thrift**というRPCを開発し採用しています。
 
 一方、Meta以外でGraphQLを採用してるケースでは、バックエンドへの通信プロトコルとして採用されることも多く見られます。
 
 ![Metaの考えるGraphQL](/images/react-team-vision/graphql.png)
 
-ここでも、「見てる世界」の違いが見て取れます。GraphQL自体はBFF構成に依存する技術ではないのでバックエンド側でも採用は可能ですが、開発元であるMetaのモチベーションはあくまでフロントエンドの問題を解決することです。
+ここでも「見てる世界」の違いが見て取れます。GraphQL自体はBFF構成に依存する技術ではないのでバックエンド側でも採用は可能ですが、開発元であるMetaのモチベーションはあくまでフロントエンドの問題を解決することであり、バックエンドとの通信には採用されていません。
 
 ## 自立分散的アーキテクチャ
 
-ReactやGraphQLの歴史的経緯を振り返ると、Metaは一貫して**自立分散的アーキテクチャ**を重視していることがわかります。Reactはコンポーネント指向なフレームワークであり、GraphQLとRelayはコンポーネントが自身で必要なデータを宣言するような設計になっています。
+ReactやGraphQLの歴史的経緯を振り返ると、Metaは一貫して**自立分散的アーキテクチャ**を重視していることがわかります。Reactはコンポーネント指向なフレームワークであり、Relayはコンポーネントが自身で必要なデータを宣言するような設計になっています。
 
 自立分散的でないアーキテクチャとして考えられるのは、**中央集権的アーキテクチャ**です。中央集権的アーキテクチャはWeb MVCやReduxなどが該当すると考えられます。
 
@@ -93,19 +115,55 @@ ReactやGraphQLの歴史的経緯を振り返ると、Metaは一貫して**自�
 
 ![Top-down Data Fetching](/images/react-team-vision/top-level-data-fetching.png)
 
-一方RelayではGraphQL co-locationを用いて、必要なデータを自身で定義できます。さらに言えば、GraphQLの各Resolverも自律的にデータフェッチを行います。
+一方RelayではGraphQL Colocationを用いて、必要なデータを自身で定義できます。さらに言えば、GraphQLの各Resolverも自律的にデータフェッチを行います。
 
-![GraphQL co-location](/images/react-team-vision/graphql-co-location.png)
+![GraphQL Colocation](/images/react-team-vision/graphql-co-location.png)
 
 ### ReduxとMeta
 
-自立分散的アーキテクチャを重視していることを象徴しているのが、ReduxとMetaの関係です。2016年、Redux作者である[Dan Abramov](https://bsky.app/profile/did:plc:fpruhuo22xkm5o7ttr2ktxdo)氏と[Andrew Clark](https://x.com/acdlite)氏がMetaに入社、Reactチームに参画しhooksやReact Fiberなど多くの発展に貢献しています。しかし、彼らが開発したReduxはMeta社内では採用されていません。
+自立分散的アーキテクチャを重視していることを象徴しているのが、ReduxとMetaの関係です。2016年、Redux作者である[Dan Abramov氏](https://bsky.app/profile/did:plc:fpruhuo22xkm5o7ttr2ktxdo)と[Andrew Clark氏](https://x.com/acdlite)がMetaに入社、Reactチームに参画しhooksやReact Fiberなど多くの発展に貢献しました。しかし、彼らが開発したReduxはMeta社内では採用されていません。
 
-Reduxは典型的な中央集権的アーキテクチャです。Metaが抱える大規模開発では、中央集権的アーキテクチャはスケールしないと見なされ、避けられる傾向にあるようです。
+Reduxは典型的な中央集権的アーキテクチャです。Metaが抱える大規模開発では、中央集権的アーキテクチャは避けられる傾向にあることが見て取れます。
 
 ## React Server Components
 
-TBW
+Metaの大規模開発はReact+Relay（GraphQL）により安定した成長を続け、現在でもこれらの技術は多くのプロダクトを支えています。
+
+しかし、当然ながら全く問題がなかったわけではありません。様々なReactアプリケーションの事例や肥大化から、様々な問題が見えてきました。
+
+- バックエンドアクセス
+  - 冗長な実装
+  - セキュリティ
+  - パフォーマンス
+- バンドルサイズ
+  - 不要なバンドル、冗長なバンドル
+  - 最適化コスト
+  - 抽象化コスト
+- etc...
+
+Reactチームはこれらの問題に対して個別の対処を検討しますが、最終的にはこれらの問題は一貫して「Reactがサーバーを活用できてない」ことに起因してると結論付けます。この問題に対処すべく新たに設計されたのが、2020年に発表された[React Server Components](https://github.com/reactjs/rfcs/blob/main/text/0188-server-components.md#motivation)です。
+
+React Server Componentsにより、上記の問題は以下のように解決されました。
+
+- バックエンドフルアクセス
+- 0バンドルサイズ（ただし、バンドルサイズは[必ずしも減るわけではない](https://tonyalicea.dev/blog/understanding-react-server-components/)）
+- 自動コードスプリッティング
+- 0コスト抽象化
+- etc...
+
+### React Server Componentsの自立分散性
+
+Server Componentsによってデータフェッチをコンポーネントにカプセル化することが可能となったことは、React Server Componentsにもまた自立分散性アーキテクチャが重視されていることを示しています。
+
+これは言い換えると、React Server Componentsが**GraphQLの精神的後継**であるとも言えます。実際、React Server Componentsの最初のRFCはRelayやGraphQLの発展をリードしてきた[Joe Savona氏](https://twitter.com/en_js)が提案していることからもこのことは見て取れます。
+
+先述のGraphQLの図と、React Server Componentsにおけるデータフェッチを表した図を以下にしまします。
+
+![GraphQL Colocation](/images/react-team-vision/graphql-co-location.png)
+
+![React Server Components](/images/react-team-vision/react-server-components.png)
+
+自律分散性を維持するためにRelayがになっていた層がなくなり、よりシンプルな設計になったと感じられます。
 
 ## Reactチームが見てる世界、Reactユーザーが見てる世界
 
@@ -117,17 +175,6 @@ TBW
 
 ## Memo
 
-- Reactの誕生
-  - 2012年のWeb開発
-  - 2012年のMeta
-  - bolt.js
-  - React
-  - ReactのOSS化
-  - Reactの拡大
-- ReactとGraphQL
-  - GraphQLの誕生と拡大
-  - MetaにとってのGraphQL
-  - MetaにとってのReactとGraphQL
 - React Server Components
   - 2020年頃、Reactが抱えていた課題
   - React Server Componentsの誕生
