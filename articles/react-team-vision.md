@@ -45,13 +45,13 @@ https://dionarodrigues.dev/blog/reactjs-behind-the-scenes
 - コンポーネント指向
 - JSX
 
-ここで重要なのは、上述のアイディアを持って**シンプルなフレームワーク**を目指していたことです。最も重視していたのは覚えやすさやパフォーマンスではありません、アプリケーション開発をスケールするシンプルなフレームワークこそ、Reactが目指した姿です。
+ここで重要なのは、上述のアイディアを持って**シンプルなフレームワーク**を目指していたことです。最も重視していたのは覚えやすさやパフォーマンスではなく、アプリケーション開発をスケールさせるシンプルさです。
 
 ### Instagramでの採用とReactのOSS化
 
 Reactが最初に採用されたのは、2013年に買収されたばかりのInstagramのWeb UIでした。当時はまだReactは開発途上で、Instagramの開発と並行して改善が進められました。
 
-Instagramで一定の成功が見えた後は、ReactのOSS化が進められました。最初の発表は2013年のJS Conf USでしたが、Reactチームはのちにこの発表を「失敗だった」と表現しています。Web MVCが主流で、HTML・CSS・JavaScriptが技術的関心によって分離されてることこそが良しとされていた時代において、Reactは非常に革新的なアイディアでした。それ故に多くの人々が「うまくいくはずがない」と感じ、反発したようです。実際、レンダリングのアイディアは当初のReactチームメンバーすら「うまくいかないだろう」と感じたメンバーが多かったほどなので、当時の価値観を考えると当然かもしれません。
+Instagramで一定の成功が見えた後は、ReactのOSS化が進められました。最初の発表は2013年のJS Conf USでしたが、Reactチームはのちにこの発表を「失敗だった」と表現しています^[出典: [React.js The Documentary](https://www.youtube.com/watch?v=8pDqJVdNa44)]。Web MVCが主流で、HTML・CSS・JavaScriptが技術的関心によって分離されてることこそが良しとされていた時代において、Reactは非常に革新的なアイディアでした。それ故に多くの人々が「うまくいくはずがない」と感じ、反発したようです。実際、レンダリングのアイディアは当初のReactチームメンバーすら「うまくいかないだろう」と感じたメンバーが多かったほどなので、当時の価値観を考えると当然かもしれません。
 
 しかし、「失敗だった」とされるJS Conf USでReactに興味を持った方がいました。後にReactチームに参画する[Sophie Alpert](https://twitter.com/sophiebits)氏です。Sophie Alpert氏はJS Conf US後、Reactに2000行ものコントリビュートを行い、Reactは多くの技術的課題を解消します。多くの改善を経たReactは、改めて同年のJS Conf EUで発表され、これ以降Reactは加速度的に大きな人気を得ていきます。
 
@@ -59,7 +59,7 @@ Instagramで一定の成功が見えた後は、ReactのOSS化が進められま
 
 JS Conf EU以降、ReactはNetflixやAirbnbなど多くの企業で採用されました。関連ライブラリも発展し、Reactのエコシステムと人気は急速に拡大していきます。
 
-その後も、hooksの発明や並行レンダリングなど様々な改善が取り込まれますが、破壊的変更は最小限にとどめられ、Reactの人気は確固たるものになっていきます。
+その後も、Hooksの発明や並行レンダリングなど様々な改善が取り込まれますが、破壊的変更は最小限にとどめられ、Reactの人気は確固たるものになっていきます。
 
 ## ReactとGraphQL
 
@@ -125,7 +125,7 @@ ReactやGraphQLの歴史的経緯を振り返ると、Metaは一貫して**自�
 
 ### ReduxとMeta
 
-Metaが自立分散的アーキテクチャを重視していることの象徴の1つが、ReduxとMetaの関係です。2016年、Redux作者である[Dan Abramov氏](https://bsky.app/profile/did:plc:fpruhuo22xkm5o7ttr2ktxdo)と[Andrew Clark氏](https://x.com/acdlite)がMetaに入社Reactチームに参画し、hooksやReact Fiberなど多くの発展に貢献しました。しかし、彼らが開発したReduxはMeta社内では採用されていません。
+Metaが自立分散的アーキテクチャを重視していることの象徴の1つが、ReduxとMetaの関係です。2016年、Redux作者である[Dan Abramov氏](https://bsky.app/profile/did:plc:fpruhuo22xkm5o7ttr2ktxdo)と[Andrew Clark氏](https://x.com/acdlite)がMetaに入社Reactチームに参画し、HooksやReact Fiberなど多くの発展に貢献しました。しかし、彼らが開発したReduxはMeta社内では採用されていません。
 
 Reduxは典型的な中央集権的アーキテクチャです。Reduxの作者を迎えてもなお、中央集権的アーキテクチャは採用されませんでした。
 
