@@ -49,7 +49,7 @@ Metaにおいても上述の状況は同様で、特にFacebookは革新的な�
 
 Reactが最初に採用されたのは、2013年に買収されたばかりのInstagramのWeb UIでした。当時はまだReactは開発途上で、Instagramの開発と並行して改善が進められました。
 
-Instagramで一定の成功が見えた後は、ReactのOSS化が進められました。最初の発表は2013年のJS Conf USでしたが、Reactチームはのちにこの発表を「失敗だった」と表現しています^[出典: [React.js The Documentary](https://www.youtube.com/watch?v=8pDqJVdNa44)]。Web MVCが主流で、HTML・CSS・JavaScriptが技術的関心によって分離されてることこそが良しとされていた時代において、Reactは非常に革新的なアイディアでした。それ故に多くの人々が「うまくいくはずがない」と感じ、反発したようです。実際、レンダリングのアイディアは当初のReactチームメンバーすら「うまくいかないだろう」と感じたメンバーが多かったほどなので、当時の価値観を考えると当然かもしれません。
+Instagramで一定の成功が見えた後は、ReactのOSS化が進められました。最初の発表は2013年のJS Conf USでしたが、Reactチームはのちにこの発表を「失敗だった」と表現しています^[出典: [React.js The Documentary](https://www.youtube.com/watch?v=8pDqJVdNa44)]。Reactは多くの面で非常に革新的なアイディアだったため、多くの人々が「うまくいくはずがない」と感じ、反発したようです。実際、`Blot.js`に再レンダリングのアイディアを組み込むことに対しても、当初は多くのチームメンバーが「うまくいかないだろう」と感じたほどなので、当時の価値観を考えると当然かもしれません。
 
 しかし、「失敗だった」とされるJS Conf USでReactに興味を持った方がいました。後にReactチームに参画する[Sophie Alpert](https://twitter.com/sophiebits)氏です。Sophie Alpert氏はJS Conf US後、Reactに2000行ものコントリビュートを行い、Reactは多くの技術的課題を解消します。多くの改善を経たReactは、改めて同年のJS Conf EUで発表され、これ以降Reactは加速度的に大きな人気を得ていきます。
 
@@ -63,13 +63,13 @@ JS Conf EU以降、ReactはNetflixやAirbnbなど多くの企業で採用され�
 
 React同様、Metaが開発し現在でも広く使われている技術の1つにGraphQLがあります。
 
-Metaでは昔からクライアントサイド・BFF・バックエンドの3層構成を基本としており、クライアントサイド〜BFF間にREST APIを採用すると発生する以下のような課題を抱えていました。
+Metaでは昔からクライアントサイド・API Gateway（=BFF）・バックエンドの3層構成を基本としており、クライアントサイド〜BFF間にREST APIを採用すると以下のような課題が発生するため最適解ではないと考えられていました。
 
 - 複数エンドポイントからデータ取得するとネットワーク効率が悪い
 - Over-fetching: 取得するデータが過剰になる場合がある
 - Under-fetching: 取得するデータが不足する場合がある
 
-これらを解決すべく開発されたのがGraphQLです。
+これらの課題を解決すべく開発されたのが、GraphQLです。
 
 2013年、Reactが本格的に採用されるとReactとGraphQLを統合する必要が出てきました。これを実現すべく開発されたのが[Relay](https://relay.dev/)です。RelayはGraphQL Colocationを用いて、Reactコンポーネントが必要とするデータを自身で定義できるような自立分散的アーキテクチャを採用しています。
 
