@@ -165,7 +165,7 @@ Server Componentsの登場により、データフェッチもまたコンポー
 
 ![React Server Components](/images/react-team-vision/react-server-components.png)
 
-自律分散性を維持するためにRelayがになっていた層がなくなり、よりシンプルな設計になったと筆者は感じます。
+自律分散性を維持するためにRelayが担っていた層がなくなり、よりシンプルな設計になったと筆者は感じます。
 
 ## Reactチームが見てる世界、Reactユーザーが見てる世界
 
