@@ -71,7 +71,7 @@ Metaでは昔からクライアントサイド・API Gateway（=BFF）・バッ�
 
 これらの課題を解決すべく開発されたのが、GraphQLです。
 
-2013年、Reactが本格的に採用されるとReactとGraphQLを統合する必要が出てきました。これを実現すべく開発されたのが[Relay](https://relay.dev/)です。RelayはGraphQL Colocationを用いて、Reactコンポーネントが必要とするデータを自身で定義できるような自立分散的アーキテクチャを採用しています。
+2013年にReactが本格的に採用されると、ReactとGraphQLを統合する必要が出てきました。これを実現すべく開発されたのが[Relay](https://relay.dev/)です。RelayはGraphQL Colocationを用いて、Reactコンポーネントが必要とするデータを自身で定義できるようなアーキテクチャを採用しています。
 
 ```tsx: author-details.tsx
 const authorDetailsFragment = graphql`
@@ -89,7 +89,7 @@ export default function AuthorDetails({ author }: Props) {
 }
 ```
 
-このことは以下*Thinking in Relay*でも述べられています。
+このことは以下*Thinking in Relay*や、初期の[README](https://github.com/facebook/relay/blob/2a86be3/README.md)でも述べられています。
 
 https://relay.dev/docs/principles-and-architecture/thinking-in-relay/
 
@@ -107,15 +107,15 @@ GraphQLとRelayは2015年にOSS化され、Meta社内ではReact&Relay（GraphQL
 
 ## 自立分散的アーキテクチャ
 
-ReactやGraphQLの歴史的経緯を振り返ると、Metaは一貫して**自立分散的アーキテクチャ**を重視していることがわかります。Reactはコンポーネント指向なフレームワークであり、Relayはコンポーネントが自身で必要なデータを宣言するような設計になっています。
+前述の通り、Relayはコンポーネントが必要とするデータを自身で定義できるようなアーキテクチャを採用しています。Reactのコンポーネント指向やGraphQLのResolver、Relay、これらに一貫して見て取れるのは強いカプセル化であり、いわば**自立分散性**です。Metaでは、Metaの大規模開発において自立分散性こそ開発のスケールにおいて重要だと考えていることがわかります。
 
-自立分散的でないアーキテクチャとして考えられるのは、**中央集権的アーキテクチャ**です。中央集権的アーキテクチャはWeb MVCやReduxなどが該当すると考えられます。
+自立分散的アーキテクチャと対立的な立場にあるアーキテクチャとして考えられるのは、**中央集権的アーキテクチャ**です。中央集権的アーキテクチャはMVCやReduxなどが該当すると考えられます。
 
-中央集権的アーキテクチャの思考でReactのデータフェッチを考えると、ルートコンポーネントからのバケツリレーを基本としたトップダウン方式になります。
+中央集権的アーキテクチャの思考でデータフェッチを考えると、データフェッチを一括管理する層が必要になります。Reactにおいてはルートコンポーネントなどの祖先コンポーネントがこれを担うことになるため、データフェッチの結果はバケツリレーでトップダウンに行われます。
 
 ![Top-down Data Fetching](/images/react-team-vision/top-level-data-fetching.png)
 
-一方RelayではGraphQL Colocationを用いて、必要なデータを自身で定義できます。さらに言えば、GraphQLの各Resolverも自律的にデータフェッチを行います。
+一方RelayではGraphQL Colocationを用いて、必要なデータを自身で定義できます。さらに言えば、GraphQLサーバーの各Resolverも自律的にデータフェッチを行います。
 
 ![GraphQL Colocation](/images/react-team-vision/graphql-co-location.png)
 
