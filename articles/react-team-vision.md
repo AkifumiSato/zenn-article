@@ -201,7 +201,7 @@ function UserCassette({ id }: { id: string }) {
 
 しかし、このような実装は規模が大きくなるにつれてアプリケーションのパフォーマンスを著しく劣化させます。クライアントサイドからBFFやBackend APIへの通信は、一般的に低速なネットワーク^[一般的な回線の品質や物理的距離に起因して、サーバー間通信に比べて低速になる可能性が高くなります。]を介して行われるため、リクエスト数が多いほど顕著にパフォーマンス劣化を引き起こします。GraphQL Colocationでは最終的にリクエストが1つにまとめられますが、REST APIではColocation相当な技術がないため、多数のリクエストが発行されパフォーマンス劣化が起こりやすくなります。
 
-TODO: 図
+![Boomer Fetching](/images/react-team-vision/bommer-fetching.png)
 
 このように、低速なネットワーク上でリクエストを多数発行することを**Boomer Fetching**と呼びます。前述の通り、MetaがGraphQLを開発するモチベーションの1つは
 
