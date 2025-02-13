@@ -203,13 +203,12 @@ function UserCassette({ id }: { id: string }) {
 
 ![Boomer Fetching](/images/react-team-vision/bommer-fetching.png)
 
-このように、低速なネットワーク上でリクエストを多数発行することを**Boomer Fetching**と呼びます。前述の通り、MetaがGraphQLを開発するモチベーションの1つは
+このように、低速なネットワーク上でリクエストを多数発行することを**Boomer Fetching**と呼びます。前述の通り、GraphQL Colocationではリクエストは1つにまとめられるため、Boomer Fetchingは発生せずパフォーマンス劣化を抑えることができます。そのため、ReactチームにとってBoomer Fetchingは避けるべき状態であることは変わらず、ことMetaにおいてはGraphQLやRelayによって解決済みの問題という認識でした。
 
-> 複数エンドポイントからデータ取得するとネットワーク効率が悪い
+しかし、現実には多くのReactユーザーがBoomer Fetching相当な実装を好んでしていました。このような実装が好まれた背景にはいくつかの要因が考えられますが、以下の2つが要因として多かったのではないかと筆者は考えています。
 
-という問題を解消することで、これはまさしくBoomer Fetchingによるパフォーマンス劣化問題を指していました。そのため、Boomer FetchingはReactチームにとって避けるべき状態かつGraphQLやRelayによって解決済みの問題、という認識でした。
-
-しかし、現実には多くのReactユーザーが、Boomer Fetching相当な実装を好んでしていました。これは、扱うアプリケーション規模次第ではBoomer Fetchingな実装をしてもリクエスト数自体が非常に少なかったり、パフォーマンス影響が出てても軽んじられたり、もしくは開発者がBoomer Fetchingな実装によってパフォーマンス影響があること自体認識できてなかったり、さまざまな要因が考えられます。
+- 自立分散的アーキテクチャを好むが、GraphQLやGraphQL Colocationを採用していなかった
+- Boomer Fetchingによるパフォーマンス影響を許容したり、軽視したり、もしくは認識できてなかった
 
 このように、「Reactチームにとってはアンチパターン、しかし一部Reactユーザーの間では好んで使われている」というすれ違いが、React19 RCにおけるBoomer Fetching問題と呼ばれる、以下issueでの議論を引き起こしました。
 
