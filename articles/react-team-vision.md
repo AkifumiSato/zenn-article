@@ -121,11 +121,11 @@ GraphQLとRelayは2015年にOSS化され、Meta社内ではReact&Relay（GraphQL
 
 クライアントサイド〜BFFの通信は1つにまとめられていますが、これはRelayがGraphQL Colocationをまとめて1つのQueryに集約していることで成り立っています。
 
-### ReduxとMeta
+### Flux/Reduxに見る中央集権的アーキテクチャ
 
-Metaが自立分散的アーキテクチャを重視していることの象徴の1つが、ReduxとMetaの関係です。2016年、Redux作者である[Dan Abramov氏](https://bsky.app/profile/did:plc:fpruhuo22xkm5o7ttr2ktxdo)と[Andrew Clark氏](https://x.com/acdlite)がMetaに入社Reactチームに参画し、HooksやReact Fiberなど多くの発展に貢献しました。しかし、彼らが開発したReduxはMeta社内では採用されていません。
+ReactはHooksが登場するまで、[Fluxアーキテクチャ](https://facebookarchive.github.io/flux/)と組み合わせて使うことがベストプラクティスとされていました。このことから、ReactチームはMVCを否定しつつも当初はFluxによる中央集権的アーキテクチャ＋Reactの自立分散的アーキテクチャを併用し、複合的なアーキテクチャに理想を見ていたように感じられます。このことは、2016年にFlux系ライブラリとして最も人気だった[Redux](https://redux.js.org/)の作者である[Dan Abramov氏](https://bsky.app/profile/did:plc:fpruhuo22xkm5o7ttr2ktxdo)と[Andrew Clark氏](https://x.com/acdlite)をReactチームに招いていることからも、当初から中央主権的なアーキテクチャに否定的だったわけではないことが伺えます。
 
-Reduxは典型的な中央集権的アーキテクチャです。Reduxの作者を迎えてもなお、中央集権的アーキテクチャは採用されませんでした。
+しかし実際には、彼らが参画しHooksやReact Fiberなど多くの発展があった中に中央集権的アーキテクチャは見られなくなっていきました。研究が進むにつれて、Metaのような大規模開発においては自立分散的アーキテクチャこそが最適であると、Reactチームは考えるようになったものと思われます。
 
 ## React Server Components
 
