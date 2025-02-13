@@ -203,20 +203,31 @@ function UserCassette({ id }: { id: string }) {
 
 ![Boomer Fetching](/images/react-team-vision/bommer-fetching.png)
 
-このように、低速なネットワーク上でリクエストを多数発行することを**Boomer Fetching**と呼びます。前述の通り、GraphQLやRSCではColocationではリクエストは1つにまとめられるため、Boomer Fetchingは発生せずパフォーマンス劣化を抑えることができます。そのため、ReactチームにとってBoomer Fetchingは避けるべき状態であることは変わらず、ことMetaにおいてはGraphQLやRelayによって解決済みの問題という認識でした。
+このように、低速なネットワーク上でリクエストを多数発行することをReactチームでは**Boomer Fetching**と呼んでいます。前述の通り、GraphQLやRSCではColocationではリクエストは1つにまとめられるため、Boomer Fetchingは発生せずパフォーマンス劣化を抑えることができます。そのため、ReactチームにとってBoomer Fetchingは避けるべき状態であることは変わらず、GraphQLやRSCによって解決済みの問題という認識でした。
 
 しかし、現実には多くのReactユーザーがBoomer Fetching相当な実装を好んでしていました。このような実装が好まれた背景にはいくつかの要因が考えられますが、以下の2つが要因として多かったのではないかと筆者は考えています。
 
 - 自立分散的アーキテクチャを好むが、GraphQLやGraphQL Colocationを採用していなかった
 - Boomer Fetchingによるパフォーマンス影響を許容したり、軽視したり、もしくは認識できてなかった
 
-このように、「Reactチームにとってはアンチパターン、しかし一部Reactユーザーの間では好んで使われている」というすれ違いが、React19 RCにおけるBoomer Fetching問題と呼ばれる、以下issueでの議論を引き起こしました。
+このように、「Reactチームにとってはアンチパターン、しかし一部Reactユーザーの間では好んで使われている」というすれ違いが、React19 RCでの[破壊的変更に関する議論](https://github.com/facebook/react/issues/29898)を引き起こしました。
 
-https://github.com/facebook/react/issues/29898
+React18までは`<Suspense>`配下に複数の子コンポーネントがレンダリングされた場合、それらの子コンポーネントは並行に実行され、それぞれの子コンポーネントが行うデータフェッチも並行に開始することができていました。しかし、React19 RCでは`<Suspense>`配下の子コンポーネントを直列実行するような破壊的変更が行われました。
 
-従来`<Suspense>`配下で複数Suspendが発生した場合は並列実行していましたが、React19 RCではこれらを直列実行するような破壊的変更が行われました。これは一種のパフォーマンス改善として行われた変更だったようですが、Boomer Fetchingにおいては著しくパフォーマンスが劣化することになり、紛糾されることとなりました。
+```tsx
+export function Page({ id }) {
+  // React18: `<Author>`と`<Comments>`は並行に実行される
+  // React19(RC): `<Author>`と`<Comments>`は直列に実行される
+  return (
+    <Suspense>
+      <Author id={id} />
+      <Post id={id} />
+    </Suspense>
+  );
+}
+```
 
-このReact19 RCにおけるBoomer Fetching問題は、その後兄弟要素をwarm upするという仕様を追加することで、Boomer Fetchingしてるアプリケーションにおいても、パフォーマンス影響が最小限になるように改善されました。
+このReact19 RCにおける破壊的変更はBoomer Fetchingで顕著なパフォーマンス劣化を引き起こすため、大きな議論になりました。この問題はその後、兄弟要素をwarm upするという仕様を追加することで従来と比較しても影響が最小限になるように改善されました。
 
 本稿では詳細な説明を割愛しているので、より詳細な内容を知りたい方は公式ブログを参照ください。
 
