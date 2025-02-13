@@ -3,7 +3,7 @@ title: "Reactチームが見てる世界、Reactユーザーが見てる世界"
 emoji: "🌏"
 type: "idea" # tech: 技術記事 / idea: アイデア
 topics: ["react"]
-published: false
+published: true
 ---
 
 :::message
@@ -14,7 +14,7 @@ Reactはシンプルなサイトから複雑なアプリケーションまで、
 
 一方で、React Server Componentsへの批判的意見や[Boomer Fetching問題](https://github.com/facebook/react/issues/29898)などを見ていると、Reactチームと一部Reactユーザーの間には意見の相違が見て取れます。この意見の相違はそれぞれが置かれた状況の違いから生じるもの、つまり「見てる世界が違う」ことに起因してると筆者は感じています。
 
-本稿は「Reactチームの見てる世界」を歴史的経緯を踏まえながら考察し、Reactの根本にある思想やコンセプトに対する読者の理解を深めることを目指します。
+本稿では「Reactチームの見てる世界」を歴史的経緯を踏まえながら考察し、Reactの根本にある思想やコンセプトに対する読者の理解を深めることを目指します。
 
 ## 要約
 
@@ -47,7 +47,7 @@ Metaにおいても上述の状況は同様で、特にFacebookのWebサイト�
 
 ### Instagramでの採用とReactのOSS化
 
-Reactが最初に採用されたのは、2013年に買収されたばかりのInstagramのWeb UIでした。当時はまだReactは開発途上で、Instagramの開発と並行して改善が進められました。
+Reactが最初に採用されたのは、2013年に買収されたばかりのInstagramのWeb UIでした。当時Reactはまだ開発途上で、Instagramの開発と並行して改善が進められました。
 
 Instagramで一定の成功が見えた後は、ReactのOSS化が進められました。最初の発表は2013年のJS Conf USでしたが、Reactチームはのちにこの発表を「失敗だった」と表現しています^[出典: [React.js The Documentary](https://www.youtube.com/watch?v=8pDqJVdNa44)]。Reactは多くの面で非常に革新的なアイディアだったため、多くの人々が「うまくいくはずがない」と感じ、反発したようです。実際、`Blot.js`に再レンダリングのアイディアを組み込むことに対しても、当初は多くのチームメンバーが「うまくいかないだろう」と感じたほどなので、当時の価値観を考えると当然かもしれません。
 
@@ -111,6 +111,8 @@ GraphQLとRelayは2015年にOSS化され、Meta社内ではReact&Relay（GraphQL
 
 自立分散的アーキテクチャと対立的な立場にあるアーキテクチャとして考えられるのは、**中央集権的アーキテクチャ**です。中央集権的アーキテクチャはMVCやReduxなどが該当すると考えられます。
 
+### データフェッチの中央集権と自立分散性
+
 中央集権的アーキテクチャの思考でデータフェッチを考えると、データフェッチを一括管理する層が必要になります。Reactにおいてはルートコンポーネントなどの祖先コンポーネントがこれを担うことになるため、データフェッチの結果はトップダウンにバケツリレーされます。
 
 ![Top-down Data Fetching](/images/react-team-vision/top-level-data-fetching.png)
@@ -123,7 +125,9 @@ GraphQLとRelayは2015年にOSS化され、Meta社内ではReact&Relay（GraphQL
 
 ### Flux/Reduxに見る中央集権的アーキテクチャ
 
-ReactはHooksが登場するまで、[Fluxアーキテクチャ](https://facebookarchive.github.io/flux/)と組み合わせて使うことがベストプラクティスとされていました。このことから、ReactチームはMVCを否定しつつも当初はFluxによる中央集権的アーキテクチャ＋Reactの自立分散的アーキテクチャを併用し、複合的なアーキテクチャに理想を見ていたように感じられます。このことは、2016年にFlux系ライブラリとして最も人気だった[Redux](https://redux.js.org/)の作者である[Dan Abramov氏](https://bsky.app/profile/did:plc:fpruhuo22xkm5o7ttr2ktxdo)と[Andrew Clark氏](https://x.com/acdlite)をReactチームに招いていることからも、当初から中央主権的なアーキテクチャに否定的だったわけではないことが伺えます。
+Reactチームは最初から中央集権的アーキテクチャを否定していたわけではありません。
+
+Hooksが登場するまで、Reactは典型的な中央集権的アーキテクチャである[Fluxアーキテクチャ](https://facebookarchive.github.io/flux/)と組み合わせて使うことがベストプラクティスとされていました。このことからReactチームはMVCを否定しつつも、当初はFluxによる中央集権的アーキテクチャ＋Reactの自立分散的アーキテクチャを併用した、複合的なアーキテクチャに理想を見ていたように感じられます。2016年にFlux系ライブラリとして最も人気だった[Redux](https://redux.js.org/)の作者である[Dan Abramov氏](https://bsky.app/profile/did:plc:fpruhuo22xkm5o7ttr2ktxdo)と[Andrew Clark氏](https://x.com/acdlite)をReactチームに招いていることからも、中央主権的アーキテクチャを当初から否定していたわけではないことが伺えます。
 
 しかし実際には、彼らが参画しHooksやReact Fiberなど多くの発展があった中に中央集権的アーキテクチャは見られなくなっていきました。研究が進むにつれて、Metaのような大規模開発においては自立分散的アーキテクチャこそが最適であると、Reactチームは考えるようになったものと思われます。
 
@@ -131,7 +135,7 @@ ReactはHooksが登場するまで、[Fluxアーキテクチャ](https://faceboo
 
 Metaの大規模開発はReact+Relay（GraphQL）により安定した成長を続け、現在でもこれらの技術は多くのプロダクトを支えています。
 
-しかし、当然ながら全く問題がなかったわけではありません。様々なReactアプリケーションの事例や肥大化から、様々な問題が見えてきました。
+しかし、当然ながら全く問題がなかったわけではありません。Reactアプリケーションが肥大化するにつれ、様々な問題が見えてきました。
 
 - バックエンドアクセス
   - 冗長な実装
@@ -156,6 +160,10 @@ React Server Componentsにより、上記の問題は以下のように解決さ
 ### React Server Componentsの自立分散性
 
 Server Componentsの登場により、データフェッチもまたコンポーネントにカプセル化することが可能となりました。これは、React Server Componentsもまた自立分散性アーキテクチャを重視していることを示しています。
+
+:::message
+React Server Componentsとはアーキテクチャ名称であり、Server ComponentsとはReact Server Componentsを構成する1つの要素です。
+:::
 
 言い換えると、React Server Componentsが**GraphQLの精神的後継**であるとも言えます。事実、React Server Componentsの最初のRFCは、RelayやGraphQLの発展をリードしてきた[Joe Savona氏](https://twitter.com/en_js)が提案していることからもこのことは見て取れます。
 
@@ -216,6 +224,7 @@ React18までは`<Suspense>`配下に複数の子コンポーネントがレン�
 
 ```tsx
 export function Page({ id }) {
+  // `<Author>`と`<Comments>`はそれぞれSuspendするものとする
   // React18: `<Author>`と`<Comments>`は並行に実行される
   // React19(RC): `<Author>`と`<Comments>`は直列に実行される
   return (
