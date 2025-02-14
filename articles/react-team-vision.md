@@ -7,7 +7,7 @@ published: true
 ---
 
 :::message
-この記事は[React Tokyo#2](https://react-tokyo.connpass.com/event/343757/)で公演した[「Reactチームが見てる世界」](https://akifumisato.github.io/slide-of-react-tokyo-202502/1)を、記事として執筆しなおしたものです。
+この記事は[React Tokyo#2](https://react-tokyo.connpass.com/event/343757/)で講演した[「Reactチームが見てる世界」](https://akifumisato.github.io/slide-of-react-tokyo-202502/1)を、記事として執筆しなおしたものです。
 :::
 
 Reactはシンプルなサイトから複雑なアプリケーションまで、非常に幅広く採用されている人気のフレームワークです。OSS化から10年以上の歴史がありながら、昨今も[React Server Components](https://ja.react.dev/blog/2023/03/22/react-labs-what-we-have-been-working-on-march-2023#react-server-components)など革新的なアイディアを我々に提案し続けています。
@@ -49,7 +49,7 @@ Metaにおいても上述の状況は同様で、特にFacebookのWebサイト�
 
 Reactが最初に採用されたのは、2013年に買収されたばかりのInstagramのWeb UIでした。当時Reactはまだ開発途上で、Instagramの開発と並行して改善が進められました。
 
-Instagramで一定の成功が見えた後は、ReactのOSS化が進められました。最初の発表は2013年のJS Conf USでしたが、Reactチームはのちにこの発表を「失敗だった」と表現しています^[出典: [React.js The Documentary](https://www.youtube.com/watch?v=8pDqJVdNa44)]。Reactは多くの面で非常に革新的なアイディアだったため、多くの人々が「うまくいくはずがない」と感じ、反発したようです。実際、`Blot.js`に再レンダリングのアイディアを組み込むことに対しても、当初は多くのチームメンバーが「うまくいかないだろう」と感じたほどなので、当時の価値観を考えると当然かもしれません。
+Instagramで一定の成功が見えた後は、ReactのOSS化が進められました。最初の発表は2013年のJS Conf USでしたが、Reactチームはのちにこの発表を「失敗だった」と表現しています^[出典: [React.js The Documentary](https://www.youtube.com/watch?v=8pDqJVdNa44)]。Reactは多くの面で非常に革新的なアイディアだったため、多くの人々が「うまくいくはずがない」と感じ、反発したようです。実際、`Bolt.js`に再レンダリングのアイディアを組み込むことに対しても、当初は多くのチームメンバーが「うまくいかないだろう」と感じたほどなので、当時の価値観を考えると当然かもしれません。
 
 しかし、「失敗だった」とされるJS Conf USでReactに興味を持った方がいました。後にReactチームに参画する[Sophie Alpert](https://twitter.com/sophiebits)氏です。Sophie Alpert氏はJS Conf US後、Reactに2000行ものコントリビュートを行い、Reactは多くの技術的課題を解消します。多くの改善を経たReactは、改めて同年のJS Conf EUで発表され、これ以降Reactは加速度的に大きな人気を得ていきます。
 
@@ -127,7 +127,7 @@ GraphQLとRelayは2015年にOSS化され、Meta社内ではReact&Relay（GraphQL
 
 Reactチームは最初から中央集権的アーキテクチャを否定していたわけではありません。
 
-Hooksが登場するまで、Reactは典型的な中央集権的アーキテクチャである[Fluxアーキテクチャ](https://facebookarchive.github.io/flux/)と組み合わせて使うことがベストプラクティスとされていました。このことからReactチームはMVCを否定しつつも、当初はFluxによる中央集権的アーキテクチャ＋Reactの自立分散的アーキテクチャを併用した、複合的なアーキテクチャに理想を見ていたように感じられます。2016年にFlux系ライブラリとして最も人気だった[Redux](https://redux.js.org/)の作者である[Dan Abramov氏](https://bsky.app/profile/did:plc:fpruhuo22xkm5o7ttr2ktxdo)と[Andrew Clark氏](https://x.com/acdlite)をReactチームに招いていることからも、中央主権的アーキテクチャを当初から否定していたわけではないことが伺えます。
+Hooksが登場するまで、Reactは典型的な中央集権的アーキテクチャである[Fluxアーキテクチャ](https://facebookarchive.github.io/flux/)と組み合わせて使うことがベストプラクティスとされていました。このことからReactチームはMVCを否定しつつも、当初はFluxによる中央集権的アーキテクチャ＋Reactの自立分散的アーキテクチャを併用した、複合的なアーキテクチャに理想を見ていたように感じられます。2016年にFlux系ライブラリとして最も人気だった[Redux](https://redux.js.org/)の作者である[Dan Abramov氏](https://bsky.app/profile/did:plc:fpruhuo22xkm5o7ttr2ktxdo)と[Andrew Clark氏](https://x.com/acdlite)をReactチームに招いていることからも、中央集権的アーキテクチャを当初から否定していたわけではないことが伺えます。
 
 しかし実際には、彼らが参画しHooksやReact Fiberなど多くの発展があった中に中央集権的アーキテクチャは見られなくなっていきました。研究が進むにつれて、Metaのような大規模開発においては自立分散的アーキテクチャこそが最適であると、Reactチームは考えるようになったものと思われます。
 
