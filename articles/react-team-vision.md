@@ -227,7 +227,7 @@ React18までは`<Suspense>`配下に複数の子コンポーネントがレン�
 
 ```tsx
 export function Page({ id }) {
-  // `<Author>`と`<Comments>`はそれぞれSuspendするものとする
+  // `<Author>`と`<Post>`はそれぞれSuspendするものとする
   // React18: `<Author>`と`<Post>`は並行に実行される
   // React19(RC): `<Author>`と`<Post>`は直列に実行される
   return (
