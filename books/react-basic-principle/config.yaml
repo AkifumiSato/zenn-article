@@ -1,0 +1,8 @@
+title: "Reactの考え方"
+summary: "Reactアプリケーション開発者に知ってて欲しい考え方やプラクティスを筆者なりにまとめました。"
+topics: ["react"]
+published: false
+price: 0 # 有料の場合200〜5000
+# 本に含めるチャプターを順番に並べましょう
+chapters:
+  - part_1
