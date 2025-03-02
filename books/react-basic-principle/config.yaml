@@ -5,4 +5,10 @@ published: false
 price: 0 # 有料の場合200〜5000
 # 本に含めるチャプターを順番に並べましょう
 chapters:
+  - intro
   - part_1
+  - part_1_scalable
+  - part_1_rendering
+  - part_1_components
+  - part_1_functional
+  - part_1_jsx
