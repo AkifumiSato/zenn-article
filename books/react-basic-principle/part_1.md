@@ -7,5 +7,5 @@ Web開発におけるライブラリやフレームワークは、それぞれ�
 第一部ではReactの哲学について解説します。
 
 :::message
-Reactの立ち位置に対する解釈はさまざまで、ライブラリと考える人もフレームワークと考える人もいます。本稿においては[State of React](https://2024.stateofreact.com/en-US/libraries/back-end-infrastructure/#meta_frameworks_ratios)での解釈を拝借し、Reactをフレームワーク、Next.jsなどのReactを内包するものはメタフレームワークと呼称します。
+Reactの立ち位置に対する解釈はさまざまで、ライブラリと考える人もフレームワークと考える人もいます。本稿においては[State of React](https://2024.stateofreact.com/en-US/libraries/back-end-infrastructure/#meta_frameworks_ratios)での解釈を拝借し、Reactをフレームワーク、Next.jsなどのReactを内包するものはメタフレームワークと呼びます。
 :::
