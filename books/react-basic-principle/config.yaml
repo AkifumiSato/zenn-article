@@ -10,5 +10,5 @@ chapters:
   - part_1_scalable
   - part_1_rendering
   - part_1_components
-  - part_1_functional
   - part_1_jsx
+  - part_1_boundary
