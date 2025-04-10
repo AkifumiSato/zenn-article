@@ -58,4 +58,4 @@ Reactは高いパフォーマンスも追求していますが、パフォーマ
 
 ### React Server Componentsへの移行
 
-前述の通り、Reactは高い後方互換性や移行手段を提供していますが、**React Server Components**は既存の仕組みへの変更ではなく全く新しいコンセプトの導入です。そのため、既存プロダクトで採用するにはメタフレームワークの乗り換えなど、高い移行コストを伴う可能性があります。
+[React Server Components](https://ja.react.dev/reference/rsc/server-components)はReactの新たなアーキテクチャと仕様です。前述の通り、Reactは高い後方互換性や移行手段を提供していますが、React Server Componentsは既存の仕組みへの変更ではなく全く新しいコンセプトの導入のため、既存プロダクトで採用するにはメタフレームワークの乗り換えなど、高い移行コストを伴う可能性があります。

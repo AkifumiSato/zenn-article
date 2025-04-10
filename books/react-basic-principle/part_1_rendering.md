@@ -124,7 +124,7 @@ UIを式で表現できるなら、これを適切なタイミングで実行す
 
 ::::details `UI = f(state)`とReact Server Components
 :::message
-React Server Componentsによって、上述のメンタルモデルは更新され、以下の2つが統合される形となりました。
+[React Server Components](https://ja.react.dev/reference/rsc/server-components)では上述のメンタルモデルは更新され、以下の2つが統合される形となりました。
 
 - `UI = f(state)`: Client Components
 - `UI = f(data)`: Server Components
