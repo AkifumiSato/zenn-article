@@ -4,11 +4,13 @@ title: "レンダリングの境界"
 
 ## 要約
 
-Reactでは`<Suspense>`や`"use client"`など、様々な形で**レンダリングの境界**を定義できます。レンダリングの境界は、UIをツリー構造で考えるコンポーネント指向に組み込みやすい一方、ツリー構造だけでは対応が難しい最適化や前提条件の組み込みを可能にします。
+Reactでは`<Suspense>`や`"use client"`など、様々なレンダリングの**境界**を定義できます。レンダリングの境界は、UIをツリー構造で考えるコンポーネント指向に組み込みやすい一方、ツリー構造と相性が悪い最適化や前提条件の組み込みを可能にします。
 
 ## 背景
 
-Reactをはじめ、コンポーネント指向ではUIをツリー構造で考えます。ツリー構造は情報の依存関係が明確になるため、適切に要素を作成することで全体の構造把握が容易になります。
+Reactをはじめ、コンポーネント指向ではUIをツリー構造で考えます。ツリー構造は情報の依存関係が明確になるため、全体の構造把握が容易になります。
+
+<!-- https://excalidraw.com/#json=XEHJ4Eaby-Q-Gg2Whb1S_,L_QxKu8yfT1Q8P9AEAd0wQ -->
 
 ![UI Tree](/images/react-basic-principle/ui-tree.png)
 
@@ -33,9 +35,11 @@ function Page() {
 
 一方、UIに関するあらゆる実装要件がツリー構造とマッチするわけではありません。例えば、末端のコンポーネントで発生したエラーに対し祖先でエラーUIを出し分けるなどするのに、_Props Drilling_（Propsのバケツリレー）をするのは良い設計とは言えません。
 
+![Error UI](/images/react-basic-principle/error-props-dlilling.png =350x)
+
 ## 設計思想
 
-Reactでは、様々な課題解決のために**レンダリングの境界**（Boundary）というアプローチが採用されています。レンダリングの境界は、UIをツリー構造で考えるコンポーネント指向のメンタルモデルに組み込みやすいため、ツリー構造で解決が難しい実装要件に対するReact側の解決策として、採用されることがあります。
+Reactでは、様々な課題解決のためにレンダリングに**境界**（Boundary）を定義するアプローチが採用されています。レンダリングの境界は、UIをツリー構造で考えるコンポーネント指向のメンタルモデルに組み込みやすいため、ツリー構造な設計だけでは解決が難しい場合に、Reactから提供される解決策として採用されることがあります。
 
 ![Boundary](/images/react-basic-principle/boundary.png =350x)
 
@@ -47,7 +51,7 @@ Reactでは、様々な課題解決のために**レンダリングの境界**�
 - [Context](#context)
 
 :::message
-レンダリングの境界には、Reactではなくフレームワーク固有のものも存在します。例えば、Next.jsの[`"use cache"`](https://nextjs.org/docs/app/api-reference/directives/use-cache)は、関数やコンポーネントに対するキャッシュの境界を定義するのに用いられます。
+レンダリングの境界には、Reactではなくフレームワークによって定義されているものも存在します。例えば、Next.jsの[`"use cache"`](https://nextjs.org/docs/app/api-reference/directives/use-cache)は、関数やコンポーネントに対するキャッシュの境界を定義するのに用いられます。
 :::
 
 ### `<ErrorBoundary>`
@@ -105,7 +109,7 @@ class ErrorBoundary extends React.Component {
 
 :::
 
-`<ErrorBoundary>`はプロジェクトごとに毎度実装するのも手間なので、筆者は[react-error-boundary](https://www.npmjs.com/package/react-error-boundary)を好んで利用します。
+とはいえ、`<ErrorBoundary>`をプロジェクトごとに毎度実装するのも手間なので、筆者は[react-error-boundary](https://www.npmjs.com/package/react-error-boundary)を好んで利用します。
 
 ### `<Suspense>`
 
@@ -117,15 +121,15 @@ class ErrorBoundary extends React.Component {
 </Suspense>
 ```
 
-`<Suspense>`はよくデータフェッチと組み合わせて、読み込み時のUIを記述するのに利用されます。`<Suspense>`は組み込みコンポーネントのため、ライブラリやフレームワークがサスペンドするのであれば書き方は常に一定になります^[開発者が自前でサスペンドするような実装は推奨されません]。
+`<Suspense>`はよくデータフェッチと組み合わせて、読み込み時のUIを記述するのに利用されます。`<Suspense>`は組み込みコンポーネントのため、ライブラリやフレームワークがサスペンドするのであれば、書き方は常に一定になります^[開発者が自前でサスペンドするような実装は推奨されません]。
 
-より詳しく知りたい方は、[uhyoさん](https://x.com/uhyo_)の以下の本がとてもわかりやすいのでぜひご一読ください。
+より`<Suspense>`について詳しく知りたい方は、[uhyoさん](https://x.com/uhyo_)の以下の本がとてもわかりやすいのでぜひご一読ください。
 
 https://zenn.dev/uhyo/books/react-concurrent-handson
 
 ### `"use client"`
 
-`"use client"`は、Reactの新たなアーキテクチャと仕様である[React Server Components](https://ja.react.dev/reference/rsc/server-components)の一貫で追加された、新たなディレクティブです。[Next.js](https://nextjs.org/)などではデフォルトでServre Componentsとなるため、Client境界（Client Componentsの境界）^[`"use client"`は境界となるコンポーネントを含むファイルの先頭で宣言する必要があります。]で`"use client"`を宣言する必要があります。
+`"use client"`は、Reactの新たなアーキテクチャと仕様である[React Server Components](https://ja.react.dev/reference/rsc/server-components)の一貫で追加された、新たなディレクティブです。[Next.js](https://nextjs.org/)などではデフォルトでServre Componentsとなるため、**Client境界**（Client Componentsの境界）^[`"use client"`は境界となるコンポーネントを含むファイルの先頭で宣言する必要があります。]で`"use client"`を宣言する必要があります。
 
 ```tsx
 "use client";
@@ -141,14 +145,14 @@ Client Componentsには`children`などを通してServer Componentsを渡すこ
 
 ### Context
 
-[Context](https://ja.react.dev/learn/passing-data-deeply-with-context)は情報を共有する境界で、`createContext()`によって作成できるコンポーネントです。従来このコンポーネントは**Provider**と呼ばれていました。Contextを通して情報を境界内で共有することで、*Props Drilling*を避けることができます。
+[Context](https://ja.react.dev/learn/passing-data-deeply-with-context)は情報を共有する境界で、`createContext()`によって作成できるコンポーネントです。Context境界内でデータや関数などを共有することで、*Props Drilling*を避けることができます。
 
 ```tsx
 const SomeContext = createContext(defaultValue);
 ```
 
 :::message
-従来Contextの境界は`<MyContext.Provider>`とする必要がありましたが、[React19](https://ja.react.dev/blog/2024/12/05/react-19#context-as-a-provider)以降は`createContext()`の結果をそのままコンポーネントとして利用できるようになりました。
+従来Contextの境界は`<MyContext.Provider>`とする必要がありましたが、[React19](https://ja.react.dev/blog/2024/12/05/react-19#context-as-a-provider)以降は`createContext()`の結果をそのままコンポーネントとして利用できるようになりました。慣習的に、現在も多くのライブラリが*Provider*という名称でコンポーネントを提供しています。
 :::
 
 ## トレードオフ
