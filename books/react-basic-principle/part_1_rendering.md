@@ -193,4 +193,4 @@ Reactは状態が更新されたコンポーネント自身と、その子孫コ
 
 ![React Tree](/images/react-basic-principle/re-render-tree.png)
 
-状態を上位のコンポーネントで持たざるを得ない場合には、不要なレンダリングをスキップするために[`memo`](https://ja.react.dev/reference/react/memo)の使用を検討してください。
+状態を上位のコンポーネントで持たざるを得ない場合には、不要なレンダリングをスキップするために[`memo`](https://ja.react.dev/reference/react/memo)の使用を検討するなどしてください。

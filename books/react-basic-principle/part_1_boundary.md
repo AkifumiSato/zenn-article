@@ -4,7 +4,7 @@ title: "レンダリングの境界"
 
 ## 要約
 
-Reactでは`<Suspense>`や`"use client"`など、様々なレンダリングの**境界**を定義できます。レンダリングの境界は、UIをツリー構造で考えるコンポーネント指向に組み込みやすい一方、ツリー構造と相性が悪い最適化や前提条件の組み込みを可能にします。
+Reactでは`<Suspense>`や`"use client"`など、様々なレンダリングの**境界**を定義できます。レンダリングの境界はUIをツリー構造で考えるコンポーネント指向に組み込みやすく、ツリー構造と相性が悪い最適化や前提条件の組み込みで境界の概念が採用されています。
 
 ## 背景
 
@@ -56,7 +56,7 @@ Reactでは、様々な課題解決のためにレンダリングに**境界**�
 
 ### `<ErrorBoundary>`
 
-`<ErrorBoundary>`は、レンダリング中にエラーが発生した場合にfallbackを表示するための境界を定義するコンポーネントです。
+`<ErrorBoundary>`は、レンダリング中にエラーが発生した場合にfallbackを表示するための境界を定義するコンポーネントです。言い換えると、`<ErrorBoundary>`はアプリケーション全体がクラッシュするのを防ぎ、部分的にエラーUIを表示します。
 
 ```tsx
 <ErrorBoundary fallback={<ErrorDialog>error message</ErrorDialog>}>
@@ -64,7 +64,7 @@ Reactでは、様々な課題解決のためにレンダリングに**境界**�
 </ErrorBoundary>
 ```
 
-`<ErrorBoundary>`は他の境界とは異なり、開発者が自身で内容を実装できる境界コンポーネントです。ただし、古くから存在していることもあり、執筆時現在では[Classコンポーネント](https://ja.react.dev/reference/react/Component#defining-a-class-component)で記述する必要があります。
+`<ErrorBoundary>`は他の境界とは異なり、開発者が自身で内容を実装できる境界コンポーネントです。ただし、執筆時現在では歴史的経緯により[Classコンポーネント](https://ja.react.dev/reference/react/Component#defining-a-class-component)でのみ実装することが可能です。
 
 :::details `<ErrorBoundary>`の実装例
 
@@ -109,11 +109,15 @@ class ErrorBoundary extends React.Component {
 
 :::
 
-とはいえ、`<ErrorBoundary>`をプロジェクトごとに毎度実装するのも手間なので、筆者は[react-error-boundary](https://www.npmjs.com/package/react-error-boundary)を好んで利用します。
+:::message
+筆者は[react-error-boundary](https://www.npmjs.com/package/react-error-boundary)を好んで利用します。
+:::
 
 ### `<Suspense>`
 
 `<Suspense>`は、レンダリング中に発生した**サスペンド**に対し、fallbackを表示することができる組み込みのコンポーネントです。サスペンドとは、レンダリング中に`Promise`を`throw`することを意味します。サスペンドが発生すると、`<Suspense>`コンポーネントはpropsで受け取った`fallback`を表示します。
+
+これにより、非同期処理の待機時UI表示が容易に実装できます。
 
 ```tsx
 <Suspense fallback={<Loading />}>
@@ -129,7 +133,7 @@ https://zenn.dev/uhyo/books/react-concurrent-handson
 
 ### `"use client"`
 
-`"use client"`は、Reactの新たなアーキテクチャと仕様である[React Server Components](https://ja.react.dev/reference/rsc/server-components)の一貫で追加された、新たなディレクティブです。[Next.js](https://nextjs.org/)などではデフォルトでServre Componentsとなるため、**Client境界**（Client Componentsの境界）^[`"use client"`は境界となるコンポーネントを含むファイルの先頭で宣言する必要があります。]で`"use client"`を宣言する必要があります。
+`"use client"`は、Reactの新たなアーキテクチャと仕様である[React Server Components](https://ja.react.dev/reference/rsc/server-components)の一貫で追加された、新たなディレクティブです。[Next.js](https://nextjs.org/)ではコンポーネントのデフォルトはServre Componentsとなり、サーバー側でのみレンダリングされます。クライアント側でもレンダリングするには、`"use client"`で**Client境界**（Client Componentsの境界）^[`"use client"`は境界となるコンポーネントを含むファイルの先頭で宣言する必要があります。]を明示的に指定し、オプトインする必要があります。
 
 ```tsx
 "use client";
@@ -145,20 +149,29 @@ Client Componentsには`children`などを通してServer Componentsを渡すこ
 
 ### Context
 
-[Context](https://ja.react.dev/learn/passing-data-deeply-with-context)は情報を共有する境界で、`createContext()`によって作成できるコンポーネントです。Context境界内でデータや関数などを共有することで、*Props Drilling*を避けることができます。
+[Context](https://ja.react.dev/learn/passing-data-deeply-with-context)はデータや関数を共有する境界で、`createContext()`によって作成できるコンポーネントです。Context境界内でデータや関数を共有することで、*Props Drilling*を避けることができます。
 
 ```tsx
 const SomeContext = createContext(defaultValue);
+
+// ...
+
+<SomeContext value={myContextValue}>
+  <SomeComponent />
+</SomeContext>;
 ```
 
+多くの3rd partyライブラリでは、*Provider*という名称でContext境界のコンポーネントを提供しています。
+
 :::message
-従来Contextの境界は`<MyContext.Provider>`とする必要がありましたが、[React19](https://ja.react.dev/blog/2024/12/05/react-19#context-as-a-provider)以降は`createContext()`の結果をそのままコンポーネントとして利用できるようになりました。慣習的に、現在も多くのライブラリが*Provider*という名称でコンポーネントを提供しています。
+従来Contextの境界は`<MyContext.Provider>`とする必要がありましたが、[React19](https://ja.react.dev/blog/2024/12/05/react-19#context-as-a-provider)以降は`createContext()`の結果をそのままコンポーネントとして利用できるようになりました。
 :::
 
 ## トレードオフ
 
 ### 見えない境界
 
-レンダリングの境界は必ずしもコンポーネント宣言の近くにあるとは限りません。特に、再利用性の高いコンポーネントや深い階層のコンポーネントを実装している時には、境界を意識しづらいことがあります。
+Propsとは異なり、レンダリングの境界は見えない前提条件です。境界は必ずしもコンポーネント宣言の近くにあるとは限らないため、実装時にはコード上に見えない前提条件への配慮が必要な場合があります。
 
-境界が意識しづらいことが問題になる代表的なケースには、`"use client"`によるClient境界が利用者の祖先側にあった場合が考えられます。Next.jsでは、Client境界外でClient Componentsでのみ利用可能なAPIを利用した場合には、エラーと修正のヒントが明示されます。
+- `"use client"`が遠い祖先要素にあり、末端コンポーネントの実装からはClient Componentsかどうか判断できない
+- テストを書いてみたら依存してるContext境界を定義してなかったためにエラー
