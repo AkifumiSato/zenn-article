@@ -12,10 +12,10 @@ UIの更新処理は命令的な実装になりやすく、複雑化しがちで
 
 - **更新前のUI**: DOMがどういう状態にあるか
 - **アプリケーションの状態**: JavaScript変数やURLのクエリパラメータなど
-- **イベント**: クリックや入力など
+- **複数のイベントリスナー**: イベントリスナーの順序や依存関係
 - **更新後のUI**: DOMをどういう状態にすべきか
 
-これらを統合するUI更新処理は**命令的**になりやすく、命令的な実装はすぐに複雑化します。命令的な実装でも小さなサンプルであればうまくいくかもしれませんが、Webアプリケーションのように要求が複雑な場合には実装難易度は非常に高くなります。
+これらを統合するUI更新処理は**命令的**になりやすく、命令的な実装はすぐに複雑化します。小さなサンプルであればうまくいくかもしれませんが、Webアプリケーションのように要求が複雑な場合、実装難易度は非常に高くなります。
 
 ### 実装例
 
@@ -23,50 +23,64 @@ UIの更新処理は命令的な実装になりやすく、複雑化しがちで
 
 ```html
 <div>
-  <form>
-    <input type="text" id="newItemText" />
-    <button type="submit" id="addItemButton">アイテムを追加</button>
+  <form id="todoForm">
+    <input type="text" id="newTodoTextInput" />
+    <button type="submit">追加</button>
+    <p id="todoError" role="alert" style="color: red;"></p>
   </form>
-  <ul id="itemList">
+  <ul id="todoList">
     <!-- <li>...</li> -->
   </ul>
 </div>
 ```
 
 ```js
-const newItemText = document.getElementById("newItemText");
-const addItemButton = document.getElementById("addItemButton");
-const itemList = document.getElementById("itemList");
+const todoForm = document.getElementById("todoForm");
+const newTodoTextInput = document.getElementById("newTodoTextInput");
+const todoList = document.getElementById("todoList");
+const todoError = document.getElementById("todoError");
 
-addItemButton.addEventListener("click", () => {
-  const text = newItemText.value.trim();
-  if (text !== "") {
-    // 新しいリストアイテムを作成
-    const newListItem = document.createElement("li");
-    newListItem.textContent = text;
+const formSchema = z.object({
+  newTodo: z.string().trim().min(1, { message: "Todoを入力してください" }),
+});
 
-    // 削除ボタンを作成
-    const deleteButton = document.createElement("button");
-    deleteButton.textContent = "削除";
+todoForm.addEventListener("submit", (event) => {
+  event.preventDefault();
 
-    // 削除ボタンにイベントリスナーを追加
-    deleteButton.addEventListener("click", () => {
-      itemList.removeChild(newListItem);
-    });
-
-    // リストアイテムに削除ボタンを追加
-    newListItem.appendChild(deleteButton);
-
-    // リストに新しいアイテムを追加
-    itemList.appendChild(newListItem);
-
-    // 入力フィールドをクリア
-    newItemText.value = "";
+  const validationResult = formSchema.safeParse();
+  if (!validationResult.success) {
+    const errorMessage =
+      validationResult.error.errors[0]?.message || "入力内容が無効です";
+    todoError.textContent = errorMessage;
+    return;
   }
+
+  // エラーメッセージをクリア
+  todoError.textContent = "";
+
+  // 新しいリストアイテムを作成
+  const newListItem = document.createElement("li");
+  newListItem.textContent = validationResult.data.newTodo;
+
+  // 削除ボタンを作成
+  const deleteButton = document.createElement("button");
+  deleteButton.textContent = "削除";
+  deleteButton.addEventListener("click", () => {
+    todoList.removeChild(newListItem);
+  });
+
+  // リストアイテムに削除ボタンを追加
+  newListItem.appendChild(deleteButton);
+
+  // リストに新しいアイテムを追加
+  todoList.appendChild(newListItem);
+
+  // 入力フィールドをクリア
+  newTodoTextInput.value = "";
 });
 ```
 
-上記実装では、「アイテムを追加」クリック後にDOMがどういう状態になるか全体を読み通さないと想像できません。現状コード自体がそれほど長くないため問題に感じづらいかもしれませんが、ここにさらに「一括削除ボタン」やサーバー側への「保存ボタン」を追加すると、複数のイベントリスナーが`<ul id="itemList">`内のDOMを扱うことにため、DOMがいつどういう状態になっているか各処理の依存関係を把握し、影響を考慮しなければなりません。
+上記実装では、「追加」クリック後にDOMがどういう状態になるか全体を読み通さないと想像できません。現状コード自体がそれほど長くないため問題に感じづらいかもしれませんが、ここにさらに「一括削除ボタン」やサーバー側への「保存ボタン」を追加すると、複数のイベントリスナーが`<ul id="todoList">`内のDOMを扱うことにため、DOMがいつどういう状態になっているか各処理の依存関係を把握し、影響を考慮しなければなりません。
 
 ## 設計思想
 
@@ -75,20 +89,30 @@ Reactでは、「フロントエンド開発における複雑さの主な要因
 以下は前述のTodoアプリをReactで再実装した例です。
 
 ```tsx
-type FormValues = {
-  newItemText: string;
-};
+const formSchema = z.object({
+  newTodo: z.string().trim().min(1, { message: "Todoを入力してください" }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 function TodoList() {
   const [todoItems, setTodoItems] = useState<string[]>([]);
   // `useForm()`はreact-hook-formのhooks
-  const { register, handleSubmit, reset } = useForm<FormValues>();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      newTodo: "",
+    },
+  });
 
   const onSubmit: SubmitHandler<FormValues> = (data) => {
-    if (data.newItemText.trim() !== "") {
-      setTodoItems([...todoItems, data.newItemText]);
-      reset();
-    }
+    setTodoItems([...todoItems, data.newTodo]);
+    reset();
   };
 
   const handleDeleteItem = (target: number) => () => {
@@ -98,8 +122,13 @@ function TodoList() {
   return (
     <div>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <input type="text" {...register("newItemText")} />
-        <button type="submit">アイテムを追加</button>
+        <input type="text" {...register("newTodo")} />
+        <button type="submit">追加</button>
+        {errors.newTodo && (
+          <p role="alert" style={{ color: "red" }}>
+            {errors.newTodo.message}
+          </p>
+        )}
       </form>
       <ul>
         {todoItems.map((item, index) => (
@@ -120,7 +149,7 @@ function TodoList() {
 
 **宣言的UI**とは、文字通りUIを宣言的に表現することを指しています。この文脈における「宣言的」とは、値として表現できることを指しており、宣言的UIはよく`UI = f(state)`と表現されます。この式における`f()`はコンポーネント関数、`state`は文字通り状態です。
 
-UIを式で表現できるなら、これを適切なタイミングで実行すれば常にあるべきUIを得ることができます。`f()`が純粋な関数であれば、この式を実行すべきタイミングは初期描画時と`state`の更新時です。Reactでは特に`state`の更新時にこの式を再実行することを、**再レンダリング**と呼びます^[参考: [レンダリング大全](https://zenn.dev/txxm/articles/f04b21949ddab3)]。
+UIを式で表現できるなら、初期描画時と`state`の更新時に式を実行すれば常にあるべきUIを得ることができます。Reactでは特に`state`の更新時にこの式を再実行することを、**再レンダリング**と呼びます^[参考: [レンダリング大全](https://zenn.dev/txxm/articles/f04b21949ddab3)]。
 
 ::::details `UI = f(state)`とReact Server Components
 :::message
@@ -135,7 +164,7 @@ UIを式で表現できるなら、これを適切なタイミングで実行す
 
 ### 再レンダリングの大まかな仕組み
 
-Reactにおける`state`は`useState()`で定義します。`useState()`は`state`を更新するためのsetter関数を返し、この関数を通じて`state`が更新された時にReactはコンポーネントを再レンダリングします。
+Reactにおける`state`は`useState()`で定義します。`useState()`は`state`と`state`を更新するためのsetter関数を返し、この関数を通じて`state`が更新された時にReactはコンポーネントを再レンダリングします。
 
 :::message alert
 setter関数を通じずに`state`を更新しても再レンダリングはされません。必ずsetter関数を通じて`state`を更新しましょう。
@@ -156,8 +185,7 @@ export function Counter() {
 
 上記の例では、クリックのたびに`setCount`が呼び出され、`<Counter>`が再レンダリングされます。
 
-Reactは「更新前のUI」と「更新後のUI」を比較して、差分があった場合のみ実際のDOMに変更を反映します^[参考: [レンダーとコミット
-](https://ja.react.dev/learn/render-and-commit)]。そのため、再レンダリングの結果差分がない場合にはDOMへの適用はスキップされます。
+Reactは「更新前のUI」と「更新後のUI」を比較して、差分があった場合のみ実際のDOMに変更を反映します^[参考: [レンダーとコミット](https://ja.react.dev/learn/render-and-commit)]。そのため、再レンダリングの結果差分がない場合にはDOMへの適用はスキップされます。
 
 ### コンポーネントの純粋性
 
