@@ -10,7 +10,7 @@ Reactでは`<Suspense>`や`"use client"`など、様々なレンダリングの*
 
 Reactをはじめ、コンポーネント指向ではUIをツリー構造で考えます。ツリー構造は情報の依存関係が明確になるため、全体の構造把握が容易になります。
 
-<!-- https://excalidraw.com/#json=XEHJ4Eaby-Q-Gg2Whb1S_,L_QxKu8yfT1Q8P9AEAd0wQ -->
+<!-- https://excalidraw.com/#json=1BqNUBkEjbP4Napz-xkwR,tYubY5DXn_2a45eDcUngwQ -->
 
 ![UI Tree](/images/react-basic-principle/ui-tree.png)
 
@@ -33,7 +33,7 @@ function Page() {
 }
 ```
 
-一方、UIに関するあらゆる実装要件がツリー構造とマッチするわけではありません。例えば、末端のコンポーネントで発生したエラーに対し祖先でエラーUIを出し分けるなどするのに、_Props Drilling_（Propsのバケツリレー）をするのは良い設計とは言えません。
+一方、UIに関するあらゆる実装要件がツリー構造とマッチするわけではありません。例えば、末端のコンポーネントでエラーが発生した場合に、祖先コンポーネントでエラーUIを表示したいとします。この際、ツリー構造のルールに厳密に従うにはエラーを`throw`するのではなく、エラーハンドリング関数などを*Props Drilling*（Propsのバケツリレー）することが考えられますが、これは冗長な実装が伴うため良い設計ではありません。
 
 ![Error UI](/images/react-basic-principle/error-props-dlilling.png =350x)
 
