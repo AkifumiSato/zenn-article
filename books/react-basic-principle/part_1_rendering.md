@@ -143,7 +143,7 @@ function TodoList() {
 }
 ```
 
-命令型の実装では最終的なDOM構造が予測しづらかったのに対し、Reactでは`return`文のところを見れば明らかなので、UIの結果を予測しやすくなりました。
+命令型の実装では最終的なDOM構造が予測しづらかったのに対し、Reactではコンポーネントの`return`を見れば明らかなので、UIの結果を予測しやすくなりました。
 
 ### 宣言的UIのメンタルモデル
 
@@ -151,7 +151,6 @@ function TodoList() {
 
 UIを式で表現できるなら、初期描画時と`state`の更新時に式を実行すれば常にあるべきUIを得ることができます。Reactでは特に`state`の更新時にこの式を再実行することを、**再レンダリング**と呼びます^[参考: [レンダリング大全](https://zenn.dev/txxm/articles/f04b21949ddab3)]。
 
-::::details `UI = f(state)`とReact Server Components
 :::message
 [React Server Components](https://ja.react.dev/reference/rsc/server-components)では上述のメンタルモデルは更新され、以下の2つが統合される形となりました。
 
@@ -160,11 +159,10 @@ UIを式で表現できるなら、初期描画時と`state`の更新時に式�
 
 詳細な解説はDan Abramov氏の[The Two Reacts](https://overreacted.io/the-two-reacts/)を参照ください。
 :::
-::::
 
 ### 再レンダリングの大まかな仕組み
 
-Reactにおける`state`は`useState()`で定義します。`useState()`は`state`と`state`を更新するためのsetter関数を返し、この関数を通じて`state`が更新された時にReactはコンポーネントを再レンダリングします。
+Reactにおける`state`は`useState()`で定義します。`useState()`は`state`とsetter関数を返し、このsetter関数が呼び出された時にReactはコンポーネントを再レンダリングします。
 
 :::message alert
 setter関数を通じずに`state`を更新しても再レンダリングはされません。必ずsetter関数を通じて`state`を更新しましょう。
@@ -191,33 +189,35 @@ Reactは「更新前のUI」と「更新後のUI」を比較して、差分が�
 
 `UI = f(state)`に表されるように、Reactが宣言的UIを実現する上で非常に重要なのは、コンポーネントの**純粋性**です。
 
-プログラミングにおける純粋性とは、同じ入力に対して常に同じ出力を返し、かつ関数外の状態を変更したり外部の影響を受けたりしない関数のことを指します。関数やコンポーネントが純粋でなくなる要因となる処理は**副作用**と呼ばれます。具体的には関数外の状態変更であったり、外部APIへのデータフェッチなどが副作用と見做されます。
+プログラミングにおける純粋とは、同じ入力に対して常に同じ出力を返し、かつ関数外の状態を変更したり外部の影響を受けたりしない関数のことを指します。関数やコンポーネントが純粋でなくなる要因となる処理は**副作用**^[入力に対する出力を作用と考えるため、副作用と呼ばれます。]と呼ばれます。具体的には関数外の状態変更であったり、外部APIへのデータフェッチなどが副作用と見做されます。
 
 ```tsx
 // NG: 呼び出すごとに結果が変わるような処理=副作用
-let guest = 0;
-function Cup() {
-  guest = guest + 1;
-  return <h2>guest #{guest}</h2>;
+let count = 0;
+function SomeComponent() {
+  count = count + 1;
+  return <h2>count: {count}</h2>;
 }
 
 // OK: 副作用を含まない純粋な関数
-function Cup({ guest }: { guest: number }) {
-  return <h2>guest #{guest}</h2>;
+function SomeComponent({ count }: { count: number }) {
+  return <h2>count: {count}</h2>;
 }
 ```
 
-Reactでは副作用を**hooks**を通じて扱うことができます。先述の`useState()`もhooksの1つで、状態の変更というUI実装における最も代表的な副作用を扱います。
+Reactのコンポーネントは純粋性が重要ですが、**hooks**を通じてのみ副作用を扱うことができます。先述の`useState()`もhooksの1つで、状態の変更というUI実装における最も代表的な副作用を扱います。
 
 他にも様々な副作用に対応するために、Reactでは[Escape Hatches](https://ja.react.dev/learn/escape-hatches)として、`useEffect()`や`useRef()`など様々なhooksが提供されています。これらは文字通りできるだけ避けるべき避難口ではありますが、現実のコンポーネント開発では必要不可欠なものでもあります。
 
-Reactはこのように、hooksに副作用を隠蔽することでコンポーネントを純粋な関数かのように記述することができます。
+Reactコンポーネントではhooksでのみ副作用を扱い、あとは純粋な関数かのように記述します。hooksを含むコンポーネントは厳密な純粋関数ではありませんが、副作用の扱いに規約を設けることで、関数の純粋性と実装容易性のバランスを取っています。
+
+純粋性はReactにとって手段の1つであり、目的ではありません。現実的な実装容易性のために妥協点と規約を見出すバランス感覚が、広くReactが受け入れられた理由の1つだと考えられます。
 
 ## トレードオフ
 
 ### 再レンダリング範囲の適正化
 
-Reactは状態が更新されたコンポーネント自身と、その子孫コンポーネントを再帰的にレンダリングします。そのため、上位のコンポーネントで再レンダリングを頻繁にトリガーすると、パフォーマンス的に不利になりえます。
+Reactは状態が更新されたコンポーネント自身と、その子孫コンポーネントを再帰的にレンダリングします。そのため、上位のコンポーネントで再レンダリングをトリガーすることは、パフォーマンス的に不利になりえます。
 
 ![React Tree](/images/react-basic-principle/re-render-tree.png)
 

@@ -4,7 +4,7 @@ title: "JSX"
 
 ## 要約
 
-Reactは一般的に[JSX](https://ja.react.dev/learn/writing-markup-with-jsx)で記述します。JSXは非常にシンプルなJavaScript拡張であるため学習コストは少なく、JavaScriptより直感的にマークアップ構造を記述することができます。
+Reactは一般的に[JSX](https://ja.react.dev/learn/writing-markup-with-jsx)で記述します。JSXは非常にシンプルなJavaScript拡張であるため学習コストは少ないながら、より直感的にマークアップ構造を記述することができます。
 
 ## 背景
 
@@ -48,13 +48,11 @@ export function Counter() {
 }
 ```
 
-多少違いはありますが、JSXはマークアップ構造をほとんどHTMLのように記述できます。一方、直接的にJavaScript変数や関数を埋め込めるので、HTMLとJavaScriptで分離してる時より振る舞いや依存関係が直感的に理解できる形にもなっています。
+JSXはマークアップ構造をほとんどHTMLのように記述できますが、直接的に変数や関数を埋め込めるので、HTMLとJavaScriptで分離してる時より振る舞いや依存関係が直感的に理解できる形になっています。
 
 ### 小さな拡張
 
-JSXは、JavaScriptに対する拡張としては部分的で非常にシンプルです。後述するようにいくつか[JSX固有のルール](#jsx固有のルール)はありますが、基本的にはHTMLやJavaScriptの知識で書き始めることができます。
-
-JSXは小さな拡張でReactに依存しない仕様のため、[Vue](https://ja.vuejs.org/guide/extras/render-function)や[Solid.js](https://www.solidjs.com/tutorial/introduction_jsx)など様々なフレームワークでサポートされています。
+JSXは、JavaScriptに対する拡張としては非常にシンプルで、Reactに限らず[Vue](https://ja.vuejs.org/guide/extras/render-function)や[Solid.js](https://www.solidjs.com/tutorial/introduction_jsx)など様々なフレームワークでサポートされています。また、いくつか[JSX固有のルール](#jsx固有のルール)はあるものの、基本的にはHTMLやJavaScriptの知識で書き始めることができます。
 
 ## トレードオフ
 
@@ -82,7 +80,6 @@ function ComponentA() {
 }
 
 // ✅: 全体をフラグメント(<>...</>)で囲んでいる
-//     不要なDOM要素を追加したくない場合に便利
 function ComponentB() {
   return (
     <>
@@ -93,17 +90,13 @@ function ComponentB() {
 }
 
 // 🙅‍♂️: ルート要素がh1とpの2つ存在している
-//     JSXでは、コンポーネントは必ず単一の要素（またはフラグメント）を返す必要があります。
-/*
 function ComponentC_NG() {
+  // Error: JSX expressions must have one parent element.
   return (
-    // NG: このように並列に要素を返すことはできません
     <h1>タイトル</h1>
     <p>これはNGな例です。</p>
-    // Error: JSX expressions must have one parent element.
   );
 }
-*/
 ```
 
 #### すべてのタグを閉じる
@@ -124,22 +117,17 @@ function ComponentD() {
 }
 
 // 🙅‍♂️: imgタグやbrタグが閉じられていない
-//     HTMLでは許容される場合もありますが、JSXではエラーになります。
-/*
 function ComponentE_NG() {
+  // Error: JSX elements must be closed, or be self-closing.
   return (
     <div>
       <p>画像を表示します:</p>
-      // NG: img タグが閉じられていない
       <img src="image.jpg" alt="サンプル画像">
-      // NG: br タグが閉じられていない
       <br>
       <p>改行しました。</p>
-      // Error: JSX elements must be closed, or be self-closing.
     </div>
   );
 }
-*/
 ```
 
 #### 一部属性名の変更
@@ -147,10 +135,10 @@ function ComponentE_NG() {
 JSXはJavaScriptに変換される都合上、`class`を`className`、`for`を`htmlFor`など独自の命名に変更してる場合があります。
 
 ```jsx
-// ✅: labelタグの`for`は`htmlFor`で記述
+// labelタグの`for`は`htmlFor`で記述
 <label htmlFor="my-input">ラベル</label>
 
-// ✅: `class`は`className`で記述
+// `class`は`className`で記述
 <img
   src="https://i.imgur.com/yXOvdOSs.jpg"
   alt="Hedy Lamarr"
@@ -160,6 +148,6 @@ JSXはJavaScriptに変換される都合上、`class`を`className`、`for`を`h
 
 ### トランスパイルは必須
 
-JSXはそのままではブラウザは扱うことができないため、トランスパイルは必須です。初学者で特に強い理由がない場合、ReactではNext.jsなどの[メタフレームワークの利用が推奨](https://ja.react.dev/learn/creating-a-react-app)されます。
+ブラウザはJSXを扱うことができないため、トランスパイルは必須です。初学者で特に強い理由がない場合、ReactではNext.jsなどの[メタフレームワークの利用が推奨](https://ja.react.dev/learn/creating-a-react-app)されます。
 
 もし自身でトランスパイル環境を構築する場合、様々なツールに関する知識が必要となります。
