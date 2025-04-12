@@ -33,7 +33,9 @@ function Page() {
 }
 ```
 
-一方、UIに関するあらゆる実装要件が、ツリー構造と相性が良いわけではありません。例えば、末端のコンポーネントでエラーが発生した場合に、祖先コンポーネントでエラーUIを表示したいとします。この際、ツリー構造のルールとして祖先や子孫のことを知ってはならないという前提に従う場合、エラーを`throw`するのではなく、エラーハンドリング関数などを*Props Drilling*（Propsのバケツリレー）することが考えられます。これは冗長な実装が伴うため、良い設計ではありません。
+一方、UIに関するあらゆる実装要件が、ツリー構造と相性が良いわけではありません。
+
+例えば、末端のコンポーネントでエラーが発生した場合に、祖先コンポーネントでエラーUIを表示したいとします。この際、ツリー構造のルールとして祖先や子孫のことを知ってはならないという前提に従う場合、エラーを`throw`するのではなく、エラーハンドリング関数などを*Props Drilling*（Propsのバケツリレー）することが考えられます。これは実装が冗長になるため、良い設計ではありません。
 
 ![Error UI](/images/react-basic-principle/error-props-dlilling.png =350x)
 
@@ -56,7 +58,7 @@ Reactでは、前述のエラーハンドリングのようにツリー構造な
 
 ### `<ErrorBoundary>`
 
-`<ErrorBoundary>`は、レンダリング中にエラーが発生した場合にfallbackを表示するための境界を定義するコンポーネントです`<ErrorBoundary>`はアプリケーション全体がクラッシュするのを防ぎ、部分的にエラーUIを表示します。
+`<ErrorBoundary>`は、レンダリング中のエラーに対しfallbackを表示するための境界を定義するコンポーネントです。`<ErrorBoundary>`はアプリケーション全体がクラッシュするのを防ぎ、部分的にエラーUIを表示します。
 
 ```tsx
 <ErrorBoundary fallback={<ErrorDialog>error message</ErrorDialog>}>
@@ -109,7 +111,7 @@ class ErrorBoundary extends React.Component {
 
 :::
 
-多くの場合`<ErrorBoundary>`の実装は[react-error-boundary](https://www.npmjs.com/package/react-error-boundary)の再実装になりがちなため、理由がなければreact-error-boundaryを利用することを検討しましょう。
+多くの場合`<ErrorBoundary>`の実装は[react-error-boundary](https://www.npmjs.com/package/react-error-boundary)の再実装になりがちなため、理由がなければreact-error-boundaryなどの3rd partyライブラリの利用を検討しましょう。
 
 ### Context
 
@@ -133,9 +135,9 @@ const SomeContext = createContext(defaultValue);
 
 ### `<Suspense>`
 
-`<Suspense>`は、レンダリング中に発生した**サスペンド**に対し、fallbackを表示することができる組み込みのコンポーネントです。サスペンドとは、レンダリング中に`Promise`を`throw`すること^[開発者が自前でサスペンドするような実装は推奨されません]を意味します。サスペンドが発生すると、`<Suspense>`コンポーネントはpropsで受け取った`fallback`を表示します。
+`<Suspense>`は、レンダリング中に発生した**サスペンド**に対し、fallbackを表示することができる組み込みのコンポーネントです。サスペンドとは、レンダリング中に`Promise`を`throw`すること^[開発者が自前でサスペンドするような実装は推奨されません]を意味します。
 
-`<Suspense>`を利用すると、`<Loading />`などの表示が容易に実装できます。
+`<Suspense>`はよくデータフェッチと組み合わせて利用され、`<Suspense>`によって`<Loading />`などの表示が容易に実装できます。
 
 ```tsx
 <Suspense fallback={<Loading />}>
@@ -143,7 +145,7 @@ const SomeContext = createContext(defaultValue);
 </Suspense>
 ```
 
-`<Suspense>`はよくデータフェッチと組み合わせて利用されます。`<Suspense>`は組み込みコンポーネントのため、ライブラリやフレームワークがサスペンドするのであれば、書き方は常に上記のような形になります。
+`<Suspense>`は組み込みコンポーネントのため、ライブラリやフレームワークがサスペンドするのであれば、書き方は常に上記のような形になります。
 
 より`<Suspense>`について詳しく知りたい方は、[uhyoさん](https://x.com/uhyo_)の以下の本がとてもわかりやすいのでぜひご一読ください。
 
