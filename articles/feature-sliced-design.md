@@ -6,9 +6,17 @@ topics: ["react", "vue"]
 published: true
 ---
 
+:::message alert
+この記事は当時まだ日本語での情報が少なかったFeature Sliced Designについて、筆者なりにまとめたものです。
+
+その後現在に至るまで**筆者はFeature Sliced Designを採用しておらず、積極的に推奨する立場にはありません**。
+
+本稿は備忘録を兼ねて残しますが、筆者の現在の見解とは異なる点があることをご理解ください。
+:::
+
 ## Feature-Sliced Designとは
 
-[**Feature-Sliced Design**](https://feature-sliced.design/)（以下FSD）とは、フロントエンドのディレクトリ設計方法の1つです。公式には「Architectural methodology for frontend projects(フロントエンドのアーキテクチャ方法論)」とされています。
+[Feature-Sliced Design](https://feature-sliced.github.io/documentation)（以下FSD）とは、フロントエンドのディレクトリ設計方法の1つです。公式には「Architectural methodology for frontend projects(フロントエンドのアーキテクチャ方法論)」とされています。
 
 FSDはLayers・Slices・Segmentsといった3つの概念と、それを取り巻くルールやプラクティスで成り立っています。
 
@@ -24,7 +32,7 @@ FSDは予測可能なスコープとスケーラブルな設計を目指して�
 
 ## 目的と前提
 
-https://feature-sliced.design/docs/about/motivation
+https://feature-sliced.github.io/documentation/docs/about/motivation
 
 FSDの最大の目的は**開発を促進しコストを下げる**ことです。この目的を達成するために、FSDでは以下の価値観を持って問題解決に取り組んでいます。
 
@@ -38,17 +46,15 @@ SOLID・KISS・YAGNIなどの設計原則は非常に重要ですが、アーキ
 
 FSDによると、開発時の知識は以下の3つに分けられます。
 
-| name | detail | e.g. |
-|------| -- | ---- |
-| **基礎知識** | 実質的に時代とともに変化しない知識。 | アルゴリズム、コンピュータサイエンス |
-| **技術スタック** | プロジェクトで使用される一連の技術ソリューションに関する知識。 | プログラミング言語、フレームワーク、ライブラリ |
-| **プロジェクト知識** | 現在のプロジェクトの枠組みの中でのみ適用可能な知識。 | ビジネスドメインの知識、事業やクライアントの価値観 |
+| name                 | detail                                                         | e.g.                                               |
+| -------------------- | -------------------------------------------------------------- | -------------------------------------------------- |
+| **基礎知識**         | 実質的に時代とともに変化しない知識。                           | アルゴリズム、コンピュータサイエンス               |
+| **技術スタック**     | プロジェクトで使用される一連の技術ソリューションに関する知識。 | プログラミング言語、フレームワーク、ライブラリ     |
+| **プロジェクト知識** | 現在のプロジェクトの枠組みの中でのみ適用可能な知識。           | ビジネスドメインの知識、事業やクライアントの価値観 |
 
 FSDは、開発者はプロジェクト知識の学習にこそ時間を割くべきと考えており、その他の知識については必要最低限の学習と流用が可能なよう設計を試みています。
 
 ## コンセプト
-
-https://feature-sliced.design/docs/concepts
 
 FSDは目的達成のために多くのコンセプトを掲げています。FSDは開発現場で実際に起きる問題の多くと向き合っており、細かいものや公式が執筆途中のものも含めると説明が非常に長くなってしまうので、ここではいくつかピックアップして紹介します。
 
@@ -124,7 +130,7 @@ Layers直下は**Slices**と呼ばれる第2階層を持ちます。SlicesはFSD
 
 ```
 ├── app/
-|   # Does not have specific slices, 
+|   # Does not have specific slices,
 |   # Because it contains meta-logic on the project and its initialization
 ├── processes/
 |   # Slices implementing processes on pages
@@ -184,20 +190,20 @@ Slices配下は`Segments`と呼ばれ、実装の目的に応じてファイル�
 
 ```ts
 // features/auth-form/index.ts
-export { Form as AuthForm } from "./ui"
-export * as authFormModel from "./model"
+export { Form as AuthForm } from "./ui";
+export * as authFormModel from "./model";
 ```
 
 ```ts
 // features/post-form/index.ts
-export { Form as PostForm } from "./ui"
-export * as postFormModel from "./model"
+export { Form as PostForm } from "./ui";
+export * as postFormModel from "./model";
 ```
 
 ```ts
 // usecase
-import { AuthForm, authFormModel } from "features/auth-form"
-import { PostForm, postFormModel } from "features/post-form"
+import { AuthForm, authFormModel } from "features/auth-form";
+import { PostForm, postFormModel } from "features/post-form";
 ```
 
 なお、この際にバンドルサイズの肥大化が気になるケースもあるでしょう。webpackの[sideEffects](https://webpack.js.org/guides/tree-shaking/#mark-the-file-as-side-effect-free)オプションを有効にすることでこれを最適化できる可能性があります。
@@ -214,9 +220,9 @@ FSDは段階的な導入が可能です。FSDでは過去の経験や研究に�
 
 コンセプトや概要を理解することと同様に、実際の実装例を学ぶことも重要です。公式のチュートリアルやexamplesが参考になることでしょう。本稿は概要説明に留まるため、以下公式のリンクを参考にしてください。
 
-https://feature-sliced.design/docs/get-started/tutorial
+https://feature-sliced.github.io/documentation/docs/get-started/tutorial
 
-https://feature-sliced.design/examples
+https://feature-sliced.github.io/documentation/examples
 
 ## 考察
 
