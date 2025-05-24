@@ -46,7 +46,7 @@ export async function Page(props: {
     page: searchParams.page ? Number(searchParams.page) : 1,
   });
 
-  // ...`posts`を参照してUI組み立て
+  // ...`posts`を参照
 }
 
 type Post = {
@@ -105,7 +105,7 @@ export async function Page(props: {
     };
   });
 
-  // ...`richPosts`を参照してUI組み立て
+  // ...`richPosts`を参照
 }
 ```
 
@@ -125,7 +125,7 @@ export async function Page(props: {
   const searchParams = await props.searchParams;
   const richPosts = await fetchAllRichPosts();
 
-  // ...`richPosts`を参照してUI組み立て
+  // ...`richPosts`を参照
 }
 ```
 
@@ -162,7 +162,7 @@ export async function Page(props: {
     viewCountsMap,
   });
 
-  // ...`richPosts`を参照してUI組み立て
+  // ...`richPosts`を参照
 }
 ```
 
@@ -184,7 +184,7 @@ export async function PostCard({ post }: { post: Post }) {
     fetchViewCount(post.id),
   ]);
 
-  // ...`authors`, `comments`, `viewCount`を参照してUI組み立て
+  // ...`authors`, `comments`, `viewCount`を参照
 }
 
 // page.tsx
@@ -230,6 +230,7 @@ async function authorsBatch(authorIds: readonly string[]) {
 これにより、前述のようなN+1問題を解決することができます。
 
 ```tsx
+// 予期せぬキャッシュ共有をしないよう、`React.cache()`でリクエスト単位のインスタンス生成
 const getAuthorLoader = React.cache(() => new DataLoader(authorsBatch));
 
 async function fetchAuthorsByIds(authorId: string) {
@@ -249,7 +250,7 @@ export async function PostCard({ post }: { post: Post }) {
     fetchViewCount(post.id),
   ]);
 
-  // ...`authors`, `comments`, `viewCount`を参照してUI組み立て
+  // ...`authors`, `comments`, `viewCount`を参照
 }
 ```
 
@@ -259,48 +260,51 @@ React Routerの作者であるRyan Florence氏によって作られた、[batch-
 
 ## 短期キャッシュ
 
-- もう一つ問題がある。同一リクエストだ。
-- コロケーションによって全く同一なリクエストが発行されるリスクが出てきた
-- （実装例）
-- これはバッチングでは解消されない
-- これを解決するのはインメモリで短期的なキャッシュだ
-- React Cacheはまさにこれを体現したものである
-- （実装例）
-- これにより、コロケーションで発生する大きな2つの問題を解決できる
+データフェッチコロケーションでよく発生する問題がもう1つあります。同一リクエストです。
+
+現在ログインしてるユーザー情報を取得する`fetchCurrentUser()`を用いて、ヘッダーにログイン時にアイコンを表示するとします。
+
+```tsx
+export async function UserIcon() {
+  const user = await fetchCurrentUser();
+
+  // ...`user`を参照
+}
+```
+
+同様に、コメントを追加する際にはログイン状態を参照する必要があり、`fetchCurrentUser()`を実行する必要があるとします。
+
+```tsx
+export async function AddComment() {
+  const user = await fetchCurrentUser();
+
+  // ...`user`を参照
+}
+```
+
+これらのコンポーネントは離れているため、`<Suspense>`境界によってレンダリングタイミングが異なる可能性があり、必ずしもバッチングできるとは限りません。DataLoaderにはキャッシュ機能が存在するので、バッチングできずともキャッシュによってこの問題は解決しえますが、データフェッチは必ずDataLoaderを介することとするのは冗長さを否めません。
+
+このような問題を容易に解決するためにReactが提供しているのが、[React Cache](https://ja.react.dev/reference/react/cache)です。DataLoaderの実装例でもDataLoaderのインスタンス保持のために利用していました。
+
+React Cacheを用いた`fetchCurrentUser()`の実装例は以下です。
+
+```tsx
+export const fetchCurrentUser = React.cache(async () => {
+  const cookies = await cookies();
+  const sessionId = cookieStore.get("session-id");
+  const user = await fetch(`https://.../?sessionId=${sessionId}`);
+  return user;
+});
+```
+
+ただし、実際にはNext.jsの[Request Memoization](https://nextjs.org/docs/app/deep-dive/caching#request-memoization)のように、フレームワーク側で同一リクエストの排除が実装されていることが多いと考えられます。そのため、`fetch()`の場合には`React.cache()`すら不要になるでしょう。
 
 ## まとめ
 
-- Metaでは、短期キャッシュとバッチングによってパフォーマンスと保守性を両立させてる
-- これは大規模開発のみならず、小規模な開発から適用可能な優れた設計
-- 実際、僕も普段から好んで採用してるが、複雑なループが避けられるのでとても素晴らしいと感じてる
-- (Next.jsの考え方へ誘導)
+Metaでは、自律分散的な設計にバッチングと短期キャッシュを組み合わせることによって、パフォーマンスと保守性を両立させています。これは大規模開発のみで有用なアプローチではなく、小規模な開発から適用可能で保守性を向上させる有効な手段です。
 
----
+実際に、筆者は昨今好んでDataLoaderやReact Cacheを利用して自律分散的な設計を心がけていますが、メリットを感じる場面が多く、筆者にとってこれらは必要不可欠な存在です。
 
-```tsx
-export default async function Page() {
-  const user = await fetchUserData();
-  const userBlogs = await fetchUserBlogs(user.id);
+また、より詳細にNext.jsにおけるDataLoaderの使い方を知りたい場合には、筆者が以前執筆した「Next.jsの考え方」の以下の章をご参照ください。
 
-  const enrichedBlogs = await Promise.all(
-    userBlogs.map(async (blog) => {
-      const authorsPromises = blog.authorIds.map((authorId) =>
-        fetchAuthorInfo(authorId),
-      );
-      const authors = await Promise.all(authorsPromises);
-      const [commentStats, impressionStats] = await Promise.all([
-        fetchBlogCommentCount(blog.blogId),
-        fetchBlogImpressionCount(blog.blogId),
-      ]);
-      return {
-        ...blog,
-        authors,
-        commentCount: commentStats.commentCount,
-        impressionCount: impressionStats.impressionCount,
-      };
-    }),
-  );
-
-  // ...
-}
-```
+https://zenn.dev/akfm/books/nextjs-basic-principle/viewer/part_1_data_loader
