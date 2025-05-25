@@ -387,7 +387,7 @@ const getAuthorLoader = React.cache(() => new DataLoader(authorsBatch));
 
 export async function fetchAuthors(authorIds: string[]) {
   const authorLoader = getAuthorLoader();
-  return Promise.all(authorIds.map((id) => authorLoader.load(id)));
+  return authorLoader.loadMany(authorIds);
 }
 ```
 
