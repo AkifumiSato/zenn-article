@@ -60,7 +60,92 @@ https://zenn.dev/akfm/articles/react-team-vision
 
 ### 中央集権型の弊害
 
-以下はNext.jsでブログ記事一覧ページを実装する際、Pageコンポーネントを中央集権的なデータフェッチ層として扱う実装例です。
+本稿では例として、Next.jsでブログ記事一覧ページを実装することを考えてみます。
+
+APIのエンドポイントごとに以下のような関数がすでに定義されているものとします。`fetchPosts()`で得られる`Post[]`は著者情報、コメント数、閲覧数の詳細を**含みません**。
+
+- `fetchPosts()`
+- `fetchAuthors(authorIds: string[])`
+- `fetchCommentCountsForPosts(postIds: string[])`
+- `fetchCommentCount(postId: string)`
+- `fetchViewCountsForPosts(postIds: string[])`
+- `fetchViewCount(postId: string)`
+
+:::details より詳細な定義
+
+```ts
+type Post = {
+  id: string;
+  title: string;
+  authorIds: string[];
+  summary: string;
+};
+
+async function fetchPosts() {
+  const res = await fetch(`${API_URL}/posts`);
+  const posts: Post[] = await res.json();
+  return posts;
+}
+
+type Author = {
+  id: string;
+  name: string;
+};
+
+async function fetchAuthors(authorIds: string[]) {
+  const res = await fetch(
+    `${API_URL}/authors?${authorIds.map((id) => `id=${id}`).join("&")}`,
+  );
+  const authors: Author[] = await res.json();
+  return authors;
+}
+
+type CommentCount = {
+  postId: string;
+  count: number;
+};
+
+async function fetchCommentCountsForPosts(postIds: string[]) {
+  const res = await fetch(
+    `${API_URL}/posts/comments_counts?${postIds.map((id) => `postId=${id}`).join("&")}`,
+  );
+  const commentCounts: CommentCount[] = await res.json();
+  return commentCounts;
+}
+
+async function fetchCommentCount(postId: string) {
+  const res = await fetch(`${API_URL}/posts/${postId}/comments_count`);
+  const commentCount: CommentCount = await res.json();
+  return commentCount;
+}
+
+type ViewCount = {
+  postId: string;
+  count: number;
+};
+
+async function fetchViewCountsForPosts(postIds: string[]) {
+  const res = await fetch(
+    `${API_URL}/posts/view_counts?${postIds.map((id) => `postId=${id}`).join("&")}`,
+  );
+  const viewCounts: ViewCount[] = await res.json();
+  return viewCounts;
+}
+
+async function fetchViewCount(postId: string) {
+  const res = await fetch(`${API_URL}/posts/${postId}/view_count`);
+  const viewCount: ViewCount = await res.json();
+  return viewCount;
+}
+```
+
+:::
+
+:::message
+APIは解説のため、極端に細粒度な設計をしています。
+:::
+
+以下はPageコンポーネントを中央集権的なデータフェッチ層として扱う実装例です。記事のタイトルとサマリーのみが表示されます。
 
 ```tsx
 export async function Page(props: {
@@ -91,8 +176,6 @@ type Post = {
 - コメント数
 - 閲覧数
 
-なお、これらは`fetchPosts()`の結果には含まれず、**それぞれ別なAPIからデータを取得するもの**とします。実装例においては少々やりすぎに見えますが、APIで責務過多な状態はGod API（神API）と呼ばれるアンチパターンのため、これを避けるために細粒度でRestful準拠を重視していることを想定します。
-
 以下は改修後の実装例です。
 
 ```tsx
@@ -112,7 +195,7 @@ export async function Page(props: {
   const uniqueAuthorIds = Array.from(
     new Set(posts.flatMap((post) => post.authorIds)),
   );
-  const [allAuthors, commentCountsMap, viewCountsMap] = await Promise.all([
+  const [allAuthors, commentCounts, viewCounts] = await Promise.all([
     fetchAuthors(uniqueAuthorIds),
     fetchCommentCountsForPosts(postIds),
     fetchViewCountsForPosts(postIds),
@@ -120,6 +203,12 @@ export async function Page(props: {
 
   // `richPosts: RichPost[]`を組み立て
   const authorsMap = new Map(allAuthors.map((author) => [author.id, author]));
+  const commentCountsMap = new Map(
+    commentCounts.map((item) => [item.postId, item.count]),
+  );
+  const viewCountsMap = new Map(
+    viewCounts.map((item) => [item.postId, item.count]),
+  );
   const richPosts = posts.map((post) => {
     const authors = post.authorIds
       .map((id) => authorsMap.get(id))
@@ -179,7 +268,7 @@ export async function Page(props: {
   const uniqueAuthorIds = Array.from(
     new Set(posts.flatMap((post) => post.authorIds)),
   );
-  const [allAuthors, commentCountsMap, viewCountsMap] = await Promise.all([
+  const [allAuthors, commentCounts, viewCounts] = await Promise.all([
     fetchAuthors(uniqueAuthorIds),
     fetchCommentCountsForPosts(postIds),
     fetchViewCountsForPosts(postIds),
@@ -189,8 +278,8 @@ export async function Page(props: {
   const richPosts = mergePosts({
     posts,
     allAuthors,
-    commentCountsMap,
-    viewCountsMap,
+    commentCounts,
+    viewCounts,
   });
 
   // ...`richPosts`を参照
@@ -225,7 +314,7 @@ export async function Page(props: {
 // post-cassette.tsx
 export async function PostCassette({ post }: { post: Post }) {
   const [authors, comments, viewCount] = await Promise.all([
-    fetchAuthorsByIds(post.authorIds),
+    fetchAuthors(post.authorIds),
     fetchCommentCount(post.id),
     fetchViewCount(post.id),
   ]);
@@ -236,7 +325,7 @@ export async function PostCassette({ post }: { post: Post }) {
 
 修正前と比べて非常に読みやすく、シンプルになりました。ファイル分割され、参照するデータも明確なため可読性が高く、修正時のデグレリスクも低いと考えられます。筆者の感覚では、保守性はこちらの方が圧倒的に良いと感じます。
 
-しかし一方で、パフォーマンス観点では非常に大きな問題が発生します。`fetchAuthors()`が`fetchAuthorsByIds()`などに変更されており、著者情報の取得が`post`の数分データフェッチされるような設計になっています。これにより、修正前は4回だったデータフェッチが`posts`の取得1回+`posts`の取得分×3回分に増えており、典型的なN+1を引き起こしています。もし`post`が100件だった場合、301回分のデータフェッチが発生します。`fetchAuthorsByIds(post.authorIds)`には同一リクエストも含まれることでしょう。
+しかし一方で、パフォーマンス観点では非常に大きな問題が発生します。`fetchAuthors()`が`post`の数だけ呼び出され、個別に著者情報を取得する設計になっています。これにより、修正前は4回だったデータフェッチが`posts`の取得1回+`posts`の取得分×3回分に増えており、典型的なN+1を引き起こしています。もし`post`が100件だった場合、301回分のデータフェッチが発生します。`fetchAuthors(post.authorIds)`には同一リクエストも含まれることでしょう。
 
 データフェッチはパフォーマンス観点でボトルネックになりやすい部分です。このようなデータフェッチの極端な増加は、無視できない非常に大きな問題です。
 
@@ -250,8 +339,15 @@ Metaではこの問題を**バッチング**によって解決しています。
 
 ```ts
 async function authorsBatch(authorIds: readonly string[]) {
-  // `authorIds`を元にデータフェッチ
-  const allAuthors = fetchAuthors(authorIds);
+  const res = await fetch(
+    `${API_URL}/authors?${authorIds.map((id) => `id=${id}`).join("&")}`,
+  );
+  if (!res.ok) {
+    console.error("Failed to fetch authors in batch:", await res.text());
+    return authorIds.map(() => null);
+  }
+  const allAuthors: Author[] = await res.json();
+
   return authorIds.map(
     (authorId) => allAuthors.find((author) => author.id === authorId) ?? null,
   );
@@ -269,19 +365,19 @@ async function authorsBatch(authorIds: readonly string[]) {
 // 予期せぬキャッシュ共有をしないよう、`React.cache()`でリクエスト単位のインスタンス生成
 const getAuthorLoader = React.cache(() => new DataLoader(authorsBatch));
 
-async function fetchAuthorsByIds(authorId: string) {
+async function fetchAuthors(authorIds: string[]) {
   const authorLoader = getAuthorLoader();
-  return authorLoader.load(authorId);
+  return Promise.all(authorIds.map((id) => authorLoader.load(id)));
 }
 ```
 
-このように`fetchAuthorsByIds()`を実装すれば、データフェッチコロケーションしつつバッチングによりN+1が防げます。驚くべきことに、`fetchAuthorsByIds()`の使い方は何一つ変わりません。
+このように`fetchAuthors()`を実装すれば、データフェッチコロケーションしつつバッチングによりN+1が防げます。驚くべきことに、`fetchAuthors()`の使い方は何一つ変わりません。
 
 ```tsx
 // post-cassette.tsx
 export async function PostCassette({ post }: { post: Post }) {
   const [authors, comments, viewCount] = await Promise.all([
-    fetchAuthorsByIds(post.authorIds),
+    fetchAuthors(post.authorIds),
     fetchCommentCount(post.id),
     fetchViewCount(post.id),
   ]);
@@ -290,7 +386,60 @@ export async function PostCassette({ post }: { post: Post }) {
 }
 ```
 
-`fetchCommentCount()`や`fetchViewCount()`もDataLoaderによってバッチングすれば、上記のような実装のままN+1を解決し、保守性とパフォーマンスを同時に得ることができます。
+`fetchCommentCount()`や`fetchViewCount()`も同様にDataLoaderによってバッチングすれば、上記のような実装のままN+1を解決し、保守性とパフォーマンスを同時に得ることができます。
+
+:::details `fetchCommentCount()`と`fetchViewCount()`の修正
+
+```tsx
+async function commentCountBatch(postIds: readonly string[]) {
+  const res = await fetch(
+    `${API_URL}/posts/comments_counts?${postIds.map((id) => `postId=${id}`).join("&")}`,
+  );
+  if (!res.ok) {
+    console.error("Failed to fetch commentCount in batch:", await res.text());
+    return postIds.map(() => null);
+  }
+  const commentCounts: CommentCount[] = await res.json();
+
+  return postIds.map(
+    (postId) =>
+      commentCounts.find((commentCount) => commentCount.postId === postId) ??
+      null,
+  );
+}
+const getCommentCountLoader = React.cache(
+  () => new DataLoader(commentCountBatch),
+);
+
+async function fetchCommentCount(postId: string) {
+  const commentCountLoader = getCommentCountLoader();
+  return commentCountLoader.load(postId);
+}
+
+async function viewCountBatch(postIds: readonly string[]) {
+  const res = await fetch(
+    `${API_URL}/posts/view_counts?${postIds.map((id) => `postId=${id}`).join("&")}`,
+  );
+  if (!res.ok) {
+    console.error("Failed to fetch viewCount in batch:", await res.text());
+    return postIds.map(() => null);
+  }
+  const viewCounts: ViewCount[] = await res.json();
+
+  return postIds.map(
+    (postId) =>
+      viewCounts.find((viewCount) => viewCount.postId === postId) ?? null,
+  );
+}
+const getViewCountLoader = React.cache(() => new DataLoader(viewCountBatch));
+
+async function fetchViewCount(postId: string) {
+  const viewCountLoader = getViewCountLoader();
+  return viewCountLoader.load(postId);
+}
+```
+
+:::
 
 :::message
 React Routerの作者であるRyan Florence氏によって作られた[batch-loader](https://github.com/ryanflorence/batch-loader)は、DataLoaderに大きく影響を受けています。機能をより狭めたもののようです。
