@@ -28,9 +28,9 @@ Metaでは大規模開発における保守性とパフォーマンスの両立�
 
 本稿では、データフェッチ設計を考える上で以下の考え方を前提とします。
 
-### God APIとChatty API
+### APIの粒度
 
-REST APIにおいて、責務が大きすぎるAPIは**God API**と呼ばれ、通信回数を抑えられる反面、変更容易性やAPI自体のパフォーマンス問題が起きやすい傾向にあります。一方、責務が小さく設計された細粒度なAPIは**Chatty API**(おしゃべりなAPI)と呼ばれ、データフェッチをコロケーションできるなどのメリットが得られる一方、通信回数が増えたりデータフェッチのウォーターフォールが発生しやすいため、アプリケーションのパフォーマンス劣化要因になりえます。
+REST APIにおいて、責務が大きすぎる粗粒度なAPIは**God API**と呼ばれ、通信回数を抑えられる反面、変更容易性やAPI自体のパフォーマンス問題が起きやすい傾向にあります。一方、責務が小さく設計された細粒度なAPIは**Chatty API**(おしゃべりなAPI)と呼ばれ、データフェッチをコロケーション^[コードをできるだけ関連性のある場所に配置することを指します。]できるなどのメリットが得られる一方、通信回数が増えたりデータフェッチのウォーターフォールが発生しやすいため、アプリケーションのパフォーマンス劣化要因になりえます。
 
 これらはそれぞれアンチパターンとされることがありますが、実際には観点次第で最適解が異なるので、一概にアンチパターンなのではなくそれぞれトレードオフが伴うと捉えるべきです。
 
@@ -43,7 +43,7 @@ REST APIにおいて、責務が大きすぎるAPIは**God API**と呼ばれ、�
 
 ### データフェッチの設計パターン
 
-筆者の考えでは、データフェッチの設計は大きく2パターンに分けられます。データフェッチ層を設けるなどするような**中央集権型**の設計と、データフェッチコロケーション^[コードをできるだけ関連性のある場所に配置することを指します。]に代表される**自律分散型**の設計です。
+筆者の考えでは、データフェッチの設計は大きく2パターンに分けられます。データフェッチ層を設けるなどするような**中央集権型**の設計と、データフェッチコロケーションに代表される**自律分散型**の設計です。
 
 - 中央集権型: 責務を集約し、一元管理を重視する
 - 自律分散型: 責務を末端に分散し、自律性を重視する
@@ -52,24 +52,24 @@ MetaやReactにおける自律分散型の設計の歴史については、筆�
 
 https://zenn.dev/akfm/articles/react-team-vision
 
-## 詳解
+## 解説
 
 冒頭で触れたように、Metaでは自律分散型の設計が重視されており、特に大規模開発の保守性において重要だと考えられています。データフェッチ層を設けるような中央集権型の設計はなぜ好まれないのでしょう？
 
-実装例を元に問題点を考察してみましょう。
+実装例を元に問題点を考察してみます。
 
 ### 中央集権型の弊害
 
-本稿では例として、Next.jsでブログ記事一覧ページを実装することを考えてみます。
+例として、Next.jsでブログ記事一覧ページを実装することを考えてみます。
 
 APIのエンドポイントごとに以下のような関数がすでに定義されているものとします。`fetchPosts()`で得られる`Post[]`は著者情報、コメント数、閲覧数の詳細を**含みません**。
 
-- `fetchPosts(options: { page: number })`
-- `fetchAuthors(authorIds: string[])`
-- `fetchCommentCountsForPosts(postIds: string[])`
-- `fetchCommentCount(postId: string)`
-- `fetchViewCountsForPosts(postIds: string[])`
-- `fetchViewCount(postId: string)`
+- `fetchPosts(options: { page: number })`: 記事一覧の取得
+- `fetchAuthors(authorIds: string[])`: 複数著者情報の取得
+- `fetchCommentCountsForPosts(postIds: string[])`: 複数記事のコメント数取得
+- `fetchCommentCount(postId: string)`: 単一記事のコメント数取得
+- `fetchViewCountsForPosts(postIds: string[])`: 複数記事の閲覧数取得
+- `fetchViewCount(postId: string)`: 単一記事の閲覧数取得
 
 :::details より詳細な定義
 
@@ -145,7 +145,7 @@ async function fetchViewCount(postId: string) {
 APIは解説のため、極端に細粒度な設計をしています。
 :::
 
-以下はPageコンポーネントを中央集権的なデータフェッチ層として扱う実装例です。記事のタイトルとサマリーのみが表示されます。
+以下は`<Page>`コンポーネントを中央集権的なデータフェッチ層として扱う実装例です。記事のタイトルとサマリーのみが表示されます。
 
 ```tsx
 export async function Page(props: {
@@ -286,7 +286,7 @@ export async function Page(props: {
 }
 ```
 
-元の実装と比べ、極端に短くはなりません。また、UIが参照しているデータの由来を調べる際には、`mergePosts()`の実装を確認する必要があります。
+元の実装と比べ、あまり短くなりませんでした。また、UIが参照しているデータの由来を調べる際には、`mergePosts()`の実装を確認する必要があります。
 
 このように、関数に抽出するだけではおおよそ本質的な保守性の改善は見込めません。また、これらのアプローチはシンプルなルールにしづらいため、一貫性の欠如にも繋がりやすいと筆者は考えます。
 :::
@@ -325,7 +325,27 @@ export async function PostCassette({ post }: { post: Post }) {
 
 修正前と比べて非常に読みやすく、シンプルになりました。データフェッチが参照単位に分割されたため可読性が高く、修正時のデグレリスクも低いと考えられます。このように自律分散的な設計は、**読み手に必要なコンテキストを小さく留める**ことができます。大規模な開発では予測性は非常に重要なため、Metaは自律分散的な設計を重視しています。
 
-しかし一方で、パフォーマンス観点では非常に大きな問題が発生します。この設計では、`fetchAuthors()`などのデータフェッチが`post`の数だけ呼び出されます。これにより、修正前は4回だったデータフェッチが`posts`の取得1回+`posts`の取得分×3回分に増えており、典型的なN+1を引き起こしています。もし`post`が100件だった場合、301回分のデータフェッチが発生します。更に、`fetchAuthors(post.authorIds)`には同一リクエストが含まれる可能性もあるでしょう。
+しかし一方で、パフォーマンス観点では非常に大きな問題が発生します。`<Page>`では以下のように一括でデータフェッチを行なっていました。
+
+```tsx
+const [allAuthors, commentCounts, viewCounts] = await Promise.all([
+  fetchAuthors(uniqueAuthorIds),
+  fetchCommentCountsForPosts(postIds),
+  fetchViewCountsForPosts(postIds),
+]);
+```
+
+修正後のコードでは、`<PostCassette>`内で`post`の情報を元にデータフェッチをしています。
+
+```tsx
+const [authors, comments, viewCount] = await Promise.all([
+  fetchAuthors(post.authorIds),
+  fetchCommentCount(post.id),
+  fetchViewCount(post.id),
+]);
+```
+
+`<PostCassette>`はループでレンダリングされるので、修正前は4回だったデータフェッチが`posts`の取得1回+`posts`の取得分×3回分に増えており、典型的なN+1を引き起こしています。もし`post`が100件だった場合、301回分のデータフェッチが発生します。
 
 データフェッチはパフォーマンス観点でボトルネックになりやすい部分です。データフェッチの極端な増加は、無視できない非常に大きな問題です。
 
@@ -449,7 +469,7 @@ React Routerの作者であるRyan Florence氏によって作られた[batch-loa
 
 データフェッチコロケーションでよく発生する問題がもう1つあります。同一リクエストの重複実行です。
 
-現在ログインしているユーザー情報を取得する`fetchCurrentUser()`を用いて、ヘッダーにログイン時にアイコンを表示するとします。
+現在ログインしているユーザー情報を取得する`fetchCurrentUser()`を用いて、ログイン時ヘッダーにアイコンを表示するとします。
 
 ```tsx
 export async function UserIcon() {
@@ -459,7 +479,7 @@ export async function UserIcon() {
 }
 ```
 
-同様に、コメント欄でコメントを追加するにはログイン状態を参照する必要があり、`fetchCurrentUser()`を実行する必要があるとします。
+同様に、記事詳細ページでコメントを追加するにはログイン状態を参照する必要があり、`fetchCurrentUser()`を実行する必要があるとします。
 
 ```tsx
 export async function AddComment() {
@@ -469,9 +489,9 @@ export async function AddComment() {
 }
 ```
 
-これらのコンポーネントは離れているため、`<Suspense>`境界によってレンダリングタイミングが異なる可能性があり、バッチングできるとは限りません。
+これらのコンポーネントは離れているため、`<Suspense>`境界によってレンダリングタイミングが異なる可能性があり、バッチングできるとは限りません。また、バッチングできるとしても、引数がないのでDataLoaderが想定してる利用ケースではありません。
 
-このような問題を容易に解決するためにReactが提供しているのが、[React Cache](https://ja.react.dev/reference/react/cache)です。React Cacheはサーバーへのリクエストごとに作成される、**短命のキャッシュ**です。すでにDataLoaderの実装例でも、DataLoaderのインスタンス保持のために利用していました。React Cacheはリクエストごとに破棄されるためインフラ観点の作業は不要で、また、メモリリークや予期せぬキャッシュ共有なども防ぐことができます。
+このような問題を容易に解決するためにReactが提供しているのが、[React Cache](https://ja.react.dev/reference/react/cache)です。React Cacheはサーバーへのリクエストごとに作成される、**短命のキャッシュ**です。すでにDataLoaderの実装例でも、DataLoaderのインスタンス保持のために利用していました。React Cacheはリクエストごとに破棄されるためインフラ側でキャッシュストレージを用意するなどの作業は不要で、また、メモリリークや予期せぬキャッシュ共有なども防ぐことができます。
 
 React Cacheを用いた`fetchCurrentUser()`の実装例は以下です。
 
