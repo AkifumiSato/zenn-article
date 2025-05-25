@@ -64,7 +64,7 @@ https://zenn.dev/akfm/articles/react-team-vision
 
 APIのエンドポイントごとに以下のような関数がすでに定義されているものとします。`fetchPosts()`で得られる`Post[]`は著者情報、コメント数、閲覧数の詳細を**含みません**。
 
-- `fetchPosts()`
+- `fetchPosts(options: { page: number })`
 - `fetchAuthors(authorIds: string[])`
 - `fetchCommentCountsForPosts(postIds: string[])`
 - `fetchCommentCount(postId: string)`
@@ -81,8 +81,8 @@ type Post = {
   summary: string;
 };
 
-async function fetchPosts() {
-  const res = await fetch(`${API_URL}/posts`);
+async function fetchPosts({ page }: { page: number }) {
+  const res = await fetch(`${API_URL}/posts?page=${page}`);
   const posts: Post[] = await res.json();
   return posts;
 }
@@ -323,19 +323,19 @@ export async function PostCassette({ post }: { post: Post }) {
 }
 ```
 
-修正前と比べて非常に読みやすく、シンプルになりました。ファイル分割され、参照するデータも明確なため可読性が高く、修正時のデグレリスクも低いと考えられます。筆者の感覚では、保守性はこちらの方が圧倒的に良いと感じます。
+修正前と比べて非常に読みやすく、シンプルになりました。データフェッチが参照単位に分割されたため可読性が高く、修正時のデグレリスクも低いと考えられます。このように自律分散的な設計は、**読み手に必要なコンテキストを小さく留める**ことができます。大規模な開発では予測性は非常に重要なため、Metaは自律分散的な設計を重視しています。
 
-しかし一方で、パフォーマンス観点では非常に大きな問題が発生します。`fetchAuthors()`が`post`の数だけ呼び出され、個別に著者情報を取得する設計になっています。これにより、修正前は4回だったデータフェッチが`posts`の取得1回+`posts`の取得分×3回分に増えており、典型的なN+1を引き起こしています。もし`post`が100件だった場合、301回分のデータフェッチが発生します。`fetchAuthors(post.authorIds)`には同一リクエストも含まれることでしょう。
+しかし一方で、パフォーマンス観点では非常に大きな問題が発生します。この設計では、`fetchAuthors()`などのデータフェッチが`post`の数だけ呼び出されます。これにより、修正前は4回だったデータフェッチが`posts`の取得1回+`posts`の取得分×3回分に増えており、典型的なN+1を引き起こしています。もし`post`が100件だった場合、301回分のデータフェッチが発生します。更に、`fetchAuthors(post.authorIds)`には同一リクエストが含まれる可能性もあるでしょう。
 
-データフェッチはパフォーマンス観点でボトルネックになりやすい部分です。このようなデータフェッチの極端な増加は、無視できない非常に大きな問題です。
+データフェッチはパフォーマンス観点でボトルネックになりやすい部分です。データフェッチの極端な増加は、無視できない非常に大きな問題です。
 
 ### データフェッチのバッチング
 
 ここまでの話を整理してみます。中央集権型の設計より自律分散型の設計の方が、保守性には優れています。しかし、自律分散型の設計では無視できないパフォーマンス問題を引き起こす可能性が高いと言えます。この場合、保守性とパフォーマンスはトレードオフするしかないのでしょうか？
 
-Metaではこの問題を**バッチング**によって解決しています。バッチングとは、複数のデータフェッチを1つにまとめて、効率的に処理する機構です。具体的な仕組み^[[DataLoaderの実装にあるコメント](https://github.com/graphql/dataloader/blob/a10773043d41a56bde4219c155fcf5633e6c9bcb/src/index.js#L214-L239)が参考になります。]としては、Node.jsの`process.nextTick()`やブラウザ側の`setImmediate()`などを利用して、データフェッチするタイミングを「少し待つ」ことで、データフェッチのバッチングが実現できます。
+Metaではこの問題を**バッチング**によって解決しています。バッチングとは、複数のデータフェッチを1つにまとめて、効率的に処理する機構です。具体的な仕組み^[[DataLoaderの実装にあるコメント](https://github.com/graphql/dataloader/blob/a10773043d41a56bde4219c155fcf5633e6c9bcb/src/index.js#L214-L239)が参考になります。]としては、Node.jsの`process.nextTick()`やブラウザ側の`setImmediate()`などを利用して、データフェッチするタイミングを「少し待つ」ことで、バッチングを実現します。
 
-これを容易に実現するため、Metaは[DataLoader](https://www.npmjs.com/package/dataloader)というライブラリをOSSで提供しています。
+これを容易に実現するため、Metaは[DataLoader](https://www.npmjs.com/package/dataloader)というライブラリをOSSで提供しています。以下はDataLoaderを用いて著者情報のデータフェッチングをバッチングする例です。
 
 ```ts
 async function authorsBatch(authorIds: readonly string[]) {
@@ -365,7 +365,7 @@ async function authorsBatch(authorIds: readonly string[]) {
 // 予期せぬキャッシュ共有をしないよう、`React.cache()`でリクエスト単位のインスタンス生成
 const getAuthorLoader = React.cache(() => new DataLoader(authorsBatch));
 
-async function fetchAuthors(authorIds: string[]) {
+export async function fetchAuthors(authorIds: string[]) {
   const authorLoader = getAuthorLoader();
   return Promise.all(authorIds.map((id) => authorLoader.load(id)));
 }
@@ -411,7 +411,7 @@ const getCommentCountLoader = React.cache(
   () => new DataLoader(commentCountBatch),
 );
 
-async function fetchCommentCount(postId: string) {
+export async function fetchCommentCount(postId: string) {
   const commentCountLoader = getCommentCountLoader();
   return commentCountLoader.load(postId);
 }
@@ -433,7 +433,7 @@ async function viewCountBatch(postIds: readonly string[]) {
 }
 const getViewCountLoader = React.cache(() => new DataLoader(viewCountBatch));
 
-async function fetchViewCount(postId: string) {
+export async function fetchViewCount(postId: string) {
   const viewCountLoader = getViewCountLoader();
   return viewCountLoader.load(postId);
 }
@@ -469,9 +469,9 @@ export async function AddComment() {
 }
 ```
 
-これらのコンポーネントは離れているため、`<Suspense>`境界によってレンダリングタイミングが異なる可能性があり、バッチングできるとは限りません。DataLoaderにはキャッシュ機能が存在するので、バッチングできずともキャッシュによってこの問題は解決し得ますが、バッチングの必要がないのにDataLoaderを介するのは冗長かつ不自然な実装になり得ます。
+これらのコンポーネントは離れているため、`<Suspense>`境界によってレンダリングタイミングが異なる可能性があり、バッチングできるとは限りません。
 
-このような問題を容易に解決するためにReactが提供しているのが、[React Cache](https://ja.react.dev/reference/react/cache)です。React Cacheはサーバーへのリクエストごとに作成される、**短命のキャッシュ**です。すでにDataLoaderの実装例でも、DataLoaderのインスタンス保持のために利用していました。React Cacheはリクエストごとに破棄されるためキャッシュサーバーなどは不要で、メモリリークや予期せぬキャッシュ共有なども防ぐことができます。
+このような問題を容易に解決するためにReactが提供しているのが、[React Cache](https://ja.react.dev/reference/react/cache)です。React Cacheはサーバーへのリクエストごとに作成される、**短命のキャッシュ**です。すでにDataLoaderの実装例でも、DataLoaderのインスタンス保持のために利用していました。React Cacheはリクエストごとに破棄されるためインフラ観点の作業は不要で、また、メモリリークや予期せぬキャッシュ共有なども防ぐことができます。
 
 React Cacheを用いた`fetchCurrentUser()`の実装例は以下です。
 
@@ -479,7 +479,8 @@ React Cacheを用いた`fetchCurrentUser()`の実装例は以下です。
 export const fetchCurrentUser = React.cache(async () => {
   const cookieStore = await cookies();
   const sessionId = cookieStore.get("session-id");
-  const { user } = await fetch(`https://.../?sessionId=${sessionId}`);
+  const res = await fetch(`https://.../?sessionId=${sessionId}`);
+  const user = await res.json();
   return user;
 });
 ```
