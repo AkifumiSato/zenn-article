@@ -406,7 +406,7 @@ export async function PostCassette({ post }: { post: Post }) {
 }
 ```
 
-`fetchCommentCount()`や`fetchViewCount()`も同様にDataLoaderによってバッチングすれば、上記のような実装のままN+1を解決し、保守性とパフォーマンスを同時に得ることができます。
+`fetchCommentCount()`や`fetchViewCount()`も同様にDataLoaderによってバッチングすれば、上記のような実装のままN+1を解決し、データフェッチを元の通り4回に抑えることができます。
 
 :::details `fetchCommentCount()`と`fetchViewCount()`の修正
 
@@ -509,7 +509,7 @@ export const fetchCurrentUser = React.cache(async () => {
 
 ## まとめ
 
-Metaでは、自律分散的な設計にバッチングと短命のキャッシュを組み合わせることによって、パフォーマンスと保守性を両立させています。これは大規模開発のみで有用なアプローチではなく、小規模な開発から適用可能で有効な手段です。
+Metaでは、自律分散型の設計にバッチングと短命のキャッシュを組み合わせることによって、パフォーマンスと保守性を両立させています。これは大規模開発のみで有用なアプローチではなく、小規模な開発から適用可能で有効な手段です。
 
 実際に、筆者は小規模なアプリケーションでも好んでDataLoaderやReact Cacheを利用した自律分散的な設計を採用していますが、メリットを感じる場面が多く、筆者にとってこれらは必要不可欠な存在です。
 
