@@ -8,9 +8,7 @@ published: true
 
 AI Agentの進化は目覚ましく、日々実装の品質も向上しています。しかし、開発者自身に明確な実装イメージがある場合、それをAI Agentに出力させることは難しく、さまざまな工夫を必要とします。Agentに与えるコンテキストやプロンプトを最適化したり、詳細なルールを整備することで精度を高めることができますが、これらには大変な労力を伴います。
 
-筆者がNext.jsアプリケーションを扱う場合、実装イメージは著書『Next.jsの考え方』の内容に沿って生成されるため、「この本をAI Agentに読ませることで、アウトプットの精度を高めることができるのではないか」と考え、様々な検証を行いました。
-
-https://zenn.dev/akfm/books/nextjs-basic-principle
+筆者がNext.jsアプリケーションを扱う場合、実装イメージは著書[『Next.jsの考え方』](https://zenn.dev/akfm/books/nextjs-basic-principle)の内容に沿って生成されるため、「この本をAI Agentに読ませることで、アウトプットの精度を高めることができるのではないか」と考え、様々な検証を行いました。
 
 本稿では検証を通して筆者が得た、AI Agentのアウトプットに『Next.jsの考え方』を反映するプラクティスについて紹介します。
 
@@ -33,10 +31,13 @@ https://zenn.dev/akfm/books/nextjs-basic-principle
 
 ### 『Next.jsの考え方』
 
-Next.jsの根底にある考え方に沿った設計やプラクティスについて、筆者なりに解説したものです。GitHub上で原著を参照できます。
+Next.jsの根底にある考え方に沿った設計やプラクティスについて、筆者なりに解説したものです。
 
-- [Zenn - Next.jsの考え方](https://zenn.dev/akfm/books/nextjs-basic-principle)
-- [GitHub - zenn-article](https://github.com/AkifumiSato/zenn-article/tree/main/books/nextjs-basic-principle)
+https://zenn.dev/akfm/books/nextjs-basic-principle
+
+GitHub上で原著を参照できます。
+
+https://github.com/AkifumiSato/zenn-article/tree/main/books/nextjs-basic-principle
 
 ## 解説
 
