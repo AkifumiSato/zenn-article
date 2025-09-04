@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       zenn-cli:
-        specifier: 0.1.155
-        version: 0.1.155
+        specifier: 0.2.3
+        version: 0.2.3
     devDependencies:
       prettier:
         specifier: 3.3.0
@@ -200,8 +200,8 @@ packages:
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
-  zenn-cli@0.1.155:
-    resolution: {integrity: sha512-PqxeLWVrqSrGGPaMiNM5myJcbmXHh/Ur6EhzLkezrDZa5uJe1jfD6COVEnCtRf86Y5P0qy5bejXifSTNdDmqOA==}
+  zenn-cli@0.2.3:
+    resolution: {integrity: sha512-ghYpg2foOeFExvtWKDFSjCsq+utYf84jApw37Wli1MnSAE1la40GZ47kXQDQKeh/1LV2AT0LDMYWbmE64Z4ZSg==}
     engines: {node: '>=14.0.0'}
     hasBin: true
 
@@ -367,4 +367,4 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  zenn-cli@0.1.155: {}
+  zenn-cli@0.2.3: {}
