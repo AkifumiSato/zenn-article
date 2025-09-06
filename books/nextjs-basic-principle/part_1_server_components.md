@@ -47,11 +47,7 @@ App RouterはRSCをサポートしており、[データフェッチはServer Co
 :::message alert
 「Server Componentsには`"use server"`が必要」という誤解が散見されますが、これは**誤り**です。`"use server"`は関数を[Server Functions](https://ja.react.dev/reference/rsc/server-functions)としてマークしてクライアントサイドから呼び出し可能にするものであり、Server Componentsに指定するためのものではありません。
 
-![境界とディレクティブ](/images/nextjs-basic-principle/rsc-layer.png =500x)
-
-なお、App Routerにおいては、PageやLayoutはデフォルトでServer Componentsになっています。
-
-誤った`"use server"`は予期せぬエンドポイントの公開^[参考: ["use server"; でexportした関数が意図せず？公開される](https://zenn.dev/moozaru/articles/b0ef001e20baaf)]になりえるので、注意しましょう。
+詳しくは[_クライアントとサーバーのバンドル境界_](part_2_bundle_boundary)を参照ください。
 :::
 
 データフェッチをServer Componentsで行うにより、以下のようなメリットを得られます。
