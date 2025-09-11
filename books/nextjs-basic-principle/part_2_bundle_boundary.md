@@ -43,6 +43,10 @@ RSCは多段階計算^[参考: [一言で理解するReact Server Components](ht
 
 Next.jsでは、デフォルトでServer Componentsとなるので何も指定する必要はありません。
 
+##### Q. Client ComponentsにServer Componentsを含めるのはどうすればいい？
+
+直接`import`することはできません。ただし、Client Componentsの`children`などでServer Componentsを渡すことが可能です。詳しくは[_Compositionパターン_](part_2_composition_pattern)で解説します。
+
 :::
 
 :::message
@@ -138,12 +142,6 @@ export async function updateProfile(formData: FormData) {
 ![RSCのバンドル境界](/images/nextjs-basic-principle/rsc-bundle-boundary-2.png)
 
 このように、`"use server"`はクライアントバンドルとサーバーバンドルの境界を担います。
-
-:::message
-Client Componentsはクライアントバンドルのため、Server Componentsを直接`import`することはできません。ただし、`children`などでServer Componentsを渡すことが可能です。
-
-詳しくは[_Compositionパターン_](part_2_composition_pattern)で解説します。
-:::
 
 ### 「2つの世界、2つのドア」
 
