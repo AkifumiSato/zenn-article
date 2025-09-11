@@ -16,7 +16,7 @@ title: "クライアントとサーバーのバンドル境界"
 
 RSCは多段階計算^[参考: [一言で理解するReact Server Components](https://zenn.dev/uhyo/articles/react-server-components-multi-stage)]アーキテクチャであり、サーバー側処理とクライアント側処理の2段階計算で構成されます。これはつまり、バンドルも**サーバーバンドル**と**クライアントバンドル**の2つに分けられることを意味します。
 
-多くの人は、`"use server"`や`"use client"`などのディレクティブがバンドルに関する重要なルールであることは知っています。しかし、これらのディレクティブの役割については「実行環境をマークするためのもの」と誤解されることがよくあるようです^[`"use server"`に関する誤解を発端とした議論例: [Dan Abramov氏のBlueSkyでのやりとり](https://bsky.app/profile/danabra.mov/post/3lnw334g5jc24)]。実際には、これらのディレクティブは**実行環境をマークするものではありません**。
+多くの人は、`"use server"`や`"use client"`などのディレクティブがバンドルに関する重要なルールであることは知っています。しかし、これらのディレクティブの役割については「実行環境を示すためのもの」と誤解されることがよくあるようです^[`"use server"`に関する誤解を発端とした議論例: [Dan Abramov氏のBlueSkyでのやりとり](https://bsky.app/profile/danabra.mov/post/3lnw334g5jc24)]。実際には、これらのディレクティブは**実行環境を示すものではありません**。
 
 ## 設計・プラクティス
 
@@ -47,7 +47,7 @@ RSCにおけるバンドラの役割については、[uhyoさんの資料](http
 
 ### モジュールの依存関係とバンドル境界
 
-例として、ユーザー情報の編集ページで考えてみましょう。このページの`page.tsx`は、以下のような依存関係で構成されてると仮定します。
+例として、ユーザー情報の編集ページで考えてみましょう。このページの`page.tsx`は、以下のような依存関係で構成されていると仮定します。
 
 ```
 page.tsx
@@ -79,7 +79,7 @@ export default async function Page() {
 ```tsx:user-profile-form.tsx
 "use client";
 
-import { UserProfile } from "./user-schema";
+import { UserProfile } from "./user-profile-schema";
 import { useForm } from "@conform-to/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -120,7 +120,7 @@ export async function getUser() {
 
 ![RSCのバンドル境界](/images/nextjs-basic-principle/rsc-bundle-boundary-1.png)
 
-`user-schema.ts`は`"use client"`を含みませんが、`"use client"`を含む`user-profile-form.tsx`から`import`されているため、クライアントバンドルに含まれます。このように、モジュールの依存関係にはバンドルの境界が存在し、`"use client"`はサーバーバンドルとクライアントバンドルの境界を担います。
+`user-profile-schema.ts`は`"use client"`を含みませんが、`"use client"`を含む`user-profile-form.tsx`から`import`されているため、クライアントバンドルに含まれます。このように、モジュールの依存関係にはバンドルの境界が存在し、`"use client"`はサーバーバンドルとクライアントバンドルの境界を担います。
 
 ここにさらに、フォームのサブミット時に呼び出されるServer Functionsを含む`update-profile-action.ts`を追加すると、以下のようになります。
 
@@ -150,7 +150,7 @@ Dan Abramov氏は[前述の記事](https://overreacted.io/what-does-use-client-d
 
 ### `server-only`
 
-サーバーバンドルでのみ利用可能なモジュールを実装することは、よくあるユースケースです。このような場合には[`server-only`](https://www.npmjs.com/package/server-only)を使うことで、モジュールがサーバーバンドルでのみ利用されることを保証できます。
+サーバーバンドルでのみ利用可能なモジュールを実装することは、よくあるユースケースです。このような場合には[`server-only`](https://www.npmjs.com/package/server-only)を使うことで、モジュールがサーバーバンドルでのみ利用されるよう保護できます。
 
 ```shell
 $ pnpm add server-only
@@ -160,13 +160,13 @@ $ pnpm add server-only
 import "server-only";
 ```
 
-もしクライアンドバンドル内で`import "server-only";`を含むモジュールが見つかった場合、Next.jsはビルドできずエラーとなります。
+もしクライアントバンドル内で`import "server-only";`を含むモジュールが見つかった場合、Next.jsはビルドできずエラーとなります。
 
-逆に、クライアントバンドルでのみ利用可能なモジュールを実装する場合には、[`client-only`](https://www.npmjs.com/package/client-only)を利用することでクライアントバンドルでのみ利用されることを保証できます。
+逆に、クライアントバンドルでのみ利用可能なモジュールを実装する場合には、[`client-only`](https://www.npmjs.com/package/client-only)を利用することでクライアントバンドルでのみ利用されるよう保護できます。
 
 ### ファイル単位の`"use server"`による予期せぬエンドポイントの公開
 
-`"use server";`は関数単位でもファイル単位でも宣言することが可能です。ファイル単位で`"use server";`を宣言した場合、`export`された関数は全てServer Functionsとして扱われます。これにより、意図せず関数がエンドポイントとして公開される可能性があるので、注意しましょう。
+`"use server";`は関数単位でもファイル単位でも宣言が可能です。ファイル単位で`"use server";`を宣言した場合、`export`された全ての関数はServer Functionsとして扱われます。これにより、意図せず関数がエンドポイントとして公開される可能性があるので、注意しましょう。
 
 詳しくは以下の記事で解説されているので、ご参照ください。
 
