@@ -4,7 +4,7 @@ title: "クライアントとサーバーのバンドル境界"
 
 ## 要約
 
-`"use server"`や`"use client"`は実行環境を示すものではありません。これらはバンドラに**バンドル境界**を宣言するためのものです。
+`"use client"`や`"use server"`は実行環境を示すものではありません。これらはバンドラに**バンドル境界**を宣言するためのものです。
 
 サーバーバンドルでのみ利用可能なモジュールを作成する場合は、`server-only`を使ってモジュールを保護しましょう。
 
@@ -14,18 +14,18 @@ title: "クライアントとサーバーのバンドル境界"
 
 ## 背景
 
-RSCは多段階計算^[参考: [一言で理解するReact Server Components](https://zenn.dev/uhyo/articles/react-server-components-multi-stage)]アーキテクチャであり、サーバー側処理とクライアント側処理の2段階計算で構成されます。これはつまり、バンドルも**サーバーバンドル**と**クライアントバンドル**の2つに分けられることを意味します。
+RSCは多段階計算^[参考: [一言で理解するReact Server Components](https://zenn.dev/uhyo/articles/react-server-components-multi-stage)]アーキテクチャであり、サーバー側処理とクライアント側処理の2段階計算で構成されます。これはつまり、バンドルも**サーバーバンドル**と**クライアントバンドル**の2つに分けられることを意味し、Server Componentsはサーバーバンドルに、Client Componentsはクライアントバンドルに含められます。
 
-多くの人は、`"use server"`や`"use client"`などのディレクティブがバンドルに関する重要なルールであることは知っています。しかし、これらのディレクティブの役割については「実行環境を示すためのもの」と誤解されることがよくあるようです^[`"use server"`に関する誤解を発端とした議論例: [Dan Abramov氏のBlueSkyでのやりとり](https://bsky.app/profile/danabra.mov/post/3lnw334g5jc24)]。実際には、これらのディレクティブは**実行環境を示すものではありません**。
+多くの人は、`"use client"`や`"use server"`などのディレクティブがバンドルに関する重要なルールであることは知っています。しかし、これらのディレクティブの役割については「実行環境を示すためのもの」と誤解されることがよくあるようです^[`"use server"`に関する誤解を発端とした議論例: [Dan Abramov氏のBlueSkyでのやりとり](https://bsky.app/profile/danabra.mov/post/3lnw334g5jc24)]。実際には、これらのディレクティブは**実行環境を示すものではありません**。
 
 ## 設計・プラクティス
 
-`"use server"`や`"use client"`は、**バンドル境界**を宣言するためのものです。
+`"use client"`や`"use server"`は、**バンドル境界**を宣言するためのものです。
 
-- `"use server"`: **サーバーバンドルの境界**を宣言
-- `"use client"`: **クライアントバンドルの境界**を宣言
+- `"use client"`: **サーバー -> クライアント**のバンドル境界
+- `"use server"`: **クライアント -> サーバー**のバンドル境界
 
-これにより、RSCでは2つのバンドルを1つのプログラムとして表現することができます。`"use server"`や`"use client"`は、RSCにおいて最も重要な責務を負ったルールです。これらの役割を正しく理解することは、Next.jsにおいても非常に重要です。
+これにより、RSCでは2つのバンドルを1つのプログラムとして表現することができます。`"use client"`や`"use server"`は、RSCにおいて最も重要な責務を負ったルールです。これらの役割を正しく理解することは、Next.jsにおいても非常に重要です。
 
 :::message alert
 
@@ -53,7 +53,7 @@ RSCにおけるバンドラの役割については、[uhyoさんの資料](http
 page.tsx
 ├── user-fetcher.ts
 └── user-profile-form.tsx
-    └── user-profile-schema.ts
+    └── submit-button.tsx.ts
 ```
 
 以下はこれらのファイルの実装イメージです。
@@ -70,7 +70,7 @@ export default async function Page() {
   return (
     <div>
       <h1>User Profile</h1>
-      <UserProfileForm defaultValue={user} />
+      <UserProfileForm defaultUser={user} />
     </div>
   );
 }
@@ -79,38 +79,33 @@ export default async function Page() {
 ```tsx:user-profile-form.tsx
 "use client";
 
-import { UserProfile } from "./user-profile-schema";
-import { useForm } from "@conform-to/react";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { SubmitButton } from "./submit-button";
+// ...省略...
 
-export function UserProfileForm({
-  defaultValue,
-}: {
-  defaultValue: UserProfile;
-}) {
-  const { register, handleSubmit } = useForm({
-    resolver: zodResolver(UserProfile),
-    defaultValue,
-  });
+export function UserProfileForm({ defaultUser }: { defaultUser: UserProfile }) {
+  // ...省略...
+  const clickAction = () => {
+    // ...省略...
+  };
 
-  // ...formの組み立て...
+  return (
+    <form>
+      {/* ...省略... */}
+      <SubmitButton clickAction={clickAction} />
+    </form>
+  );
 }
 ```
 
-```tsx:user-profile-schema.ts
-import { z } from "zod";
-
-export const UserProfile = z.object({
-  name: z.string(),
-  age: z.number(),
-});
-
-export type UserProfile = z.infer<typeof UserProfile>;
+```tsx:submit-button.tsx
+export function SubmitButton({ clickAction }: { clickAction: () => void }) {
+  return <button onClick={clickAction}>submit</button>;
+}
 ```
 
 ```ts:user-fetcher.ts
 export async function getUser() {
-  // ...APIよりユーザー情報を取得...
+  // ...省略...
 }
 ```
 
@@ -120,7 +115,7 @@ export async function getUser() {
 
 ![RSCのバンドル境界](/images/nextjs-basic-principle/rsc-bundle-boundary-1.png)
 
-`user-profile-schema.ts`は`"use client"`を含みませんが、`"use client"`を含む`user-profile-form.tsx`から`import`されているため、クライアントバンドルに含まれます。このように、モジュールの依存関係にはバンドルの境界が存在し、`"use client"`はサーバーバンドルとクライアントバンドルの境界を担います。
+`submit-button.tsx`は`"use client"`を含みませんが、`"use client"`を含む`user-profile-form.tsx`から`import`されているため、クライアントバンドルに含まれます。このように、モジュールの依存関係にはバンドルの境界が存在し、`"use client"`はサーバーバンドルとクライアントバンドルの境界を担います。
 
 ここにさらに、フォームのサブミット時に呼び出されるServer Functionsを含む`update-profile-action.ts`を追加すると、以下のようになります。
 
@@ -148,13 +143,17 @@ Dan Abramov氏は[前述の記事](https://overreacted.io/what-does-use-client-d
 
 ## トレードオフ
 
+### ファイル単位の`"use server"`による予期せぬエンドポイントの公開
+
+`"use server";`は関数単位でもファイル単位でも宣言が可能です。ファイル単位で`"use server";`を宣言した場合、`export`された全ての関数はServer Functionsとして扱われます。これにより、意図せず関数がエンドポイントとして公開される可能性があるので、注意しましょう。
+
+詳しくは以下の記事で解説されているので、ご参照ください。
+
+https://zenn.dev/moozaru/articles/b0ef001e20baaf
+
 ### `server-only`
 
 サーバーバンドルでのみ利用可能なモジュールを実装することは、よくあるユースケースです。このような場合には[`server-only`](https://www.npmjs.com/package/server-only)を使うことで、モジュールがサーバーバンドルでのみ利用されるよう保護できます。
-
-```shell
-$ pnpm add server-only
-```
 
 ```tsx
 import "server-only";
@@ -163,11 +162,3 @@ import "server-only";
 もしクライアントバンドル内で`import "server-only";`を含むモジュールが見つかった場合、Next.jsはビルドできずエラーとなります。
 
 逆に、クライアントバンドルでのみ利用可能なモジュールを実装する場合には、[`client-only`](https://www.npmjs.com/package/client-only)を利用することでクライアントバンドルでのみ利用されるよう保護できます。
-
-### ファイル単位の`"use server"`による予期せぬエンドポイントの公開
-
-`"use server";`は関数単位でもファイル単位でも宣言が可能です。ファイル単位で`"use server";`を宣言した場合、`export`された全ての関数はServer Functionsとして扱われます。これにより、意図せず関数がエンドポイントとして公開される可能性があるので、注意しましょう。
-
-詳しくは以下の記事で解説されているので、ご参照ください。
-
-https://zenn.dev/moozaru/articles/b0ef001e20baaf
