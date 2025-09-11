@@ -135,7 +135,8 @@ export async function getUser() {
 
  export function UserProfileForm({ defaultUser }: { defaultUser: UserProfile }) {
    // ...省略...
-   const clickAction = () => {
+-  const clickAction = () => {
++  const clickAction = async () => {
 +      await updateProfile(formData);
      // ...省略...
    };
