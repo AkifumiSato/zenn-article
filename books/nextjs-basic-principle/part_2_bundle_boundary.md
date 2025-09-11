@@ -22,8 +22,12 @@ RSCは多段階計算^[参考: [一言で理解するReact Server Components](ht
 
 `"use client"`や`"use server"`は、**バンドル境界**を宣言するためのものです。
 
-- `"use client"`: **サーバー -> クライアント**のバンドル境界
-- `"use server"`: **クライアント -> サーバー**のバンドル境界
+- `"use client"`:
+  - **サーバー -> クライアント**のバンドル境界
+  - Server ComponentsにClient Componentsを組み込むことができる
+- `"use server"`:
+  - **クライアント -> サーバー**のバンドル境界
+  - クライアントへServer Functionsを公開する
 
 これにより、RSCでは2つのバンドルを1つのプログラムとして表現することができます。`"use client"`や`"use server"`は、RSCにおいて最も重要な責務を負ったルールです。これらの役割を正しく理解することは、Next.jsにおいても非常に重要です。
 
@@ -134,6 +138,12 @@ export async function updateProfile(formData: FormData) {
 ![RSCのバンドル境界](/images/nextjs-basic-principle/rsc-bundle-boundary-2.png)
 
 このように、`"use server"`はクライアントバンドルとサーバーバンドルの境界を担います。
+
+:::message
+Client Componentsはクライアントバンドルのため、Server Componentsを直接`import`することはできません。ただし、`children`などでServer Componentsを渡すことが可能です。
+
+詳しくは[_Compositionパターン_](part_2_composition_pattern)で解説します。
+:::
 
 ### 「2つの世界、2つのドア」
 
