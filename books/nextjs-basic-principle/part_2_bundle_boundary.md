@@ -6,7 +6,7 @@ title: "クライアントとサーバーのバンドル境界"
 
 `"use client"`や`"use server"`は実行環境を示すものではありません。これらはバンドラに**バンドル境界**を宣言するためのものです。
 
-サーバーバンドルでのみ利用可能なモジュールを作成する場合は、`server-only`を使ってモジュールを保護しましょう。
+サーバーバンドルでのみ利用可能なモジュールは、`server-only`を使ってモジュールを保護しましょう。
 
 :::message
 本章の解説内容は、[Dan Abramov氏の記事](https://overreacted.io/what-does-use-client-do/)を参考にしています。より詳細に知りたい方は元記事をご参照ください。
@@ -57,7 +57,7 @@ RSCにおけるバンドラの役割については、[uhyoさんの資料](http
 page.tsx
 ├── user-fetcher.ts
 └── user-profile-form.tsx
-    └── submit-button.tsx.ts
+    └── submit-button.tsx
 ```
 
 以下はこれらのファイルの実装イメージです。
