@@ -14,7 +14,7 @@ title: "クライアントとサーバーのバンドル境界"
 
 ## 背景
 
-RSCは多段階計算^[参考: [一言で理解するReact Server Components](https://zenn.dev/uhyo/articles/react-server-components-multi-stage)]アーキテクチャであり、サーバー側処理とクライアント側処理の2段階計算で構成されます。これはつまり、バンドルも**サーバーバンドル**と**クライアントバンドル**の2つに分けられることを意味し、Server Componentsはサーバーバンドルに、Client Componentsはクライアントバンドルに含められます。
+RSCは多段階計算^[参考: [一言で理解するReact Server Components](https://zenn.dev/uhyo/articles/react-server-components-multi-stage)]アーキテクチャであり、サーバー側処理とクライアント側処理の2段階計算で構成されます。これはつまり、バンドルも**サーバーバンドル**と**クライアントバンドル**の2つに分けられることを意味し、Server ComponentsやServer Functionsはサーバーバンドルに、Client Componentsはクライアントバンドルに含められます。
 
 多くの人は、`"use client"`や`"use server"`などのディレクティブがバンドルに関する重要なルールであることは知っています。しかし、これらのディレクティブの役割については「実行環境を示すためのもの」と誤解されることがよくあるようです^[`"use server"`に関する誤解を発端とした議論例: [Dan Abramov氏のBlueSkyでのやりとり](https://bsky.app/profile/danabra.mov/post/3lnw334g5jc24)]。実際には、これらのディレクティブは**実行環境を示すものではありません**。
 
@@ -24,7 +24,7 @@ RSCは多段階計算^[参考: [一言で理解するReact Server Components](ht
 
 - `"use client"`:
   - **サーバー -> クライアント**のバンドル境界
-  - Server ComponentsにClient Componentsを組み込むことができる
+  - サーバーへClient Componentsを公開する
 - `"use server"`:
   - **クライアント -> サーバー**のバンドル境界
   - クライアントへServer Functionsを公開する
@@ -129,11 +129,26 @@ export async function getUser() {
 
 :::details `update-profile-action.ts`の実装イメージ
 
+```diff:user-profile-form.tsx
+ // ...省略...
++ import { updateProfile } from "./update-profile-action";
+
+ export function UserProfileForm({ defaultUser }: { defaultUser: UserProfile }) {
+   // ...省略...
+   const clickAction = () => {
++      await updateProfile(formData);
+     // ...省略...
+   };
+
+   // ...省略...
+ }
+```
+
 ```ts:update-profile-action.ts
 export async function updateProfile(formData: FormData) {
   "use server";
 
-  // ...ユーザー情報の更新をAPIリクエスト...
+  // ...省略...
 }
 ```
 
