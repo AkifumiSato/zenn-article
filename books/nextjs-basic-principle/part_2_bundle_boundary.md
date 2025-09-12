@@ -92,22 +92,22 @@ import { SubmitButton } from "./submit-button";
 
 export function UserProfileForm({ defaultUser }: { defaultUser: UserProfile }) {
   // ...省略...
-  const clickAction = () => {
+  const onClick = () => {
     // ...省略...
   };
 
   return (
     <form>
       {/* ...省略... */}
-      <SubmitButton clickAction={clickAction} />
+      <SubmitButton onClick={onClick} />
     </form>
   );
 }
 ```
 
 ```tsx:submit-button.tsx
-export function SubmitButton({ clickAction }: { clickAction: () => void }) {
-  return <button onClick={clickAction}>submit</button>;
+export function SubmitButton({ onClick }: { onClick: () => void }) {
+  return <button onClick={onClick}>submit</button>;
 }
 ```
 
@@ -135,8 +135,8 @@ export async function getUser() {
 
  export function UserProfileForm({ defaultUser }: { defaultUser: UserProfile }) {
    // ...省略...
--  const clickAction = () => {
-+  const clickAction = async () => {
+-  const onClick = () => {
++  const onClick = async () => {
 +      await updateProfile(formData);
      // ...省略...
    };
