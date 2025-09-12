@@ -137,4 +137,8 @@ export function ProductPresentaional({ product }: { product: Product }) {
 
 このように、`"use client";`は依存関係において境界(Boundary)を定義するもので、この境界はよく**Client Boundary**と表現されます。
 
-そのため、上位層のコンポーネントでClient Boundaryを形成してしまうと下層でServer Componentsを含むことができなくなってしまい、React Server Componentsのメリットをうまく享受できなくなってしまうケースが散見されます。このようなケースへの対応は次章の[_Compositionパターン_](part_2_composition_pattern)で解説します。
+上位層のコンポーネントでClient Boundaryを形成してしまうと下層でServer Componentsを含むことができなくなってしまい、React Server Componentsのメリットをうまく享受できなくなってしまうケースが散見されます。このようなケースへの対応は次章の[_Compositionパターン_](part_2_composition_pattern)で解説します。
+
+:::message
+[_クライアントとサーバーのバンドル境界_](part_2_bundle_boundary)で解説したように、Server ComponentsとClient Componentsではバンドルが異なります。そのため、Client Boundaryのコンポーネントに渡せるPropsは、[Reactがserialize可能なもの](https://ja.react.dev/reference/rsc/use-client#serializable-types)に限られます。
+:::
