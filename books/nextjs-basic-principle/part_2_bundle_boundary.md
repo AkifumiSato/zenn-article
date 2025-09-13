@@ -159,6 +159,10 @@ export async function updateProfile(formData: FormData) {
 
 このように、`"use server"`はServer Boundaryを担います。
 
+:::message
+**Client Boundaryとなる**Client ComponentsはBundleを跨ぐため、受け取るPropsは[Reactがserialize可能なもの](https://ja.react.dev/reference/rsc/use-client#serializable-types)である必要があります。一方**Client Boundaryでない**Client Componentsが受け取れるPropsは特に制約がありません。
+:::
+
 ### 「2つの世界、2つのドア」
 
 Dan Abramov氏は[前述の記事](https://overreacted.io/what-does-use-client-do/#two-worlds-two-doors)にて、`"use client"`と`"use server"`の役割を「2つの世界、2つのドア」という言葉で説明しています。RSCにはServer BundleとClient Bundleという2つの世界があり、これらの世界を開くドアが`"use client"`と`"use server"`です。
