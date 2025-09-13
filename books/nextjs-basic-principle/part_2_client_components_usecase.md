@@ -133,12 +133,18 @@ export function ProductPresentaional({ product }: { product: Product }) {
 
 ### Client Boundaryと暗黙的なClient Components
 
-`"use client";`が記述されたモジュールから`import`されるモジュール以降は全て暗黙的にクライアントモジュールとして扱われ、それらで定義されたコンポーネントは**全てClient Components**として扱われます。
+[_クライアントとサーバーのバンドル境界_](part_2_bundle_boundary)で解説したように`"use client";`はバンドル境界を定義するものであり、Client Bundleに含まれるコンポーネントは**全てClient Components**として扱われます。
 
-このように、`"use client";`は依存関係において境界(Boundary)を定義するもので、この境界はよく**Client Boundary**と表現されます。
+上位のコンポーネントでClient Boundaryを宣言してしまうと下層でServer Componentsを含むことができなくなってしまい、React Server Componentsのメリットをうまく享受できなくなってしまうケースが散見されます。このようなケースへの対応は次章の[_Compositionパターン_](part_2_composition_pattern)で解説します。
 
-上位層のコンポーネントでClient Boundaryを形成してしまうと下層でServer Componentsを含むことができなくなってしまい、React Server Componentsのメリットをうまく享受できなくなってしまうケースが散見されます。このようなケースへの対応は次章の[_Compositionパターン_](part_2_composition_pattern)で解説します。
+### Server ComponentsからClient Componentsへ渡せるProps
 
-:::message
-[_クライアントとサーバーのバンドル境界_](part_2_bundle_boundary)で解説したように、Server ComponentsとClient Componentsではバンドルが異なります。そのため、Client Boundaryのコンポーネントに渡せるPropsは、[Reactがserialize可能なもの](https://ja.react.dev/reference/rsc/use-client#serializable-types)に限られます。
-:::
+Server ComponentsはClient Componentsを含むことができますが、これはServer BundleからClient Bundleへとバンドル境界を跨ぐため、渡せるPropsは、[Reactがserialize可能なもの](https://ja.react.dev/reference/rsc/use-client#serializable-types)に限られます。
+
+```tsx
+export async function MyServerComponent() {
+  // ...
+
+  return <ClientComponent data={/* Reactがserialize可能なもののみ渡せる */} />;
+}
+```
