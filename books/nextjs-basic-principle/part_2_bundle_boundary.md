@@ -160,7 +160,7 @@ export async function updateProfile(formData: FormData) {
 このように、`"use server"`はServer Boundaryを担います。
 
 :::message
-**Client Boundaryとなる**Client ComponentsはBundleを跨ぐため、受け取るPropsは[Reactがserialize可能なもの](https://ja.react.dev/reference/rsc/use-client#serializable-types)である必要があります。一方**Client Boundaryでない**Client Componentsが受け取れるPropsは特に制約がありません。
+**Client Boundaryとなる**Client ComponentsはBundleを跨ぐため、受け取るPropsは原則として[Reactがserialize可能なもの](https://ja.react.dev/reference/rsc/use-client#serializable-types)である必要があります。一方**Client Boundaryでない**Client Componentsが受け取れるPropsは特に制約がありません。
 :::
 
 ### 「2つの世界、2つのドア」
