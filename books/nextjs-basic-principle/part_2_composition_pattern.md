@@ -10,6 +10,10 @@ Compositionパターンを駆使して、Server Componentsを中心に組み立�
 
 [_第1部 データフェッチ_](part_1)で述べたように、React Server Componentsのメリットを活かすにはServer Components中心の設計が重要となります。そのため、Client Componentsは**適切に分離・独立**していることが好ましいですが、これを実現するにはClient Componentsの依存関係における2つの制約を考慮しつつ設計する必要があります。
 
+:::message
+以下は[_クライアントとサーバーのバンドル境界_](part_2_bundle_boundary)で解説した内容と重複します。
+:::
+
 ### Client Componentsはサーバーモジュールを`import`できない
 
 1つはClient ComponentsはServer Componentsはじめサーバーモジュールを`import`できないという制約です。クライアントサイドでも実行される以上、サーバーモジュールに依存できないのは考えてみると当然のことです。
@@ -61,14 +65,14 @@ export function CreateButton({ children }: { children: React.ReactNode }) {
 
 ### Client Boundary
 
-もう1つ注意すべきなのは、`"use client";`が記述されたモジュールから`import`されるモジュール以降は、**全て暗黙的にクライアントモジュールとして扱われる**ということです。そのため、定義されたコンポーネントは全てClient Componentsとして実行可能でなければなりません。Client Componentsはサーバーモジュールを`import`できない以上、これも当然の帰結です。
+もう1つ注意すべきなのは、`"use client";`が記述されたモジュールから`import`されるモジュール以降は、**全て暗黙的にClient Bundle^[参考: [_クライアントとサーバーのバンドル境界_](part_2_bundle_boundary)]に含まれる**ということです。そのため、定義されたコンポーネントは全てClient Componentsとして実行可能でなければなりません。Client Componentsはサーバーモジュールを`import`できない以上、これも当然の帰結です。
 
 `"use client";`はこのように依存関係において境界(Boundary)を定義するもので、この境界はよく**Client Boundary**と表現されます。
 
-:::message
-よくある誤解のようですが、以下は**誤り**なので注意しましょう。
+:::message alert
+以下はよくある誤解です。注意しましょう。
 
-- `"use client";`宣言付モジュールのコンポーネントだけがClient Components
+- `"use client";`を宣言したモジュールのコンポーネントだけがClient Components
 - 全てのClient Componentsに`"use client";`が必要
 
 :::
@@ -156,7 +160,7 @@ export function Page() {
 
 ### 「後からComposition」の手戻り
 
-Compositionパターンを駆使すればServer Componentsを中心にしつつ、部分的にClient Componentsを組み込むことが可能です。しかし、早期にClient Boundaryを形成し後からCompositionパターンを導入しようとすると、Client Componentsの設計を大幅に変更せざるを得なくなったり、Server Components中心な設計から逸脱してしまう可能性があります。
+Compositionパターンを駆使すればServer Componentsを中心にしつつ、部分的にClient Componentsを組み込むことが可能です。しかし、上位のコンポーネントにClient Boundaryを宣言し、後からCompositionパターンを導入しようとすると、Client Componentsの設計を大幅に変更せざるを得なくなったりServer Components中心な設計から逸脱してしまう可能性があります。
 
 そのため、React Server Componentsにおいては設計する順番も非常に重要です。画面を実装する段階ではまずデータフェッチを行うServer Componentsを中心に設計し、そこに必要に応じてClient Componentsを末端に配置したりCompositionパターンで組み込んで実装を進めていくことを筆者はお勧めします。
 

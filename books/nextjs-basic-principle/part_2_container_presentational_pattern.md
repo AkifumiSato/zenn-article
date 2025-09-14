@@ -89,7 +89,7 @@ React Server ComponentsにおけるContainer/Presentationalパターンは従来
 | Container      | 状態参照、状態変更関数の定義                        | Server Components上でのデータフェッチなどの**サーバーサイド処理** |
 | Presentational | `props`を参照してReactElementを定義する純粋関数など | **Shared Components/Client Components**                           |
 
-Shared Componentsはサーバーモジュールに依存せず、`"use client";`もないモジュールで定義されるコンポーネントを指します。このようなコンポーネントは、Client Boundary内においてはClient Componentsとして扱われ、そうでなければServer Componentsとして扱われます。
+Shared Componentsはクライアントまたはサーバーでのみ使える機能に依存せず、`"use client";`もないモジュールで定義されるコンポーネントを指します。このようなコンポーネントは、Client BundleにおいてはClient Componentsとして扱われ、Server BundleにおいてはServer Componentsとして扱われます。
 
 ```tsx
 // `"use client";`がないモジュール
@@ -108,7 +108,7 @@ export function CompanyLinks() {
 ```
 
 :::message
-上記のような`"use client";`を含まない場合において、自身でClient Boundaryを形成するのではなく、Client Boundary内で利用することを強制したいような場合には[`client-only`](https://www.npmjs.com/package/client-only)パッケージが役立ちます。
+上記のようにClient Boundaryでないコンポーネントで、Client Bundleに含まれることを保証したい場合には[`client-only`](https://www.npmjs.com/package/client-only)パッケージを利用しましょう。
 :::
 
 Client ComponentsやShared Componentsは従来通りRTLやStorybookで扱うことができるので、テスト容易性が向上します。一方Container Componentsはこれらのツールでレンダリング・テストすることが現状難しいので、`await ArticleContainer({ id })`のように単なる関数として実行することでテストが可能です。

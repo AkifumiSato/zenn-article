@@ -42,9 +42,15 @@ Reactチームは前述の問題を個別の問題と捉えず、根本的には
 
 https://ja.react.dev/reference/rsc/server-components
 
-App RouterはRSCをサポートしており、データフェッチはServer Componentsで行うことが[ベストプラクティス](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-on-the-server)とされています。
+App RouterはRSCをサポートしており、[データフェッチはServer Componentsで行う](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-on-the-server)ことがベストプラクティスとされています。
 
-これにより、以下のようなメリットを得られます。
+:::message alert
+「Server Componentsには`"use server"`が必要」という誤解が散見されますが、これは**誤り**です。`"use server"`は関数を[Server Functions](https://ja.react.dev/reference/rsc/server-functions)としてマークしてクライアントサイドから呼び出し可能にするものであり、Server Componentsに指定するためのものではありません。
+
+詳しくは[_クライアントとサーバーのバンドル境界_](part_2_bundle_boundary)を参照ください。
+:::
+
+データフェッチをServer Componentsで行うにより、以下のようなメリットを得られます。
 
 ### 高速なバックエンドアクセス
 
