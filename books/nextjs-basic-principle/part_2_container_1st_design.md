@@ -8,7 +8,7 @@ title: "Container 1stな設計とディレクトリ構成"
 
 ## 背景
 
-[_第1部 データフェッチ_](part_1)ではServer Componentsの設計パターンを、[_第2部 コンポーネント設計_](part_2)ではここまでClient Componentsも含めたコンポーネント全体の設計パターンを解説してきました。ここまで順に読んでいただいた方は、すでに多くの設計パターンを理解されてることと思います。
+[第1部 データフェッチ](part_1)ではServer Componentsの設計パターンを、[第2部 コンポーネント設計](part_2)ではClient Componentsも含めたコンポーネント全体の設計パターンを解説してきました。ここまで順に読んでいただいた方は、すでに多くの設計パターンを理解されてることと思います。
 
 しかし、これらを「理解してること」と「使いこなせること」は別問題です。
 
@@ -22,23 +22,23 @@ title: "Container 1stな設計とディレクトリ構成"
 
 これらにも大きな違いがあります。
 
-React Server Componentsでは特に、Compositionパターンを後から適用しようとすると大幅なClient Componentsの設計見直しや書き換えが発生しがちです。こういった手戻りを防ぐためにも、設計の手順はとても重要です。
+React Server Componentsでは特に、[Compositionパターン](part_2_composition_pattern)を後から適用しようとすると大幅なClient Componentsの設計見直しや書き換えが発生しがちです。こういった手戻りを防ぐためにも、設計の手順はとても重要です。
 
 ## 設計・プラクティス
 
-筆者が提案する設計手順は、画面の設計はまずContainer Componentsのみで行い、Presentational Componentsやそこで使うClient Componentsは後から実装する、といういわば**Container 1stな設計手法**です。これは、最初から**Compositionパターンありきで設計する**ことと同義です。
+筆者が提案する設計手順は、画面の設計はまずContainer Components^[参考: [Container/Presentationalパターン](part_2_container_presentational_pattern)]のみで行い、Presentational Componentsやそこで使うClient Componentsは後から実装するという、いわば**Container 1stな設計手法**です。これは、最初からCompositionパターンありきで設計することと同義です。
 
-具体的には以下のような手順になります。
+具体的な手順は以下です。
 
-1. Container Componentsのツリー構造を書き出す
-2. Container Componentsを実装
-3. Presentational Components(Shared/Client Components)を実装
-4. 2,3を繰り返す
+1. **Container Componentsのツリー構造を書き出す**
+2. **Container Componentsを実装**
+3. **Presentational Components(Shared/Client Components)を実装**
+4. **2,3を繰り返す**
 
 この手順ではServer Componentsツリーをベースに設計することで、最初からCompositionパターンを適用した状態・あるいは適用しやすい状態を目指します。これにより、途中でContainer Componentsが増えたとしても修正範囲が少なく済むというメリットもあります。
 
 :::message
-「まずはContainerのツリー構造から設計する」ことが重要なのであって、「最初に決めた設計を守り切る」ことは重要ではありません。実装を進める中でContainerツリーの設計を見直すことも重要です。
+「Containerのツリー構造から設計する」ことが重要なのであって、「最初に決めた設計を守り切る」ことは重要ではありません。実装を進める中でContainerツリーの設計を見直すことも重要です。
 :::
 
 ### 実装例
@@ -97,11 +97,11 @@ async function PostContainer({ postId }: { postId: string }) {
 
 ### ディレクトリ構成案
 
-App Routerの規約ファイルはコロケーションを強く意識した設計がなされており、Route Segmentで利用するコンポーネントや関数もできるだけコロケーションすることが推奨されます。
+Next.jsの規約ファイルはコロケーション^[コードをできるだけ関連性のある場所に配置することを指します。]を強く意識した設計がなされており、[Route Segment↗︎](https://nextjs.org/docs/app/getting-started/layouts-and-pages#creating-a-nested-route)で利用するコンポーネントや関数もできるだけコロケーションすることが推奨されます。
 
 Container/Presentationalパターンにおいて、ページやレイアウトから見える単位はContainer単位です。Presentational Componentsやその他のコンポーネントは、Container Componentsのプライベートな実装詳細に過ぎません。
 
-これらを体現するContainer 1stなディレクトリ設計として、Containerの単位を`_containers`以下でディレクトリ分割することを提案します。このディレクトリ設計では、外部から利用されうるContainer Componentsの公開を`index.tsx`で行うことを想定しています。
+これらを体現するContainer 1stなディレクトリ設計として、Containerの単位を`_containers`以下でディレクトリ分割することを筆者は推奨します。このディレクトリ設計では、外部から利用されうるContainer Componentsの公開を`index.tsx`で行うことを想定しています。
 
 ```
 _containers
@@ -113,7 +113,7 @@ _containers
 └── ...
 ```
 
-`_containers`のようにディレクトリ名に`_`をつけているのはApp Routerにおけるルーティングディレクトリと明確に区別する[Private Folder](https://nextjs.org/docs/app/building-your-application/routing/colocation#private-folders)の機能を利用するためです。筆者は`_components`、`_lib`のように他のSegment内共通なコンポーネントや関数も`_`をつけたディレクトリにまとめることを好みます。
+`_containers`のようにディレクトリ名に`_`をつけているのはNext.jsにおけるルーティングディレクトリと明確に区別する[Private Folder↗︎](https://nextjs.org/docs/app/getting-started/project-structure#colocation)の機能を利用するためです。筆者は`_components`、`_lib`のように他のSegment内共通なコンポーネントや関数も`_`をつけたディレクトリにまとめることを好みます。
 
 `app`直下からみた時には以下のような構成になります。
 
@@ -135,15 +135,15 @@ app
 └── ...
 ```
 
-命名やさらに細かい分割の詳細は、プロジェクトごとに適宜修正してもいいと思います。筆者が重要だと思うのはディレクトリをContainer単位で、ファイルをContainer/Presentationalで分割することです。
+命名やさらに細かい分割の詳細は、プロジェクトごとに適宜定義してください。筆者が重要だと考えるのは、ディレクトリをContainer単位で、ファイルをContainer/Presentationalで分割することです。
 
 ## トレードオフ
 
 ### 広すぎるexport
 
-前述のように、Presentational ComponentsはContainer Componentsの実装詳細と捉えることもできるので、本来Presentational Componentsはプライベート定義として扱うことが好ましいと考えられます。
+前述のように、Presentational Componentsは実装詳細と捉えることもできるので、できるならPresentational Componentsはプライベート定義として扱うことが好ましいと考えられます。
 
-[ディレクトリ構成例](#ディレクトリ構成案)に基づいた設計の場合、Presentational Componentsは`presentational.tsx`で定義されます。
+[#ディレクトリ構成例](#ディレクトリ構成案)に基づいた設計の場合、Presentational Componentsは`presentational.tsx`で定義されます。
 
 ```
 _containers
@@ -155,8 +155,8 @@ _containers
 └── ...
 ```
 
-上記の構成では`<Container Name>`の外から参照されるモジュールは`index.tsx`のみの想定です。ただ実際には、`presentational.tsx`で定義したコンポーネントもプロジェクトのどこからでも参照することができます。
+上記の構成では`<Container Name>`の外から参照されるモジュールは`index.tsx`のみの想定です。ただし、実際には`presentational.tsx`で定義したコンポーネントもプロジェクトのどこからでも参照することができます。
 
-このような同一ディレクトリにおいてのみ利用することを想定したモジュール分割においては、[eslint-plugin-import-access](https://github.com/uhyo/eslint-plugin-import-access)を利用すると予期せぬ外部からのimportを制限することができます。
+このような同一ディレクトリにおいてのみ利用することを想定したモジュール分割は、[eslint-plugin-import-access↗︎](https://github.com/uhyo/eslint-plugin-import-access)やbiomeの[`noPrivateImports`↗︎](https://biomejs.dev/linter/rules/no-private-imports/)を利用することで、`import`を制限することができます。
 
 上記のようなディレクトリ設計に沿わない場合でも、Presentational ComponentsはContainer Componentsのみが利用しうる**実質的なプライベート定義**として扱うようにしましょう。

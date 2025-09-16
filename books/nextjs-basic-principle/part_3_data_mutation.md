@@ -8,27 +8,29 @@ title: "データ操作とServer Actions"
 
 ## 背景
 
-Pages Routerではデータ取得のために[getServerSideProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)や[getStaticProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)が提供されてましたが、データ操作アプローチは公式には提供されていませんでした。そのため、クライアントサイドを主体、または[API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes)を統合した3rd partyライブラリによるデータ操作の実装パターンが多く存在します。
+Pages Routerではデータ取得のために[`getServerSideProps()`↗︎](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)や[`getStaticProps()`↗︎](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)が提供されてましたが、データ操作アプローチは公式には提供されていませんでした。そのため、クライアントサイドを主体、または[API Routes↗︎](https://nextjs.org/docs/pages/building-your-application/routing/api-routes)を統合した3rd partyライブラリによるデータ操作の実装パターンが多く存在します。
 
-- [SWR](https://swr.vercel.app/)
-- [React Query](https://react-query.tanstack.com/)
+- [SWR↗︎](https://swr.vercel.app/)
+- [React Query↗︎](https://react-query.tanstack.com/)
 - GraphQL
-  - [Apollo Client](https://www.apollographql.com/docs/react/)
-  - [Relay](https://relay.dev/)
-- [tRPC](https://trpc.io/)
+  - [Apollo Client↗︎](https://www.apollographql.com/docs/react/)
+  - [Relay↗︎](https://relay.dev/)
+- [tRPC↗︎](https://trpc.io/)
 - etc...
 
-しかし、API RouteはApp Routerにおいて[Route Handler](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)となり、定義の方法や参照できる情報などが変更されました。また、App Routerは多層のキャッシュを活用しているため、データ操作時にはキャッシュのrevalidate機能との統合が必要となるため、上記にあげたライブラリや実装パターンをApp Routerで利用するには多くの工夫や実装が必要となります。
+しかし、API RouteはApp Routerにおいて[Route Handler↗︎](https://nextjs.org/docs/app/api-reference/file-conventions/route)となり、定義の方法や参照できる情報などが変更されました。また、App Routerは多層のキャッシュを活用しているため、データ操作時にはキャッシュのrevalidate機能との統合が必要となるため、上記にあげたライブラリや実装パターンをApp Routerで利用するには多くの工夫や実装が必要となります。
 
 ## 設計・プラクティス
 
-App Routerでのデータ操作は、従来からある実装パターンではなく[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)を利用することが推奨されています。これにより、tRPCなどの3rd partyライブラリなどなしにクライアント・サーバーの境界を超えて関数を呼び出すことができ、データ変更処理を容易に実装できます。
+App Routerでのデータ操作は、従来からある実装パターンではなく[Server Actions↗︎](https://nextjs.org/docs/app/getting-started/updating-data)^[データ操作を伴うServer Functionsは、**Server Actions**と呼ばれます。[参考↗︎](https://nextjs.org/docs/app/getting-started/updating-data#what-are-server-functions)]を利用することが推奨されています。これにより、tRPCなどの3rd partyライブラリなどなしにクライアント・サーバーの境界を超えて関数を呼び出すことができ、データ変更処理を容易に実装できます。
 
 :::message
-Server Actionsはクライアント・サーバーの境界を超えて関数を呼び出しているように見えますが、実際には当然通信処理が伴うため、[Reactがserialize可能なもの](https://react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)のみが引数や戻り値に利用できます。
+Server Actionsはクライアント・サーバーの境界を超えて関数を呼び出しているように見えますが、実際には当然通信処理が伴うため、[Reactがserialize可能なもの↗︎](https://ja.react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)のみが引数や戻り値に利用できます。
+
+詳しくは[クライアントとサーバーのバンドル境界](part_2_bundle_boundary)を参照ください。
 :::
 
-```tsx :app/actions.ts
+```tsx :app/create-todo.ts
 "use server";
 
 export async function createTodo(formData: FormData) {
@@ -39,7 +41,7 @@ export async function createTodo(formData: FormData) {
 ```tsx :app/page.tsx
 "use client";
 
-import { createTodo } from "./actions";
+import { createTodo } from "./create-todo";
 
 export default function CreateTodo() {
   return (
@@ -51,13 +53,13 @@ export default function CreateTodo() {
 }
 ```
 
-上記の実装例では、サーバーサイドで実行される関数`createTodo`をClient Componentsで`<form>`の`action`propsに直接渡しているのがわかります。このformを実際にsubmitすると、サーバーサイドで`createTodo`が実行されます。
+上記の実装例では、サーバーサイドで実行される関数`createTodo`をClient Components内の`<form action={createTodo}>`で渡しているのがわかります。このformを実際にsubmitすると、サーバーサイドで`createTodo`が実行されます。
 
-このように非常にシンプルな実装でクライアントサイドからサーバーサイド関数を呼び出せることで、開発者はデータ操作の実装に集中できます。Server ActionsはReactの仕様ですが、実装はフレームワークに統合されているので、他にも以下のようなApp Routerならではのメリットが得られます。
+このように、非常にシンプルな実装でクライアントサイドからサーバーサイド関数を呼び出せることで、開発者はデータ操作の実装に集中できます。Server ActionsはReactの仕様ですが、実装はフレームワークに統合されているので、他にも以下のようなNext.jsならではのメリットが得られます。
 
 ### キャッシュのrevalidate
 
-App Routerは多層のキャッシュを活用しているため、データ操作時には関連するキャッシュのrevalidateが必要になります。Server Actions内で`revalidatePath()`や`revalidateTag()`を呼び出すと、サーバーサイドの関連するキャッシュ([Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)や[Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache))とクライアントサイドのキャッシュ([Router Cache](https://nextjs.org/docs/app/building-your-application/caching#router-cache))がrevalidateされます。
+Next.jsは多層のキャッシュを活用しているため、データ操作時には関連するキャッシュのrevalidateが必要になります。Server Actions内で`revalidatePath()`や`revalidateTag()`を呼び出すと、サーバーサイドの関連するキャッシュ([Data Cache↗︎](https://nextjs.org/docs/app/guides/caching#data-cache)や[Full Route Cache↗︎](https://nextjs.org/docs/app/guides/caching#full-route-cache))とクライアントサイドのキャッシュ([Router Cache↗︎](https://nextjs.org/docs/app/guides/caching#client-side-router-cache))がrevalidateされます。
 
 ```tsx :app/actions.ts
 "use server";
@@ -68,14 +70,14 @@ export async function updateTodo() {
 }
 ```
 
-:::message
+:::message alert
 Server Actionsで`revalidatePath()`/`revalidateTag()`もしくは`cookies.set()`/`cookies.delete()`を呼び出すと、Router Cacheが**全て**破棄され、呼び出したページのServer Componentsが再レンダリングされます。
 必要以上に多用するとパフォーマンス劣化の原因になるので注意しましょう。
 :::
 
 ### redirect時の通信効率
 
-App Routerではサーバーサイドで呼び出せる`redirect()`という関数があります。データ操作後にページをリダレイクトしたいことはよくあるユースケースですが、`redirect()`をServer Actions内で呼び出すとレスポンスにリダイレクト先ページの[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)が含まれるため、HTTPリダイレクトをせずに画面遷移できます。これにより、従来データ操作リクエストとリダイレクト後ページ情報のリクエストで2往復は必要だったhttp通信が、1度で済みます。
+Next.jsではサーバーサイドで呼び出せる`redirect()`という関数があります。データ操作後にページをリダレイクトしたいことはよくあるユースケースですが、`redirect()`をServer Actions内で呼び出すとレスポンスにリダイレクト先ページの[RSC Payload↗︎](https://nextjs.org/docs/app/getting-started/server-and-client-components#on-the-server)が含まれるため、HTTPリダイレクトをせずに画面遷移できます。これにより、従来データ操作リクエストとリダイレクト後ページ情報のリクエストで2往復は必要だったhttp通信が、1度で済みます。
 
 ```tsx :app/actions.ts
 "use server";
@@ -101,16 +103,16 @@ export async function createTodo(formData: FormData) {
 
 ### JavaScript非動作時・未ロード時サポート
 
-App RouterのServer Actionsでは`<form>`の`action`propsにServer Actionsを渡すと、ユーザーがJavaScriptをOFFにしてたり、JavaScriptファイルが未ロードであっても動作します。
+Next.jsのServer Actionsでは`<form>`の`action`propsにServer Actionsを渡すと、ユーザーがJavaScriptをOFFにしてたり、JavaScriptファイルが未ロードであっても動作します。
 
 :::message
-[公式ドキュメント](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations#behavior)では「Progressive Enhancementのサポート」と記載されていますが、厳密にはJavaScript非動作環境のサポートとProgressive Enhancementは異なると筆者は理解しています。詳しくは以下をご参照ください。
+[公式ドキュメント↗︎](https://nextjs.org/docs/app/getting-started/updating-data#server-components)では「Progressive Enhancementのサポート」と記載されていますが、厳密にはJavaScript非動作環境のサポートとProgressive Enhancementは異なると筆者は理解しています。詳しくは以下をご参照ください。
 
 https://developer.mozilla.org/ja/docs/Glossary/Progressive_Enhancement
 
 :::
 
-これにより、[FID](https://web.dev/articles/fid?hl=ja)(First Input Delay)の向上も見込めます。実際のアプリケーション開発においては、Formライブラリを利用しつつServer Actionsを利用するケースが多いと思われるので、筆者はJavaScript非動作時もサポートしてるFormライブラリの[Conform](https://conform.guide/)をおすすめします。
+これにより、[FID↗︎](https://web.dev/articles/fid?hl=ja)(First Input Delay)の向上も見込めます。実際のアプリケーション開発においては、Formライブラリを利用しつつServer Actionsを利用するケースが多いと思われるので、筆者はJavaScript非動作時もサポートしてるFormライブラリの[Conform↗︎](https://conform.guide/)をおすすめします。
 
 https://zenn.dev/akfm/articles/server-actions-with-conform
 
@@ -118,7 +120,7 @@ https://zenn.dev/akfm/articles/server-actions-with-conform
 
 ### サイト外で発生するデータ操作
 
-Server Actionsは基本的にサイト内でのみ利用することが可能ですが、データ操作がサイト内でのみ発生するとは限りません。具体的にはヘッドレスCMSでのデータ更新など、サイト外でデータ操作が発生した場合にも、App Routerで保持しているキャッシュをrevalidateする必要があります。
+Server Actionsは基本的にサイト内でのみ利用することが可能ですが、データ操作がサイト内でのみ発生するとは限りません。具体的にはヘッドレスCMSでのデータ更新など、サイト外でデータ操作が発生した場合にも、Next.jsで保持しているキャッシュをrevalidateする必要があります。
 
 Route Handlerが`revalidatePath()`などを扱えるのはまさに上記のようなユースケースをフォローするためです。サイト外でデータ操作が行われた時には、Route Handlerで定義したAPIをWeb hookで呼び出すなどしてキャッシュをrevalidateしましょう。
 
@@ -128,7 +130,7 @@ Router Cacheはユーザー端末のインメモリに保存されており、�
 
 ### ブラウザバックにおけるスクロール位置の喪失
 
-App RouterにおけるブラウザバックではRouter Cacheが利用されます。この際には画面は即時に描画され、スクロール位置も正しく復元されます。
+Next.jsにおけるブラウザバックではRouter Cacheが利用されます。この際には画面は即時に描画され、スクロール位置も正しく復元されます。
 
 しかし、Server Actionsで`revalidatePath()`などを呼び出すなどすると、Router Cacheが破棄されます。Router Cacheがない状態でブラウザバックを行うと即座に画面を更新できないため、スクロール位置がうまく復元されないことがあります。
 

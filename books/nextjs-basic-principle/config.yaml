@@ -25,11 +25,11 @@ chapters:
   - part_3_dynamic_rendering_data_cache
   - part_3_router_cache
   - part_3_data_mutation
-  - part_3_dynamicio
+  # - part_3_dynamicio
   - part_4
   - part_4_pure_server_components
   - part_4_suspense_and_streaming
-  - part_4_partial_pre_rendering
+  # - part_4_partial_pre_rendering
   - part_5
   - part_5_request_ref
   - part_5_auth

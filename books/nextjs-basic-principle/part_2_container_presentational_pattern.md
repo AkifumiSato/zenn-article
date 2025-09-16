@@ -4,19 +4,19 @@ title: "Container/Presentationalパターン"
 
 ## 要約
 
-データ取得はContainer Components・データの参照はPresentational Componentsに分離し、テスト容易性を向上させましょう。
+データ取得はContainer Components、データ参照はPresentational Componentsに分離し、テスト容易性を向上させましょう。
 
 :::message
-本章の解説内容は、[Quramyさんの記事](https://quramy.medium.com/react-server-component-%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8-container-presentation-separation-7da455d66576)を参考にしています。ほとんど要約した内容となりますので、より詳細に知りたい方は元記事をご参照ください。
+本章の解説内容は、[Quramyさんの記事↗︎](https://quramy.medium.com/react-server-component-%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8-container-presentation-separation-7da455d66576)を参考にしています。ほとんど要約した内容となりますので、より詳細に知りたい方は元記事をご参照ください。
 :::
 
 ## 背景
 
-ReactコンポーネントのテストといえばReact Testing Library(以下RTL)やStorybookなどを利用することが主流ですが、本書執筆時点でこれらのServer Components対応の状況は芳しくありません。
+Reactコンポーネントのテストといえば[React Testing Library↗︎](https://testing-library.com/docs/react-testing-library/intro/)(RTL)や[Storybook↗︎](https://storybook.js.org/)などを利用することが主流ですが、本書執筆時点でこれらのServer Components対応の状況は芳しくありません。
 
 ### React Testing Library
 
-RTLは現状[Server Componentsに未対応](https://github.com/testing-library/react-testing-library/issues/1209)で、将来的にサポートするようなコメントも見られますが時期については不明です。
+RTLは現状[Server Componentsに未対応↗︎](https://github.com/testing-library/react-testing-library/issues/1209)で、将来的にサポートするようなコメントも見られますが時期については不明です。
 
 具体的には非同期なコンポーネントを`render()`することができないため、以下のようにServer Componentsのデータフェッチに依存した検証はできません。
 
@@ -37,9 +37,13 @@ test("random Todo APIより取得した`dummyTodo`がタイトルとして表示
 });
 ```
 
+:::message
+執筆時現在開発中ですが、将来的には[vitest-plugin-rsc↗︎](https://github.com/kasperpeulen/vitest-plugin-rsc)などを使うことでServer Componentsのテストが可能になるかもしれません。
+:::
+
 ### Storybook
 
-一方Storybookはexperimentalながら[Server Components対応](https://storybook.js.org/blog/storybook-react-server-components/)を実装したとしているものの、実際にはasyncなClient Componentsをレンダリングしているにすぎず、大量のmockを必要とするため筆者はあまり実用的とは考えていません。
+一方、Storybookは[Server Components対応↗︎](https://storybook.js.org/blog/storybook-react-server-components/)をexperimentalで対応していますが、内部的にはこれは非同期なClient Componentsをレンダリングしているにすぎず、大量のmockを必要とするため、実用性に疑問が残ります。
 
 ```tsx
 export default { component: DbCard };
@@ -76,9 +80,9 @@ export const Success = {
 
 Container/Presentationalパターンは元々、Flux全盛だったReact初期に提唱された設計手法です。データの読み取り・振る舞い(主にFluxのaction呼び出しなど)の定義をContainer Componentsが、データを参照し表示するのはPresentational Componentsが担うという責務分割がなされていました。
 
-少々古い記事ですが、興味のある方はDan Abramov氏の以下の記事をご参照ください。
-
-https://medium.com/@dan_abramov/smart-and-dumb-components-7ca2f9a7c7d0
+:::message
+興味のある方は、当時Container/Presentationalパターンを提唱した[Dan Abramov氏の記事↗︎](https://medium.com/@dan_abramov/smart-and-dumb-components-7ca2f9a7c7d0)をご参照ください。
+:::
 
 ### React Server ComponentsにおけるContainer/Presentationalパターン
 
@@ -89,10 +93,10 @@ React Server ComponentsにおけるContainer/Presentationalパターンは従来
 | Container      | 状態参照、状態変更関数の定義                        | Server Components上でのデータフェッチなどの**サーバーサイド処理** |
 | Presentational | `props`を参照してReactElementを定義する純粋関数など | **Shared Components/Client Components**                           |
 
-Shared Componentsはクライアントまたはサーバーでのみ使える機能に依存せず、`"use client";`もないモジュールで定義されるコンポーネントを指します。このようなコンポーネントは、Client BundleにおいてはClient Componentsとして扱われ、Server BundleにおいてはServer Componentsとして扱われます。
+Shared Componentsはクライアントまたはサーバーでのみ使える機能に依存せず、`"use client"`もないモジュールで定義されるコンポーネントを指します。このようなコンポーネントは、Client Bundle^[参考: [クライアントとサーバーのバンドル境界](part_2_bundle_boundary)]においてはClient Componentsとして扱われ、Server BundleにおいてはServer Componentsとして扱われます。
 
 ```tsx
-// `"use client";`がないモジュール
+// `"use client"`がないモジュール
 export function CompanyLinks() {
   return (
     <ul>
@@ -108,10 +112,10 @@ export function CompanyLinks() {
 ```
 
 :::message
-上記のようにClient Boundaryでないコンポーネントで、Client Bundleに含まれることを保証したい場合には[`client-only`](https://www.npmjs.com/package/client-only)パッケージを利用しましょう。
+上記のようにClient Boundaryでないコンポーネントで、Client Bundleに含まれることを保証したい場合には[`client-only`↗︎](https://www.npmjs.com/package/client-only)パッケージを利用しましょう。
 :::
 
-Client ComponentsやShared Componentsは従来通りRTLやStorybookで扱うことができるので、テスト容易性が向上します。一方Container Componentsはこれらのツールでレンダリング・テストすることが現状難しいので、`await ArticleContainer({ id })`のように単なる関数として実行することでテストが可能です。
+Client ComponentsやShared Componentsは従来通りRTLやStorybookで扱うことができるので、**テスト容易性が向上**します。一方Container Componentsはこれらのツールでレンダリング・テストすることが現状難しいので、`await ArticleContainer({ id })`のように単なる関数として実行することでテストが可能です。
 
 ### 実装例
 
@@ -130,7 +134,7 @@ export function TodoPagePresentation({ todo }: { todo: Todo }) {
 }
 ```
 
-上記のように、Presentational Componentsはデータを受け取って表示するだけのシンプルなコンポーネントです。場合によって^[[Client Componentsのユースケース](part_2_client_components_usecase)を参照ください。]はClient Componentsにすることもあるでしょう。このようなコンポーネントのテストは従来同様RTLを使ってテストできます。
+上記のように、Presentational Componentsはデータを受け取って表示するだけのシンプルなコンポーネントです。場合によってはClient Componentsにすることもあるでしょう^[参考: [Client Componentsのユースケース](part_2_client_components_usecase)]。このようなコンポーネントのテストは従来同様RTLを使ってテストできます。
 
 ```tsx
 test("`todo`として渡された値がタイトルとして表示される", () => {
@@ -146,11 +150,7 @@ test("`todo`として渡された値がタイトルとして表示される", ()
 
 ```tsx
 export default async function Page() {
-  const res = await fetch("https://dummyjson.com/todos/random", {
-    next: {
-      revalidate: 0,
-    },
-  });
+  const res = await fetch("https://dummyjson.com/todos/random");
   const todo = ((res) => res.json()) as Todo;
 
   return <TodoPagePresentation todo={todo} />;
@@ -179,7 +179,7 @@ describe("todos/random APIよりデータ取得成功時", () => {
 
 このように、コンポーネントを通常の関数のように実行すると`type`や`props`を得ることができるので、これらを元に期待値通りかテストすることができます。
 
-ただし、上記のように`expect(page.type).toBe(TodoPagePresentation);`とすると、ReactElementの構造に強く依存してしまうFragile(壊れやすい)なテストになってしまいます。そのため、実際には[こちらの記事](https://quramy.medium.com/react-server-component-%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8-container-presentation-separation-7da455d66576#:~:text=%E3%81%8A%E3%81%BE%E3%81%912%3A%20Container%20%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8%20JSX%20%E3%81%AE%E6%A7%8B%E9%80%A0)にあるように、ReactElementを扱うユーティリティの作成やスナップショットテストなどを検討すると良いでしょう。
+ただし、上記のように`expect(page.type).toBe(TodoPagePresentation);`とすると、ReactElementの構造に強く依存してしまいFlaky(壊れやすい)なテストになってしまいます。そのため、実際には[こちらの記事↗︎](https://quramy.medium.com/react-server-component-%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8-container-presentation-separation-7da455d66576#:~:text=%E3%81%8A%E3%81%BE%E3%81%912%3A%20Container%20%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8%20JSX%20%E3%81%AE%E6%A7%8B%E9%80%A0)にあるように、ReactElementを扱うユーティリティの作成やスナップショットテストなどを検討すると良いでしょう。
 
 ```tsx
 describe("todos/random APIよりデータ取得成功時", () => {
@@ -206,6 +206,6 @@ describe("todos/random APIよりデータ取得成功時", () => {
 
 ### エコシステム側が将来対応する可能性
 
-本章では現状RTLやStorybookなどがServer Componentsに対して未成熟であることを前提にしつつ、テスト容易性を向上するための手段としてContainer/Presentationalパターンが役に立つとしています。しかし今後、RTLやStorybook側の対応状況が変わってくるとContainer/Presentationalパターンを徹底せずとも容易にテストできるようになることがあるかもしれません。
+本章ではRSCに対してテストのエコシステムが未成熟であることを前提にしつつ、テスト容易性を向上するための手段としてContainer/Presentationalパターンが役に立つことを主張しました。しかし、今後エコシステムの状況が変わればより容易にテストできるようになることがあるかもしれません。その場合、Container/Presentationalパターンは変化するか不要になる可能性もあります。
 
-ではContainer/Presentationalパターンは将来的に不要になる可能性が高く、他にメリットがないのでしょうか？次章[_Container 1stな設計_](part_2_container_1st_design)では[_Compositionパターン_](part_2_composition_pattern)とContainer/Presentationalパターンを組み合わせた、RSCのメリットを生かしつつ手戻りの少ない設計順序を提案します。
+ただし、Container相当なコンポーネント単位を意識することはRSCの設計において非常に重要です。次章[Container 1stな設計](part_2_container_1st_design)では、RSCのメリットを生かしつつ手戻りの少ない設計順序を提案します。

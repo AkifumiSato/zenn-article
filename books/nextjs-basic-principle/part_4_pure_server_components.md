@@ -8,7 +8,7 @@ Reactコンポーネントのレンダリングは純粋であるべきです。
 
 ## 背景
 
-Reactは従来より、コンポーネントが**純粋**であることを重視してきました。Reactの最大の特徴の1つである[宣言的UI](https://ja.react.dev/learn/reacting-to-input-with-state#how-declarative-ui-compares-to-imperative)も、コンポーネントが純粋であることを前提としています。
+Reactは従来より、コンポーネントが**純粋**であることを重視してきました。Reactの最大の特徴の1つである[宣言的UI↗︎](https://ja.react.dev/learn/reacting-to-input-with-state#how-declarative-ui-compares-to-imperative)も、コンポーネントが純粋であることを前提としています。
 
 とはいえ、WebのUI実装には様々な副作用^[ここでは、他コンポーネントのレンダリングに影響しうる論理的状態の変更を指します]がつきものです。Client Componentsでは、副作用を`useState()`や`useEffect()`などのhooksに分離することで、コンポーネントの純粋性を保てるように設計されています。
 
@@ -24,11 +24,11 @@ https://ja.react.dev/blog/2022/03/29/react-v18#what-is-concurrent-react
 
 ## 設計・プラクティス
 
-React Server Componentsにおいても従来同様、**コンポーネントが純粋**であることは非常に重要です。App Routerもこの原則に沿って、各種APIが設計されています。
+React Server Componentsにおいても従来同様、**コンポーネントが純粋**であることは非常に重要です。Next.jsもこの原則に沿って、各種APIが設計されています。
 
 ### データフェッチの一貫性
 
-[_データフェッチ on Server Components_](part_1_server_components)で述べたように、App RouterにおけるデータフェッチはServer Componentsで行うことが推奨されます。本来、データフェッチは純粋性を損なう操作の典型です。
+[データフェッチ on Server Components](part_1_server_components)で述べたように、Next.jsにおけるデータフェッチはServer Componentsで行うことが推奨されます。本来、データフェッチは純粋性を損なう操作の典型です。
 
 ```tsx
 async function getRandomTodo() {
@@ -40,7 +40,7 @@ async function getRandomTodo() {
 
 上記の`getRandomTodo()`は呼び出しごとに異なるTodoを返す可能性が高く、そもそもリクエストに失敗する可能性もあるため戻り値は不安定です。このようなデータフェッチを内部的に呼び出す関数は、同じ入力（引数）でも出力（戻り値）が異なる可能性があり、純粋ではありません。
 
-Server Componentsでは、Request Memoizationによって入力に対する出力を一定に保つことで、データフェッチをサポートしながらもレンダリングの範囲ではコンポーネントの純粋性を保てるよう設計されています。
+Next.jsは[Request Memoization↗︎](https://nextjs.org/docs/app/guides/caching#request-memoization)によって入力に対する出力を冪等に保ち、データフェッチをサポートしながらもレンダリングの範囲ではコンポーネントの純粋性を保てるよう設計されています。
 
 ```tsx
 export async function ComponentA() {
@@ -86,11 +86,11 @@ export const getPost = cache(async (id: number) => {
 
 ### Cookie操作
 
-App RouterにおけるCookie操作も典型的な副作用の1つであり、Server Componentsからは変更操作である`cookies().set()`や`cookies().delete()`は呼び出すことができません。
+Next.jsにおけるCookie操作も典型的な副作用の1つであり、Server Componentsからは変更操作であるcookieの`.set()`や`.delete()`は呼び出すことができません。
 
 https://nextjs.org/docs/app/api-reference/functions/cookies
 
-[_データ操作とServer Actions_](part_3_data_mutation)でも述べたように、Cookie操作や、APIに対するデータ変更リクエストなど変更操作はServer Actionsで行いましょう。
+[データ操作とServer Actions](part_3_data_mutation)でも述べたように、Cookie操作や、APIに対するデータ変更リクエストなど変更操作はServer Actionsで行いましょう。
 
 ## トレードオフ
 
