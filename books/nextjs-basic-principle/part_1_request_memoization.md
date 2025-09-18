@@ -32,9 +32,9 @@ Next.jsではコロケーションを強く意識した設計がなされてい�
 
 前述の`getProduct()`を分離する場合、筆者なら以下のいずれかのような形でファイルを分離します。データフェッチ層が多い場合にはより細かく分離すると良いでしょう。
 
-- `app/products/_lib/fetcher/product.ts`
-- `app/products/_lib/fetcher.ts`
 - `app/products/fetcher.ts`
+- `app/products/_lib/fetcher.ts`
+- `app/products/_lib/fetcher/product.ts`
 
 ファイルの命名やディレクトリについては開発規模や流儀によって異なるので、自分たちのチームでルールを決めておきましょう。
 
