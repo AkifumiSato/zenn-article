@@ -16,7 +16,7 @@ Compositionパターンを駆使して、Server Componentsを中心に組み立�
 
 ### Client Bundleはサーバーモジュールを`import`できない
 
-Client Bundle^[RSCにおける2つのバンドルの1つで、クライアントサイドで実行されるバンドルを指します。]はServer Componentsはじめサーバーモジュールを`import`できません。
+Client Bundle^[RSCにおいて、Client Componentsが含まれるバンドルを指します。]はServer Componentsはじめサーバーモジュールを`import`できません。
 
 そのため、以下のような実装はできません。
 
@@ -43,7 +43,7 @@ export function SideMenu() {
 }
 ```
 
-この制約に対し唯一例外となるのが`"use server"`が付与されたファイルや関数、つまり [Server Functions↗︎](https://nextjs.org/docs/app/getting-started/updating-data)です。
+この制約に対し唯一例外となるのが`"use server"`が付与されたファイルや関数、つまり [Server Functions↗︎](https://ja.react.dev/reference/rsc/server-functions)です。
 
 ::::details Server Functionsの実装例
 
@@ -66,7 +66,7 @@ export function CreateButton({ children }: { children: React.ReactNode }) {
 ```
 
 :::message
-Server FunctionsはClient Bundleから普通の関数のように実行することが可能ですが、実際には当然通信処理が伴うため、[Reactがserialize可能なもの](https://ja.react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)のみが引数や戻り値に利用できます。
+Server FunctionsはClient Bundleから普通の関数のように実行することが可能ですが、実際には当然通信処理が伴うため、引数や戻り値には[Reactがserialize可能なもの](https://ja.react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)のみを利用できます。
 :::
 
 ::::

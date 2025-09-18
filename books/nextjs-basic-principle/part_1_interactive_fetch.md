@@ -12,7 +12,7 @@ title: "ユーザー操作とデータフェッチ"
 
 ## 設計・プラクティス
 
-Next.jsがサポートしてるReact Server Componentsにおいては、[Server Functions↗︎](https://nextjs.org/docs/app/getting-started/updating-data#what-are-server-functions)と`useActionState()`を利用することで、ユーザー操作に基づいたデータフェッチを実現できます。
+Next.jsがサポートしてるReact Server Componentsにおいては、[Server Functions↗︎](https://ja.react.dev/reference/rsc/server-functions)と`useActionState()`を利用することで、ユーザー操作に基づいたデータフェッチを実現できます。
 
 ### `useActionState()`
 

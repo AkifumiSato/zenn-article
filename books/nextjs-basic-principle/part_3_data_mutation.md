@@ -25,7 +25,7 @@ Pages Routerではデータ取得のために[`getServerSideProps()`↗︎](http
 App Routerでのデータ操作は、従来からある実装パターンではなく[Server Actions↗︎](https://nextjs.org/docs/app/getting-started/updating-data)^[データ操作を伴うServer Functionsは、**Server Actions**と呼ばれます。[参考↗︎](https://nextjs.org/docs/app/getting-started/updating-data#what-are-server-functions)]を利用することが推奨されています。これにより、tRPCなどの3rd partyライブラリなどなしにクライアント・サーバーの境界を超えて関数を呼び出すことができ、データ変更処理を容易に実装できます。
 
 :::message
-Server Actionsはクライアント・サーバーの境界を超えて関数を呼び出しているように見えますが、実際には当然通信処理が伴うため、[Reactがserialize可能なもの↗︎](https://ja.react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)のみが引数や戻り値に利用できます。
+Server Actionsはクライアント・サーバーの境界を超えて関数を呼び出しているように見えますが、実際には当然通信処理が伴うため、引数や戻り値には[Reactがserialize可能なもの](https://ja.react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)のみを利用できます。
 
 詳しくは[クライアントとサーバーのバンドル境界](part_2_bundle_boundary)を参照ください。
 :::
