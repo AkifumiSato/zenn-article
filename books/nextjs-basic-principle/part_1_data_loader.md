@@ -14,7 +14,7 @@ title: "N+1とDataLoader"
 
 前述の[データフェッチ コロケーション](part_1_colocation)や[並行データフェッチ](part_1_concurrent_fetch)を実践し、データフェッチやコンポーネントを細かく分割していくと、ページ全体で発生するデータフェッチの管理が難しくなり2つの問題を引き起こします。
 
-1つは重複したデータフェッチです。これについてはNext.jsの機能である[Request Memoization](part_1_request_memoization)によって解消されるため、前述のようにデータフェッチ層を分離・共通化してればほとんど問題ありません。
+1つは重複したデータフェッチです。これについてはNext.jsの機能である[Request Memoization](part_1_request_memoization)によって解消されるため、前述のようにデータフェッチ層を分離・共通化していればほとんど問題ありません。
 
 もう1つは、いわゆる**N+1**^[参考: [[解説] SQLクエリのN+1問題↗︎](https://qiita.com/muroya2355/items/d4eecbe722a8ddb2568b)]なデータフェッチです。データフェッチを細粒度に分解していくと、N+1データフェッチになる可能性が高まります。
 
@@ -117,7 +117,7 @@ async function myBatchFn(keys: readonly number[]) {
     `https://dummyjson.com/posts/?${keys.map((key) => `id=${key}`).join("&")}`,
   );
   const { posts } = (await res.json()) as { posts: Post[] };
-  return keys.map((key) => posts.find((post) => post.id === key) ?? null);
+  return posts;
 }
 
 const myLoader = new DataLoader(myBatchFn);
@@ -164,7 +164,7 @@ async function batchGetUser(keys: readonly number[]) {
 // ...
 ```
 
-ポイントは`getUserLoader`が`React.cache()`を利用していることです。DataLoaderはキャッシュ機能があるため、ユーザーからのリクエストを跨いでインスタンスを共有してしまうと予期せぬデータ共有につながります。そのため、**ユーザーからのリクエスト単位でDataLoaderのインスタンスを生成**する必要があり、これを実現するために[React Cache↗︎](https://nextjs.org/docs/app/guides/caching#react-cache-function)を利用しています。
+ポイントは`getUserLoader`が`React.cache()`を利用していることです。DataLoaderはキャッシュ機能があるため、ユーザーからのリクエストを跨いでインスタンスを共有してしまうと予期せぬデータ共有につながります。そのため、**ユーザーからのリクエスト単位でDataLoaderのインスタンスを生成**する必要があり、これを実現するために[React Cache↗︎](https://ja.react.dev/reference/react/cache)を利用しています。
 
 :::message alert
 Next.jsやReactのコアメンテナである[Sebastian Markbåge氏↗︎](https://bsky.app/profile/sebmarkbage.calyptus.eu)の過去ツイート（アカウントごと削除済み）によると、React Cacheがリクエスト単位で保持される仕様は将来的に保障されたものではないようです。執筆時点では他に情報がないため、上記実装を参考にする場合には必ず動作確認を行ってください。

@@ -8,7 +8,7 @@ title: "Request Memoization"
 
 ## 背景
 
-[データフェッチ コロケーション](part_1_colocation)の章で述べた通り、Next.jsではデータフェッチをコロケーションすることが推奨されています。末端のコンポーネントでデータフェッチを行うとことはリクエストの重複リスクを伴いますが、Next.jsでは[**Request Memoization**↗︎](https://nextjs.org/docs/app/guides/caching#request-memoization)（リクエストのメモ化）によってレンダリング中の同一リクエストを排除します。
+[データフェッチ コロケーション](part_1_colocation)の章で述べた通り、Next.jsではデータフェッチをコロケーションすることが推奨されています。末端のコンポーネントでデータフェッチを行うことはリクエストの重複リスクを伴いますが、Next.jsでは[**Request Memoization**↗︎](https://nextjs.org/docs/app/guides/caching#request-memoization)（リクエストのメモ化）によってレンダリング中の同一リクエストを排除します。
 
 しかし、Next.jsがリクエストを重複と判定するには、同一URL・同一オプションの指定が必要で、オプションが1つでも異なれば別リクエストが発生してしまいます。
 

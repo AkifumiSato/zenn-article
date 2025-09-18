@@ -111,7 +111,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 }
 ```
 
-上記実装例では可読性のために`preloadCurrentUser()`をpreload専用の関数として定義しています。ページレベルで`preloadCurrentUser()`することで、`<Product>`と`<Comments>`のレンダリングと並行してUser情報のデータフェッチが実行されます。
+上記実装例では可読性のためにpreload専用の関数として`preloadCurrentUser()`を定義しています。ページレベルで`preloadCurrentUser()`することで、`<Product>`と`<Comments>`のレンダリングと並行してUser情報のデータフェッチが実行されます。
 
 ただし、preloadパターンを利用した後で`<Product>`や`<Comments>`からUser情報が参照されなくなった場合、`preloadCurrentUser()`が残っていると不要なデータフェッチが発生します。このパターンを利用する際には、無駄なpreloadが残ってしまうことのないよう注意しましょう。
 

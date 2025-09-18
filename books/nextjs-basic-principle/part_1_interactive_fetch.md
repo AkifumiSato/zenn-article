@@ -12,7 +12,7 @@ title: "ユーザー操作とデータフェッチ"
 
 ## 設計・プラクティス
 
-Next.jsがサポートしてるReact Server Componentsにおいては、[Server Functions↗︎](https://nextjs.org/docs/app/getting-started/updating-data#what-are-server-functions)と`useActionState()`^[`useActionState()`は`useFormState()`がリネームされたものです。]を利用することで、ユーザー操作に基づいたデータフェッチを実現できます。
+Next.jsがサポートしてるReact Server Componentsにおいては、[Server Functions↗︎](https://nextjs.org/docs/app/getting-started/updating-data#what-are-server-functions)と`useActionState()`を利用することで、ユーザー操作に基づいたデータフェッチを実現できます。
 
 ### `useActionState()`
 
@@ -135,12 +135,12 @@ export default async function Page(props: {
 
 :::
 
-この場合、Server Functionsと`useActionState()`のみでは実現が難しいリロード復元やURLシェアが実現できます。上記例のように検索が主であるページにおいては、状態をURLに保存すること^[URLに状態を保存するには、[`location-state`](https://github.com/recruit-tech/location-state)や[`nuqs`](https://nuqs.dev/)などのライブラリを利用が便利です。]を検討すべきでしょう。`useActionState()`を使いつつ、状態をURLに保存することもできます。
+この場合、Server Functionsと`useActionState()`のみでは実現が難しいリロード復元やURLシェアが実現できます。上記例のように検索が主であるページにおいては、状態をURLに保存すること^[URLに状態を保存するには、[`location-state`](https://github.com/recruit-tech/location-state)や[`nuqs`](https://nuqs.dev/)などのライブラリの利用が便利です。]を検討すべきでしょう。`useActionState()`を使いつつ、状態をURLに保存することもできます。
 
 一方サイドナビゲーションやcmd+kで開く検索モーダルのように、リロード復元やURLシェアをする必要がないケースでは、Server Functionsと`useActionState()`の実装が非常に役立つことでしょう。
 
 ### データ操作に伴う再レンダリング
 
-ここで紹介したのはユーザー操作に伴うデータフェッチ、つまり**データ操作を伴わない**場合の設計パターンです。ユーザー操作にともなってデータを操作し、その後の結果を再取得したいこともあります。これはServer Actions^[データ操作を伴うServer Functionsは、**Server Actions**と呼ばれます。[参考↗︎](https://nextjs.org/docs/app/getting-started/updating-data#what-are-server-functions)]と`revalidatePath()`/`revalidateTag()`を組み合わせ実行することで実現できます。
+ここで紹介したのはユーザー操作に伴うデータフェッチ、つまり**データ操作を伴わない**場合の設計パターンです。しかし、ユーザー操作にともなってデータを操作し、その後の結果を再取得したいこともあります。これはServer Actions^[データ操作を伴うServer Functionsは、**Server Actions**と呼ばれます。[参考↗︎](https://nextjs.org/docs/app/getting-started/updating-data#what-are-server-functions)]と`revalidatePath()`/`revalidateTag()`を組み合わせ実行することで実現できます。
 
 これについては、後述の[データ操作とServer Actions](part_3_data_mutation)にて詳細を解説します。
