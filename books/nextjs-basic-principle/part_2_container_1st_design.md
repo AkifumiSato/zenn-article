@@ -115,24 +115,34 @@ _containers
 
 `_containers`のようにディレクトリ名に`_`をつけているのはNext.jsにおけるルーティングディレクトリと明確に区別する[Private Folder↗︎](https://nextjs.org/docs/app/getting-started/project-structure#colocation)の機能を利用するためです。筆者は`_components`、`_lib`のように他のSegment内共通なコンポーネントや関数も`_`をつけたディレクトリにまとめることを好みます。
 
-`app`直下からみた時には以下のような構成になります。
+前述のブログ画面の実装を`app`直下からみた場合、以下のような構成になります。
 
 ```
 app
-├── <Segment>
-│  ├── page.tsx
-│  ├── layout.tsx
-│  ├── _containers
-│  │  ├── <Container Name>
-│  │  │  ├── index.tsx
-│  │  │  ├── container.tsx
-│  │  │  ├── presentational.tsx
-│  │  │  └── ...
-│  │  └── ...
-│  ├── _components // 汎用的なClient Components
-│  ├── _lib // 汎用的な関数など
-│  └── ...
-└── ...
+└── posts
+   └── [postId]
+      ├── page.tsx
+      ├── layout.tsx
+      ├── _containers
+      │  ├── post
+      │  │  ├── index.tsx
+      │  │  ├── container.tsx
+      │  │  ├── presentational.tsx
+      │  │  └── ... // utilやContainer独自のファイルなど
+      │  ├── user-profile
+      │  │  ├── index.tsx
+      │  │  ├── container.tsx
+      │  │  ├── presentational.tsx
+      │  │  └── ... // utilやContainer独自のファイルなど
+      │  └── comments
+      │     ├── index.tsx
+      │     ├── container.tsx
+      │     ├── presentational.tsx
+      │     └── ... // utilやContainer独自のファイルなど
+      ├── _components // 汎用的なClient Components
+      │  └── ...
+      └── _lib // ページで共通の関数など
+         └── ...
 ```
 
 命名やさらに細かい分割の詳細は、プロジェクトごとに適宜定義してください。筆者が重要だと考えるのは、ディレクトリをContainer単位で、ファイルをContainer/Presentationalで分割することです。
