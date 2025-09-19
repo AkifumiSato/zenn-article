@@ -59,7 +59,7 @@ export default function CreateTodo() {
 
 ### キャッシュのrevalidate
 
-Next.jsは多層のキャッシュを活用しているため、データ操作時には関連するキャッシュのrevalidateが必要になります。Server Actions内で[`revalidatePath()`](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を呼び出すと、サーバーサイドの関連するキャッシュ([Data Cache↗︎](https://nextjs.org/docs/app/guides/caching#data-cache)や[Full Route Cache↗︎](https://nextjs.org/docs/app/guides/caching#full-route-cache))とクライアントサイドのキャッシュ([Router Cache↗︎](https://nextjs.org/docs/app/guides/caching#client-side-router-cache))がrevalidateされます。
+Next.jsは多層のキャッシュを活用しているため、データ操作時には関連するキャッシュのrevalidateが必要になります。Server Actions内で[`revalidatePath()`↗︎](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`↗︎](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を呼び出すと、サーバーサイドの関連するキャッシュ([Data Cache↗︎](https://nextjs.org/docs/app/guides/caching#data-cache)や[Full Route Cache↗︎](https://nextjs.org/docs/app/guides/caching#full-route-cache))とクライアントサイドのキャッシュ([Router Cache↗︎](https://nextjs.org/docs/app/guides/caching#client-side-router-cache))がrevalidateされます。
 
 ```tsx :app/actions.ts
 "use server";

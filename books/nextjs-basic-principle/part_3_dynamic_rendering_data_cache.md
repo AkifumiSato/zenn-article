@@ -87,7 +87,7 @@ export default async function Component({ userID }) {
 
 ### オンデマンドrevalidate
 
-[Static RenderingとFull Route Cache](part_3_static_rendering_full_route_cache)でも述べた通り、[`revalidatePath()`](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)をServer Actions^[データ操作を伴うServer Functionsは、**Server Actions**と呼ばれます。[参考↗︎](https://nextjs.org/docs/app/getting-started/updating-data#what-are-server-functions)]や[Route Handlers↗︎](https://nextjs.org/docs/app/getting-started/route-handlers-and-middleware)で呼び出すことで、関連するData CacheやFull Route Cacheをrevalidateすることができます。
+[Static RenderingとFull Route Cache](part_3_static_rendering_full_route_cache)でも述べた通り、[`revalidatePath()`↗︎](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`↗︎](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)をServer Actions^[データ操作を伴うServer Functionsは、**Server Actions**と呼ばれます。[参考↗︎](https://nextjs.org/docs/app/getting-started/updating-data#what-are-server-functions)]や[Route Handlers↗︎](https://nextjs.org/docs/app/getting-started/route-handlers-and-middleware)で呼び出すことで、関連するData CacheやFull Route Cacheをrevalidateすることができます。
 
 ```ts
 "use server";
