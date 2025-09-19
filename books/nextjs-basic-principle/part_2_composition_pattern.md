@@ -8,7 +8,7 @@ Compositionパターンを駆使して、Server Componentsを中心に組み立�
 
 ## 背景
 
-[第1部 データフェッチ](part_1)で述べたように、React Server Components（RSC）のメリットを活かすにはServer Components中心の設計が重要となります。そのため、Client Componentsは**適切に分離・独立**していることが好ましいですが、これを実現するにはClient Componentsの依存関係における以下2つの制約を考慮しつつ設計する必要があります。
+[第1部 データフェッチ](part_1)で述べたように、RSCのメリットを活かすにはServer Components中心の設計が重要となります。そのため、Client Componentsは**適切に分離・独立**していることが好ましいですが、これを実現するにはClient Componentsの依存関係における以下2つの制約を考慮しつつ設計する必要があります。
 
 :::message
 以下は[クライアントとサーバーのバンドル境界](part_2_bundle_boundary)で解説した内容と重複します。

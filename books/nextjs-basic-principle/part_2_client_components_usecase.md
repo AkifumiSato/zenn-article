@@ -47,7 +47,7 @@ export default function Counter() {
 
 ### サードパーティコンポーネント
 
-Client Componentsを提供するサードパーティライブラリがReact Server Componentsに未対応な場合は、利用者側でClient Boundaryを明示しなければならないことがあります。この場合は`"use client"`を指定してre-exportするか、利用者側で`"use client"`を指定する必要があります。
+Client Componentsを提供するサードパーティライブラリがRSCに未対応な場合は、利用者側でClient Boundaryを明示しなければならないことがあります。この場合は`"use client"`を指定してre-exportするか、利用者側で`"use client"`を指定する必要があります。
 
 ```tsx :app/_components/accordion.tsx
 "use client";
@@ -135,7 +135,7 @@ export function ProductPresentaional({ product }: { product: Product }) {
 
 [クライアントとサーバーのバンドル境界](part_2_bundle_boundary)で解説したように`"use client"`はバンドル境界を定義するものであり、Client Bundleに含まれるコンポーネントは**全てClient Components**として扱われます。
 
-上位のコンポーネントでClient Boundaryを宣言してしまうと下層でServer Componentsを含むことができなくなってしまい、React Server Componentsのメリットをうまく享受できなくなってしまうケースが散見されます。このようなケースへの対応は次章の[Compositionパターン](part_2_composition_pattern)で解説します。
+上位のコンポーネントでClient Boundaryを宣言してしまうと下層でServer Componentsを含むことができなくなってしまい、RSCのメリットをうまく享受できなくなってしまうケースが散見されます。このようなケースへの対応は次章の[Compositionパターン](part_2_composition_pattern)で解説します。
 
 ### Server ComponentsからClient Componentsへ渡せるProps
 

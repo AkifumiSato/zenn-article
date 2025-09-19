@@ -7,9 +7,9 @@ Next.jsには2つのRouterが同梱されています。
 - [App Router↗︎](https://nextjs.org/docs/app): 現在主流の新しいRouter
 - [Pages Router↗︎](https://nextjs.org/docs/pages): 従来のRouter
 
-App Routerは[React Server Components↗︎](https://ja.react.dev/learn/creating-a-react-app#which-features-make-up-the-react-teams-full-stack-architecture-vision)はじめReactの先進的な機能をサポートするフレームワークであり、Pages Routerとは機能・設計・プラクティスなどあらゆる面で大きく異なります。
+App Routerは[React Server Components↗︎](https://ja.react.dev/learn/creating-a-react-app#which-features-make-up-the-react-teams-full-stack-architecture-vision)（**RSC**）はじめReactの先進的な機能をサポートするフレームワークであり、Pages Routerとは機能・設計・プラクティスなどあらゆる面で大きく異なります。
 
-本書は、Next.jsやReact Server Componentsの根底にある**考え方**に基づいた設計やプラクティスをまとめたものです。公式ドキュメントはじめ、筆者や筆者の周りで共有されている理解・前提知識などを元にまとめています。
+本書は、Next.jsやRSCの根底にある**考え方**に基づいた設計やプラクティスをまとめたものです。公式ドキュメントはじめ、筆者や筆者の周りで共有されている理解・前提知識などを元にまとめています。
 
 本書を通じて、Next.jsに対する読者の理解を一層深めることができれば幸いです。
 

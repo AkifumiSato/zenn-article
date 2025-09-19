@@ -38,7 +38,7 @@ REST APIにおいて通信回数を優先すると**God API**と呼ばれる責�
 
 ## 設計・プラクティス
 
-Reactチームは前述の問題を個別の問題と捉えず、根本的にはReactがサーバーをうまく活用できてないことが問題であると捉えて解決を目指しました。その結果生まれたのが**React Server Components**(RSC)アーキテクチャです。
+Reactチームは前述の問題を個別の問題と捉えず、根本的にはReactがサーバーをうまく活用できてないことが問題であると捉えて解決を目指しました。その結果生まれたのが**React Server Components**（**RSC**）アーキテクチャです。
 
 https://ja.react.dev/reference/rsc/server-components
 

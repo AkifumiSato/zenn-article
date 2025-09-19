@@ -84,9 +84,9 @@ Container/Presentationalパターンは元々、Flux全盛だったReact初期�
 興味のある方は、当時Container/Presentationalパターンを提唱した[Dan Abramov氏の記事↗︎](https://medium.com/@dan_abramov/smart-and-dumb-components-7ca2f9a7c7d0)をご参照ください。
 :::
 
-### React Server ComponentsにおけるContainer/Presentationalパターン
+### RSCにおけるContainer/Presentationalパターン
 
-React Server ComponentsにおけるContainer/Presentationalパターンは従来のものとは異なり、Container Componentsはデータフェッチなどのサーバーサイド処理のみを担います。一方Presentational Componentsは、データフェッチを含まない**Shared Components**もしくはClient Componentsを指します。
+RSCにおけるContainer/Presentationalパターンは従来のものとは異なり、Container Componentsはデータフェッチなどのサーバーサイド処理のみを担います。一方Presentational Componentsは、データフェッチを含まない**Shared Components**もしくはClient Componentsを指します。
 
 | Components     | React初期                                           | RSC時代                                                           |
 | -------------- | --------------------------------------------------- | ----------------------------------------------------------------- |

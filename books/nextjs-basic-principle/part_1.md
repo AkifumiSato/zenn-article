@@ -2,7 +2,7 @@
 title: "第1部 データフェッチ"
 ---
 
-Next.jsがサポートする[React Server Components↗︎](https://ja.react.dev/reference/rsc/server-components)では、従来のReactフレームワークから多くのパラダイムシフトを必要とします。データフェッチにおいては、Server Componentsによってセキュアでシンプルな実装が可能になった一方、従来とは全く異なる設計思想が求められます。
+Next.jsがサポートする[RSC↗︎](https://ja.react.dev/reference/rsc/server-components)では、従来のReactフレームワークから多くのパラダイムシフトを必要とします。データフェッチにおいては、Server Componentsによってセキュアでシンプルな実装が可能になった一方、従来とは全く異なる設計思想が求められます。
 
 第1部では、Next.jsのデータフェッチにまつわる基本的な考え方を解説します。
 

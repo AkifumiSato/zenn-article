@@ -26,7 +26,7 @@ Webアプリケーションにおいて、認証と認可は非常にありふ�
 
 しかし、Next.jsにおける認証認可の実装には、従来のWebフレームワークとは異なる独自の制約が伴います。
 
-これはNext.jsが、React Server Componentsという**自律分散性**と**並行実行性**を重視したアーキテクチャ^[参考: [Reactチームが見てる世界、Reactユーザーが見てる世界](https://zenn.dev/akfm/articles/react-team-vision)]に基づいて構築されていることや、edgeランタイムとNode.jsランタイムなど**多層の実行環境**を持つといった、従来のWebフレームワークとは異なる特徴を持つことに起因します。
+これはNext.jsが、RSCという**自律分散性**と**並行実行性**を重視したアーキテクチャ^[参考: [Reactチームが見てる世界、Reactユーザーが見てる世界](https://zenn.dev/akfm/articles/react-team-vision)]に基づいて構築されていることや、edgeランタイムとNode.jsランタイムなど**多層の実行環境**を持つといった、従来のWebフレームワークとは異なる特徴を持つことに起因します。
 
 ### 並行レンダリングされるページとレイアウト
 
@@ -44,7 +44,7 @@ v15でレンダリング順が変更され、レイアウトが先にレンダ�
 
 ### Server ComponentsでCookie操作は行えない
 
-React Server Componentsではデータ取得をServer Components、データ変更をServer Actionsという責務分けがされています。[Server Componentsの純粋性](part_4_pure_server_components)でも述べたように、Server Componentsにおける並行レンダリングやRequest Memoizationは、レンダリングに副作用が含まれないという前提の元設計されています。
+RSCではデータ取得をServer Components、データ変更をServer Actionsという責務分けがされています。[Server Componentsの純粋性](part_4_pure_server_components)でも述べたように、Server Componentsにおける並行レンダリングやRequest Memoizationは、レンダリングに副作用が含まれないという前提の元設計されています。
 
 Cookie操作は他のコンポーネントのレンダリングに影響する可能性がある副作用です。そのため、Next.jsにおけるCookie操作である`.set()`や`.delete()`は、Server ActionsかRoute Handler内でのみ行うことができます。
 

@@ -24,7 +24,7 @@ https://ja.react.dev/blog/2022/03/29/react-v18#what-is-concurrent-react
 
 ## 設計・プラクティス
 
-React Server Componentsにおいても従来同様、**コンポーネントが純粋**であることは非常に重要です。Next.jsもこの原則に沿って、各種APIが設計されています。
+RSCにおいても従来同様、**コンポーネントが純粋**であることは非常に重要です。Next.jsもこの原則に沿って、各種APIが設計されています。
 
 ### データフェッチの一貫性
 
