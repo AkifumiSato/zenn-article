@@ -6,15 +6,15 @@ title: "Client Componentsのユースケース"
 
 Client Componentsを使うべき代表的なユースケースを覚えておきましょう。
 
-- [クライアントサイド処理](#クライアントサイド処理)
-- [サードパーティコンポーネント](#サードパーティコンポーネント)
-- [RSC Payload転送量の削減](#rsc-payload転送量の削減)
+- [#クライアントサイド処理](#クライアントサイド処理)
+- [#サードパーティコンポーネント](#サードパーティコンポーネント)
+- [#RSC Payload転送量の削減](#rsc-payload転送量の削減)
 
 ## 背景
 
-[_第1部 データフェッチ_](part_1)ではデータフェッチ観点を中心にServer Componentsの設計パターンについて解説してきました。Client Componentsはオプトインのため、App Routerにおけるコンポーネント全体の設計は、Server Componentsを中心とした設計にClient Componentsを適切に組み合わせていく形で行います。
+[第1部 データフェッチ](part_1)では、データフェッチ観点を中心にServer Componentsの設計パターンについて解説してきました。Next.jsにおけるコンポーネント全体の設計は、Server Componentsを中心とした設計にClient Componentsを適切に組み合わせていく形で行います。
 
-そのためにはそもそも、いつClient Componentsにオプトインすべきなのか適切に判断できることが重要です。
+そのためには、そもそもいつClient Componentsにオプトインすべきなのか適切に判断できることが重要です。
 
 ## 設計・プラクティス
 
@@ -47,7 +47,7 @@ export default function Counter() {
 
 ### サードパーティコンポーネント
 
-Client Componentsを提供するサードパーティライブラリがReact Server Componentsに未対応な場合は、利用者側でClient Boundaryを明示しなければならないことがあります。この場合には`"use client";`指定してre-exportするか、利用者側で`"use client";`指定する必要があります。
+Client Componentsを提供するサードパーティライブラリがRSCに未対応な場合は、利用者側でClient Boundaryを明示しなければならないことがあります。この場合は`"use client"`を指定してre-exportするか、利用者側で`"use client"`を指定する必要があります。
 
 ```tsx :app/_components/accordion.tsx
 "use client";
@@ -73,9 +73,9 @@ export function SideBar() {
 
 ### RSC Payload転送量の削減
 
-3つ目はRSC Payloadの転送量を減らしたい場合です。Client Componentsは当然ながらクライアントサイドでも実行されるので、Client Componentsが多いほどJavaScriptバンドルサイズは増加します。一方Server Componentsは[RSC Payload](https://nextjs.org/docs/app/building-your-application/rendering/server-components#how-are-server-components-rendered)として転送されるため、Server ComponentsがレンダリングするReactElementや属性が多いほど転送量が多くなります。
+3つ目は[RSC Payload↗︎](https://nextjs.org/docs/app/getting-started/server-and-client-components#on-the-server)の転送量を減らしたい場合です。Client Componentsは当然ながらクライアントサイドでも実行されるので、Client Componentsが多いほどJavaScriptバンドルサイズは増加します。一方Server ComponentsはRSC Payloadとして転送されるため、Server ComponentsがレンダリングするReactElementや属性が多いほど転送量が多くなります。
 
-つまり**Client ComponentsのJavaScript転送量とServer ComponentsのRSC Payload転送量はトレードオフの関係**にあります。
+つまり、Client ComponentsのJavaScript転送量とServer ComponentsのRSC Payload転送量は**トレードオフ**になります。
 
 Client Componentsを含むJavaScriptバンドルは1回しかロードされませんが、Server ComponentsはレンダリングされるたびにRSC Payloadが転送されます。そのため、繰り返しレンダリングされるコンポーネントはRSC Payloadの転送量を削減する目的でClient Componentsにすることが望ましい場合があります。
 
@@ -133,13 +133,13 @@ export function ProductPresentaional({ product }: { product: Product }) {
 
 ### Client Boundaryと暗黙的なClient Components
 
-[_クライアントとサーバーのバンドル境界_](part_2_bundle_boundary)で解説したように`"use client";`はバンドル境界を定義するものであり、Client Bundleに含まれるコンポーネントは**全てClient Components**として扱われます。
+[クライアントとサーバーのバンドル境界](part_2_bundle_boundary)で解説したように`"use client"`はバンドル境界を定義するものであり、Client Bundleに含まれるコンポーネントは**全てClient Components**として扱われます。
 
-上位のコンポーネントでClient Boundaryを宣言してしまうと下層でServer Componentsを含むことができなくなってしまい、React Server Componentsのメリットをうまく享受できなくなってしまうケースが散見されます。このようなケースへの対応は次章の[_Compositionパターン_](part_2_composition_pattern)で解説します。
+上位のコンポーネントでClient Boundaryを宣言してしまうと下層でServer Componentsを含むことができなくなってしまい、RSCのメリットをうまく享受できなくなってしまうケースが散見されます。このようなケースへの対応は次章の[Compositionパターン](part_2_composition_pattern)で解説します。
 
 ### Server ComponentsからClient Componentsへ渡せるProps
 
-Server ComponentsはClient Componentsを含むことができますが、これはServer BundleからClient Bundleへとバンドル境界を跨ぐため、渡せるPropsは、[Reactがserialize可能なもの](https://ja.react.dev/reference/rsc/use-client#serializable-types)に限られます。
+Server ComponentsはClient Componentsを含むことができますが、これはServer BundleからClient Bundleへとバンドル境界を跨ぐため、渡せるPropsは、[Reactがserialize可能なもの↗︎](https://ja.react.dev/reference/rsc/use-client#serializable-types)に限られます。
 
 ```tsx
 export async function MyServerComponent() {

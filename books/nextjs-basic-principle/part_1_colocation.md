@@ -10,13 +10,13 @@ title: "データフェッチ コロケーション"
 
 ## 背景
 
-Pages Routerにおけるサーバーサイドでのデータフェッチは、[getServerSideProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)や[getStaticProps](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)などページの外側で非同期関数を宣言し、Next.jsがこれを実行した結果をpropsとしてページコンポーネントに渡すという設計がなされてました。
+Pages Routerにおけるサーバーサイドでのデータフェッチは、[getServerSideProps↗︎](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)や[getStaticProps↗︎](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)などページコンポーネントの外側で非同期関数を宣言し、Next.jsが実行結果をpropsとしてページコンポーネントに渡すという設計がなされてました。
 
 これはいわゆる**バケツリレー**(Props Drilling)と呼ばれるpropsを親から子・孫へと渡していくような実装を必要とし、冗長で依存関係が広がりやすいというデメリットがありました。
 
 ### 実装例
 
-以下に商品ページを想定した実装例を示します。APIから取得した`product`というpropsが親から孫までそのまま渡されるような実装が見受けれれます。
+以下は商品ページを想定した実装例です。APIから取得した`product`というpropsが親から孫までそのまま渡されるような実装が見受けれれます。
 
 ```tsx
 type ProductProps = {
@@ -58,11 +58,11 @@ function ProductContents({ product }: ProductProps) {
 
 ## 設計・プラクティス
 
-App RouterではServer Componentsでのデータフェッチが利用可能なので、できるだけ末端のコンポーネントへ**データフェッチをコロケーション**することを推奨^[公式ドキュメントにおける[ベストプラクティス](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-where-its-needed)を参照ください。]しています。
+App RouterではServer Componentsが利用可能なので、末端のコンポーネントへ**データフェッチをコロケーション**することを推奨^[公式ドキュメントにおける[ベストプラクティス↗︎](https://nextjs.org/docs/14/app/building-your-application/data-fetching/patterns#fetching-data-where-its-needed)を参照ください。]しています。
 
 もちろんページの実装規模にもよるので、小規模な実装であればページコンポーネントでデータフェッチしても問題はないでしょう。しかし、ページコンポーネントが肥大化していくと中間層でのバケツリレーが発生しやすくなるので、できるだけ末端のコンポーネントでデータフェッチを行うことを推奨します。
 
-「それでは全く同じデータフェッチが何度も実行されてしまうのではないか」と懸念される方もいるかもしれませんが、App Routerでは[Request Memoization](https://nextjs.org/docs/app/building-your-application/caching#request-memoization)によってデータフェッチがメモ化されるため、全く同じデータフェッチが複数回実行されることないように設計されています。
+「それでは全く同じデータフェッチが何度も実行されてしまうのではないか」と懸念される方もいるかもしれませんが、App Routerでは[Request Memoization↗︎](https://nextjs.org/docs/app/guides/caching#request-memoization)によってデータフェッチがメモ化されるため、全く同じデータフェッチが複数回実行されることないように設計されています。
 
 ### 実装例
 
@@ -113,4 +113,4 @@ async function fetchProduct() {
 
 データフェッチのコロケーションを実現する要はRequest Memoizationなので、Request Memoizationに対する理解と最適な設計が重要になってきます。
 
-この点については次の[_Request Memoization_](part_1_request_memoization)の章でより詳細に解説します。
+この点については次の[Request Memoization](part_1_request_memoization)の章でより詳細に解説します。

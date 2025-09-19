@@ -26,7 +26,7 @@ Next.jsは、キャッシュにまつわる混乱の解決とデフォルトで�
 
 https://nextjs.org/docs/app/api-reference/config/next-config-js/dynamicIO
 
-ここで言う動的I/O処理にはデータフェッチや`headers()`や`cookies()`などの[Dynamic APIs](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-apis)が含まれ^[動的I/O処理には`Date`、`Math`といったNext.jsが拡張してるモジュールや、任意の非同期関数なども含まれます]、Dynamic IOではこれらの処理を含む場合、以下いずれかの対応が必要となります。
+ここで言う動的I/O処理にはデータフェッチや`headers()`や`cookies()`などの[Dynamic APIs](https://nextjs.org/docs/app/guides/caching#dynamic-apis)が含まれ^[動的I/O処理には`Date`、`Math`といったNext.jsが拡張してるモジュールや、任意の非同期関数なども含まれます]、Dynamic IOではこれらの処理を含む場合、以下いずれかの対応が必要となります。
 
 - **`<Suspense>`**: 非同期コンポーネントを`<Suspense>`境界内に配置し、Dynamic Renderingにする
 - **`"use cache"`**: 非同期関数や非同期コンポーネントに`"use cache"`を指定して、Static Renderingにする
