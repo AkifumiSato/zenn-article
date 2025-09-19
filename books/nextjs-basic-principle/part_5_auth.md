@@ -32,25 +32,21 @@ Webアプリケーションにおいて、認証と認可は非常にありふ�
 
 Next.jsでは、Route間で共通となる[レイアウト↗︎](https://nextjs.org/docs/app/getting-started/layouts-and-pages)を`layout.tsx`などで定義することができます。特定のRoute配下（e.g. `/dashboard`配下など）に対する認可チェックをレイアウト層で一律実装できるのでは、と考える方もいらっしゃると思います。しかし、このような実装は一見期待通りに動いてるように見えても、RSC Payloadなどを通じて情報漏洩などにつながるリスクがあり、避けるべき実装です。
 
-これは、Next.jsの並行実行性に起因する制約です。Next.jsにおいてページとレイアウトは並行にレンダリングされるため、必ずしもレイアウト層に実装した認可チェックがページより先に実行されるとは限りません。意図した仕様なのかは不明ですが、現状だとページの方が先にレンダリングされ始めるようです。そのため、ページ側で認可チェックをしていないと予期せぬデータ漏洩が起きる可能性があります。
+これは、Next.jsの並行実行性に起因する制約です。Next.jsにおいてページとレイアウトは並行にレンダリングされるため、必ずしもレイアウト層に実装した認可チェックがページより先に実行されるとは限りません。そのため、ページ側で認可チェックをしていないと予期せぬデータ漏洩が起きる可能性があります。
 
 これらの詳細な解説については以下の記事が参考になります。
 
 https://zenn.dev/moozaru/articles/0d6c4596425da9
 
-:::message
-v15でレンダリング順が変更され、レイアウトが先にレンダリングされるようになりました。ただし、レイアウトで認証や認可処理を行う前提は依然として避けるべき実装です。
-:::
-
 ### Server ComponentsでCookie操作は行えない
 
-RSCではデータ取得をServer Components、データ変更をServer Actionsという責務分けがされています。[Server Componentsの純粋性](part_4_pure_server_components)でも述べたように、Server Componentsにおける並行レンダリングやRequest Memoizationは、レンダリングに副作用が含まれないという前提の元設計されています。
+RSCではデータ取得をServer Components、データ変更をServer Actionsという責務分けがされています。[Server Componentsの純粋性](part_4_pure_server_components)でも述べたように、Server Componentsにおける並行レンダリングやRequest Memoizationは、レンダリングに副作用が含まれないという前提の元に設計されています。
 
 Cookie操作は他のコンポーネントのレンダリングに影響する可能性がある副作用です。そのため、Next.jsにおけるCookie操作である`.set()`や`.delete()`は、Server ActionsかRoute Handler内でのみ行うことができます。
 
 ### 制限を伴うmiddleware
 
-Next.jsのmiddlewareは、ユーザーからのリクエストに対して一律処理を差し込むことができますが、ランタイムがedgeに限定されており、Node.js APIが利用できなかったりDB操作系が非推奨など様々な制限が伴います。
+Next.jsのmiddlewareはユーザーからのリクエストに対して一律処理を差し込むことができますが、v15.4まではランタイムがedgeに限定されており、Node.js APIが利用できなかったりDB操作系が非推奨など様々な制限が伴います。
 
 :::message
 [Next.js v15.5](https://nextjs.org/blog/next-15-5#nodejs-middleware-stable)でmiddlewareのNode.jsランタイムがStableとなりました。
@@ -142,7 +138,7 @@ Next.jsはStreamingをサポートしているため、確実にHTTPステータ
 
 ### URL認可の冗長な実装
 
-認証状態に基づくURL認可はありふれた要件ですが、認証状態を確認するのにRedisやDBのデータ参照が必要な場合、前述のように各`page.tsx`で認可チェックを行う必要があり、実装が少々冗長になります。
+認証状態に基づくURL認可はありふれた要件ですが、認証状態を確認するのにRedisやDBのデータ参照が必要な場合、edgeランタイムのmiddlewareでは行えません。そのため、前述のように各`page.tsx`で認可チェックを行う必要があり、冗長な実装になります。
 
 ```tsx :page.tsx
 export default async function Page() {
@@ -151,9 +147,3 @@ export default async function Page() {
   // ...
 }
 ```
-
-これに対する回避策として検討されているのが**Request Interceptors**で、特定のRoute配下に対して一律`interceptor.ts`で定義した処理を差し込むことができるようにするというものです。
-
-https://github.com/vercel/next.js/pull/70961
-
-執筆時点ではDraftのため、実際に取り込まれるのかどうかや時期などについては不明です。今後の動向に期待しましょう。
