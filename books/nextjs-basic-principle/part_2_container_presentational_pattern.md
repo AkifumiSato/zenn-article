@@ -38,12 +38,12 @@ test("random Todo APIより取得した`dummyTodo`がタイトルとして表示
 ```
 
 :::message
-執筆時点では開発中ですが、将来的には[vitest-plugin-rsc↗︎](https://github.com/kasperpeulen/vitest-plugin-rsc)などを使うことでServer Componentsのテストが可能になるかもしれません。
+執筆時点では開発中ですが、将来的には[vitest-plugin-rsc↗︎](https://github.com/kasperpeulen/vitest-plugin-rsc)などを使うことでRSCのテストが可能になるかもしれません。
 :::
 
 ### Storybook
 
-一方、Storybookはexperimentalで[Server Componentsに対応↗︎](https://storybook.js.org/blog/storybook-react-server-components/)していますが、内部的にはこれは非同期なClient Componentsをレンダリングしているにすぎず、大量のmockを必要とするため、実用性に疑問が残ります。
+一方、Storybookはexperimentalで[RSCに対応↗︎](https://storybook.js.org/blog/storybook-react-server-components/)していますが、内部的にはこれは非同期なClient Componentsをレンダリングしているにすぎず、大量のmockを必要とするため、実用性に疑問が残ります。
 
 ```tsx
 export default { component: DbCard };
