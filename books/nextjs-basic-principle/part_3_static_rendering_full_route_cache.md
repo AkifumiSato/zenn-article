@@ -104,7 +104,7 @@ Static Renderingのレンダリング結果であるHTMLやRSC Payloadのキャ�
 
 ### オンデマンドrevalidate
 
-`revalidatePath()`や`revalidateTag()`を[Server Functions↗︎](https://react.dev/reference/rsc/server-functions)や[Route Handlers↗︎](https://nextjs.org/docs/app/getting-started/route-handlers-and-middleware#route-handlers)で呼び出すことで、関連するData CacheやFull Route Cacheをrevalidateすることができます。
+[`revalidatePath()`](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)をServer Actions^[データ操作を伴うServer Functionsは、**Server Actions**と呼ばれます。[参考↗︎](https://nextjs.org/docs/app/getting-started/updating-data#what-are-server-functions)]や[Route Handlers↗︎](https://nextjs.org/docs/app/getting-started/route-handlers-and-middleware#route-handlers)で呼び出すことで、関連するData CacheやFull Route Cacheをrevalidateすることができます。
 
 ```ts
 "use server";
