@@ -47,7 +47,7 @@ export default function Counter() {
 
 ### サードパーティコンポーネント
 
-Client Componentsを提供するサードパーティライブラリがReact Server Componentsに未対応な場合は、利用者側でClient Boundaryを明示しなければならないことがあります。`"use client"`を指定してre-exportするか、利用者側で`"use client"`を指定する必要があります。
+Client Componentsを提供するサードパーティライブラリがReact Server Componentsに未対応な場合は、利用者側でClient Boundaryを明示しなければならないことがあります。この場合は`"use client"`を指定してre-exportするか、利用者側で`"use client"`を指定する必要があります。
 
 ```tsx :app/_components/accordion.tsx
 "use client";

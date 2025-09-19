@@ -16,7 +16,7 @@ App Routerは[React Server Components↗︎](https://ja.react.dev/learn/creating
 :::message alert
 
 - 本書はNext.js v15系を前提としています。
-- 本書では断りがない限り『Next.js』はApp Routerを指します。
+- 本書では断りがない限り「Next.js」はApp Routerを指します。
 
 :::
 

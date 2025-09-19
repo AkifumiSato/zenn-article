@@ -158,7 +158,7 @@ async function batchGetUser(keys: readonly number[]) {
     `https://dummyjson.com/users/?${keys.map((key) => `id=${key}`).join("&")}`,
   );
   const { users } = (await res.json()) as { users: User[] };
-  return keys.map((key) => users.find((user: User) => user.id === key) ?? null);
+  return users;
 }
 
 // ...
