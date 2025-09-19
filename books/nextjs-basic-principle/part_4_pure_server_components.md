@@ -86,7 +86,7 @@ export const getPost = cache(async (id: number) => {
 
 ### Cookie操作
 
-Next.jsにおけるCookie操作も典型的な副作用の1つであり、Server Componentsからは変更操作であるcookieの`.set()`や`.delete()`は呼び出すことができません。
+Next.jsにおけるCookie操作も典型的な副作用の1つであり、Server Componentsからは変更操作であるCookieの`.set()`や`.delete()`は呼び出すことができません。
 
 https://nextjs.org/docs/app/api-reference/functions/cookies
 

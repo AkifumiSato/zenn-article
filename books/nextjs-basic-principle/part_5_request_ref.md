@@ -4,7 +4,7 @@ title: "リクエストの参照とレスポンスの操作"
 
 ## 要約
 
-Next.jsでは他フレームワークにあるようなリクエストオブジェクト(`req`)やレスポンスオブジェクト(`res`)を参照することはできません。代わりに必要な情報を参照するためのAPIが提供されています。
+Server ComponentsやServer Functionsでは他フレームワークにあるようなリクエストオブジェクト(`req`)やレスポンスオブジェクト(`res`)を参照することはできません。代わりに必要な情報を参照するためのAPIが提供されています。
 
 ## 背景
 
@@ -27,7 +27,7 @@ export const getServerSideProps = (async ({ req, res }) => {
 }) satisfies GetServerSideProps<Props>;
 ```
 
-しかし、App Routerではこれらのオブジェクトを参照することはできません。
+しかし、Server ComponentsやServer Functionsではこれらのオブジェクトを参照することはできません。
 
 ## 設計・プラクティス
 
@@ -157,7 +157,7 @@ export default async function Page() {
 [`cookies()`↗︎](https://nextjs.org/docs/app/api-reference/functions/cookies)は、Cookie情報の参照や変更を担うオブジェクトを取得するための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
 
 :::message
-cookieの`.set()`や`.delete()`といったCookieの操作は、Server ActionsやRoute Handlerでのみ利用でき、Server Componentsでは利用できません。詳しくは[Server Componentsの純粋性](part_4_pure_server_components)を参照ください。
+Cookieの`.set()`や`.delete()`といった操作は、Server ActionsやRoute Handlerでのみ利用でき、Server Componentsでは利用できません。詳しくは[Server Componentsの純粋性](part_4_pure_server_components)を参照ください。
 :::
 
 ```tsx :app/page.tsx
@@ -211,7 +211,7 @@ export default async function Profile({ params }: { params: { id: string } }) {
 
 #### `redirect()`
 
-[`redirect()`↗︎](https://nextjs.org/docs/app/api-reference/functions/redirect)は、リダイレクトを行うための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
+[`redirect()`↗︎](https://nextjs.org/docs/app/api-reference/functions/redirect)は、リダイレクトを行うための関数です。この関数はServer ComponentsやClient Components、Server FunctionsやRouter Handlerなど、多くの場所で利用できます。
 
 ```tsx
 import { redirect } from "next/navigation";
@@ -230,7 +230,7 @@ export default async function Profile({ params }: { params: { id: string } }) {
 
 #### `permanentRedirect()`
 
-[`permanentRedirect()`↗︎](https://nextjs.org/docs/app/api-reference/functions/permanentRedirect)は、永続的なリダイレクトを行うための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
+[`permanentRedirect()`↗︎](https://nextjs.org/docs/app/api-reference/functions/permanentRedirect)は、永続的なリダイレクトを行うための関数です。この関数はServer ComponentsやClient Components、Server FunctionsやRouter Handlerなど、多くの場所で利用できます。
 
 ```tsx
 import { permanentRedirect } from "next/navigation";
