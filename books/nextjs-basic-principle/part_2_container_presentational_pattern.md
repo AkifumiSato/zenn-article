@@ -12,7 +12,7 @@ title: "Container/Presentationalパターン"
 
 ## 背景
 
-Reactコンポーネントのテストといえば[React Testing Library↗︎](https://testing-library.com/docs/react-testing-library/intro/)(RTL)や[Storybook↗︎](https://storybook.js.org/)などを利用することが主流ですが、本書執筆時点でこれらのServer Components対応の状況は芳しくありません。
+Reactコンポーネントのテストといえば[React Testing Library↗︎](https://testing-library.com/docs/react-testing-library/intro/)(RTL)や[Storybook↗︎](https://storybook.js.org/)などを利用することが主流ですが、本書執筆時点でこれらのRSC対応状況は芳しくありません。
 
 ### React Testing Library
 
@@ -38,12 +38,12 @@ test("random Todo APIより取得した`dummyTodo`がタイトルとして表示
 ```
 
 :::message
-執筆時時点では開発中ですが、将来的には[vitest-plugin-rsc↗︎](https://github.com/kasperpeulen/vitest-plugin-rsc)などを使うことでServer Componentsのテストが可能になるかもしれません。
+執筆時点では開発中ですが、将来的には[vitest-plugin-rsc↗︎](https://github.com/kasperpeulen/vitest-plugin-rsc)などを使うことでServer Componentsのテストが可能になるかもしれません。
 :::
 
 ### Storybook
 
-一方、Storybookはexperimentalで[Server Components対応↗︎](https://storybook.js.org/blog/storybook-react-server-components/)していますが、内部的にはこれは非同期なClient Componentsをレンダリングしているにすぎず、大量のmockを必要とするため、実用性に疑問が残ります。
+一方、Storybookはexperimentalで[Server Componentsに対応↗︎](https://storybook.js.org/blog/storybook-react-server-components/)していますが、内部的にはこれは非同期なClient Componentsをレンダリングしているにすぎず、大量のmockを必要とするため、実用性に疑問が残ります。
 
 ```tsx
 export default { component: DbCard };
