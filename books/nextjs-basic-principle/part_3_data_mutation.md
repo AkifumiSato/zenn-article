@@ -53,13 +53,13 @@ export default function CreateTodo() {
 }
 ```
 
-上記の実装例では、サーバーサイドで実行される関数`createTodo`をClient Components内の`<form action={createTodo}>`で渡しているのがわかります。このformを実際にsubmitすると、サーバーサイドで`createTodo`が実行されます。
+上記の実装例では、サーバーサイドで実行される関数`createTodo()`をClient Components内の`<form action={createTodo}>`で渡しているのがわかります。このformを実際にsubmitすると、サーバーサイドで`createTodo()`が実行されます。
 
 このように、非常にシンプルな実装でクライアントサイドからサーバーサイド関数を呼び出せることで、開発者はデータ操作の実装に集中できます。Server ActionsはReactの仕様ですが、実装はフレームワークに統合されているので、他にも以下のようなNext.jsならではのメリットが得られます。
 
 ### キャッシュのrevalidate
 
-Next.jsは多層のキャッシュを活用しているため、データ操作時には関連するキャッシュのrevalidateが必要になります。Server Actions内で`revalidatePath()`や`revalidateTag()`を呼び出すと、サーバーサイドの関連するキャッシュ([Data Cache↗︎](https://nextjs.org/docs/app/guides/caching#data-cache)や[Full Route Cache↗︎](https://nextjs.org/docs/app/guides/caching#full-route-cache))とクライアントサイドのキャッシュ([Router Cache↗︎](https://nextjs.org/docs/app/guides/caching#client-side-router-cache))がrevalidateされます。
+Next.jsは多層のキャッシュを活用しているため、データ操作時には関連するキャッシュのrevalidateが必要になります。Server Actions内で[`revalidatePath()`](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を呼び出すと、サーバーサイドの関連するキャッシュ([Data Cache↗︎](https://nextjs.org/docs/app/guides/caching#data-cache)や[Full Route Cache↗︎](https://nextjs.org/docs/app/guides/caching#full-route-cache))とクライアントサイドのキャッシュ([Router Cache↗︎](https://nextjs.org/docs/app/guides/caching#client-side-router-cache))がrevalidateされます。
 
 ```tsx :app/actions.ts
 "use server";
@@ -77,7 +77,7 @@ Server Actionsで`revalidatePath()`/`revalidateTag()`もしくは`cookies.set()`
 
 ### redirect時の通信効率
 
-Next.jsではサーバーサイドで呼び出せる`redirect()`という関数があります。データ操作後にページをリダレイクトしたいことはよくあるユースケースですが、`redirect()`をServer Actions内で呼び出すとレスポンスにリダイレクト先ページの[RSC Payload↗︎](https://nextjs.org/docs/app/getting-started/server-and-client-components#on-the-server)が含まれるため、HTTPリダイレクトをせずに画面遷移できます。これにより、従来データ操作リクエストとリダイレクト後ページ情報のリクエストで2往復は必要だったhttp通信が、1度で済みます。
+Next.jsではサーバーサイドで呼び出せる[`redirect()`](https://nextjs.org/docs/app/api-reference/functions/redirect)という関数があります。データ操作後にページをリダレイクトしたいことはよくあるユースケースですが、`redirect()`をServer Actions内で呼び出すとレスポンスにリダイレクト先ページの[RSC Payload↗︎](https://nextjs.org/docs/app/getting-started/server-and-client-components#on-the-server)が含まれるため、HTTPリダイレクトをせずに画面遷移できます。これにより、従来データ操作リクエストとリダイレクト後ページ情報のリクエストで2往復は必要だったhttp通信が、1度で済みます。
 
 ```tsx :app/actions.ts
 "use server";

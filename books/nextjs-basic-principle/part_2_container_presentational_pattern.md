@@ -38,12 +38,12 @@ test("random Todo APIより取得した`dummyTodo`がタイトルとして表示
 ```
 
 :::message
-執筆時現在開発中ですが、将来的には[vitest-plugin-rsc↗︎](https://github.com/kasperpeulen/vitest-plugin-rsc)などを使うことでServer Componentsのテストが可能になるかもしれません。
+執筆時時点では開発中ですが、将来的には[vitest-plugin-rsc↗︎](https://github.com/kasperpeulen/vitest-plugin-rsc)などを使うことでServer Componentsのテストが可能になるかもしれません。
 :::
 
 ### Storybook
 
-一方、Storybookは[Server Components対応↗︎](https://storybook.js.org/blog/storybook-react-server-components/)をexperimentalで対応していますが、内部的にはこれは非同期なClient Componentsをレンダリングしているにすぎず、大量のmockを必要とするため、実用性に疑問が残ります。
+一方、Storybookはexperimentalで[Server Components対応↗︎](https://storybook.js.org/blog/storybook-react-server-components/)していますが、内部的にはこれは非同期なClient Componentsをレンダリングしているにすぎず、大量のmockを必要とするため、実用性に疑問が残ります。
 
 ```tsx
 export default { component: DbCard };
@@ -115,7 +115,7 @@ export function CompanyLinks() {
 上記のようにClient Boundaryでないコンポーネントで、Client Bundleに含まれることを保証したい場合には[`client-only`↗︎](https://www.npmjs.com/package/client-only)パッケージを利用しましょう。
 :::
 
-Client ComponentsやShared Componentsは従来通りRTLやStorybookで扱うことができるので、**テスト容易性が向上**します。一方Container Componentsはこれらのツールでレンダリング・テストすることが現状難しいので、`await ArticleContainer({ id })`のように単なる関数として実行することでテストが可能です。
+Client ComponentsやShared Componentsは従来通りRTLやStorybookで扱うことができるので、**テスト容易性が向上**します。一方Container Componentsはこれらのツールでレンダリング・テストすることは現状難しいですが、`await ArticleContainer({ id })`のように単なる関数として実行することでテストが可能です。
 
 ### 実装例
 
