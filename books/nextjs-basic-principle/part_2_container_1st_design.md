@@ -1,10 +1,58 @@
 ---
-title: "Container 1stな設計とディレクトリ構成"
+title: "Server 1stなコンポーネントツリー設計"
 ---
 
 ## 要約
 
-画面の設計はまずContainer Componentsのみで行い、Presentational Componentsは後から追加することを心がけましょう。そうすることでCompositionパターンを早期に適用した設計が可能になり、大きな手戻りを防ぐことができます。
+画面の実装は、`page.tsx`におけるServer Componentsのツリー設計から行いましょう。これにより、Compositionパターンの早期適用と、細粒度なServer Components設計を目指すことができます。
+
+## 変更後構成案
+
+- 背景
+  - 「理解」と「活用」には大きな乖離がある
+  - 実装手順は設計に大きな影響を及ぼす
+  - アコーディオン: TDDは設計手法的な側面がある、実装手順は設計においてとても重要
+- 設計・プラクティス
+  - 手順説明
+    1. Server Componentsのツリー設計
+    2. Server Componentsの実装（Container/Presentationalパターンについては後述の旨触れる）
+    3. Client Componentsの実装
+    4. 1の見直し＋2,3を繰り返す
+    - message
+      - Q. ページのコンポーネントツリーが少なくてもいいのか？
+      - A. ツリーを無理に分割する必要はないが、大きすぎると感じるなら分割すべき
+  - 例: ブログ記事画面
+    - 図を追加して簡単な画面要件を説明
+    - [実装例](#実装例修正後)
+      - `getPost()`はRequest Memoizationしてるから末端で何度も呼び出しても無問題
+- ファイルコロケーションと`export`（旧ディレクトリ設計）
+  - Container/Presentationalパターンにも触れつつ、ディレクトリの例を明示
+  - （ディレクトリ設計とは言う言葉は避ける）
+- トレードオフ
+  - 広すぎる`export`
+
+### 実装例（修正後）
+
+```tsx
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ postId: string }>;
+}) {
+  const { postId } = await params;
+
+  return (
+    <>
+      <PostContainer postId={postId} />
+      <CommentsContainer postId={postId}>
+        <CommentListContainer postId={postId} />
+      </CommentsContainer>
+    </>
+  );
+}
+```
+
+<!-- 以下修正前原文 -->
 
 ## 背景
 
