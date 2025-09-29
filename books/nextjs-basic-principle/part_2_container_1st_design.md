@@ -1,220 +1,157 @@
 ---
-title: "Server 1stなコンポーネントツリー設計"
+title: "合成から考えるページコンポーネント"
 ---
 
 ## 要約
 
-画面の実装は、`page.tsx`におけるServer Componentsのツリー設計から行いましょう。これにより、Compositionパターンの早期適用と、細粒度なServer Components設計を目指すことができます。
-
-## 変更後構成案
-
-- 背景
-  - 「理解」と「活用」には大きな乖離がある
-  - 実装手順は設計に大きな影響を及ぼす
-  - アコーディオン: TDDは設計手法的な側面がある、実装手順は設計においてとても重要
-- 設計・プラクティス
-  - 手順説明
-    1. Server Componentsのツリー設計
-    2. Server Componentsの実装（Container/Presentationalパターンについては後述の旨触れる）
-    3. Client Componentsの実装
-    4. 1の見直し＋2,3を繰り返す
-    - message
-      - Q. ページのコンポーネントツリーが少なくてもいいのか？
-      - A. ツリーを無理に分割する必要はないが、大きすぎると感じるなら分割すべき
-  - 例: ブログ記事画面
-    - 図を追加して簡単な画面要件を説明
-    - [実装例](#実装例修正後)
-      - `getPost()`はRequest Memoizationしてるから末端で何度も呼び出しても無問題
-- ファイルコロケーションと`export`（旧ディレクトリ設計）
-  - Container/Presentationalパターンにも触れつつ、ディレクトリの例を明示
-  - （ディレクトリ設計とは言う言葉は避ける）
-- トレードオフ
-  - 広すぎる`export`
-
-### 実装例（修正後）
-
-```tsx
-export default async function Page({
-  params,
-}: {
-  params: Promise<{ postId: string }>;
-}) {
-  const { postId } = await params;
-
-  return (
-    <>
-      <PostContainer postId={postId} />
-      <CommentsContainer postId={postId}>
-        <CommentListContainer postId={postId} />
-      </CommentsContainer>
-    </>
-  );
-}
-```
-
-<!-- 以下修正前原文 -->
+ページコンポーネントの実装は、細粒度なServer Componentsを合成しツリー構造を設計することから始めましょう。これにより、データフェッチコロケーションやCompositionパターンの早期適用を目指します。
 
 ## 背景
 
-[第1部 データフェッチ](part_1)ではServer Componentsの設計パターンを、[第2部 コンポーネント設計](part_2)ではClient Componentsも含めたコンポーネント全体の設計パターンを解説してきました。ここまで順に読んでいただいた方は、すでに多くの設計パターンを理解されてることと思います。
-
-しかし、これらを「理解してること」と「使いこなせること」は別問題です。
-
-- テストを書けること
-- TDDで開発できること
-
-これらに大きな違いがあることと同じく、
-
-- 設計パターンを理解してること
-- 設計パターンを駆使して設計できること
-
-これらにも大きな違いがあります。
-
-RSCでは特に、[Compositionパターン](part_2_composition_pattern)を後から適用しようとすると大幅なClient Componentsの設計見直しや書き換えが発生しがちです。こういった手戻りを防ぐためにも、設計の手順はとても重要です。
+[第1部 データフェッチ](part_1)でServer Componentsの設計パターンを、[第2部 コンポーネント設計](part_2)ではここまでClient Componentsの設計パターンを解説してきました。特に、[データフェッチ コロケーション](part_1_colocation)や[Compositionパターン](part_2_composition_pattern)は、後から適用しようとすると大きな手戻りを生む可能性があるため、早期から考慮して設計することが重要です。
 
 ## 設計・プラクティス
 
-筆者が提案する設計手順は、画面の設計はまずContainer Components^[参考: [Container/Presentationalパターン](part_2_container_presentational_pattern)]のみで行い、Presentational Componentsやそこで使うClient Componentsは後から実装するという、いわば**Container 1stな設計手法**です。これは、最初からCompositionパターンありきで設計することと同義です。
+データフェッチコロケーションとCompositionパターンを早期適用するには、ページコンポーネントのツリー構造を設計することから始めることが効果的です。ツリー構造の設計は、**細粒度なServer Componentsを合成**することを意識しましょう。
 
-具体的な手順は以下です。
+### 設計手順
 
-1. **Container Componentsのツリー構造を書き出す**
-2. **Container Componentsを実装**
-3. **Presentational Components(Shared/Client Components)を実装**
-4. **2,3を繰り返す**
+具体的な手順は以下の通りです。
 
-この手順ではServer Componentsツリーをベースに設計することで、最初からCompositionパターンを適用した状態・あるいは適用しやすい状態を目指します。これにより、途中でContainer Componentsが増えたとしても修正範囲が少なく済むというメリットもあります。
+1. コンポーネントの合成を考え、ツリー構造を仮実装
+2. Server Componentsを実装
+3. Shared/Client Componentsを実装
 
 :::message
-「Containerのツリー構造から設計する」ことが重要なのであって、「最初に決めた設計を守り切る」ことは重要ではありません。実装を進める中でContainerツリーの設計を見直すことも重要です。
+最初に決めた設計に固執する必要はありません。実装を進める中でコンポーネントツリーを見直すことも重要です。
 :::
 
-### 実装例
+### 設計例
 
-よくあるブログ記事の画面実装を例に、Container 1stな設計を実際にやってみましょう。ここでは特に重要なステップ1を詳しく見ていきます。
+例として、ブログ記事画面について「1. コンポーネントの合成を考え、ツリー構造を仮実装」のステップを実施してみます。ブログ記事画面は以下の要素で構成されているものとします。
 
-画面に必要な情報はPost、User、Commentsの3つを仮定し、それぞれに対してContainer Componentsを考えます。
+- ブログ記事情報
+- 著者情報
+- コメント一覧
 
-- `<PostContainer postId={postId}>`
-- `<UserProfileContainer id={post.userId}>`
-- `<CommentsContainer postId={postId}>`
+これらのデータソースとして、以下のAPIを利用するものとします。
 
-`postId`はURLから取得できますが`userId`はPost情報に含まれているので、`<UserProfileContainer>`は`<PostContainer>`で呼び出される形になります。一方`<CommentsContainer>`は`postId`を元にレンダリングされるので、`<PostContainer>`と並行に呼び出すことが可能です。
+- PostAPI: 投稿IDをもとにブログ記事情報を取得するAPI
+- UserAPI: ユーザーIDをもとにユーザー情報を取得するAPI
+- CommentsAPI: 投稿IDをもとにコメント一覧を取得するAPI
 
-これらを加味して、まずはContainer Componentsのツリー構造を`page.tsx`に実際に書き出してみます。各ContainerやPresentational Componentsの実装は後から行うので、ここでは仮実装で構造を設計することに集中しましょう。
+以下はこれらの画面要素とAPIの依存関係を図示したものです。
 
-```tsx
-export default async function Page({
-  params,
-}: {
+![APIの依存関係](/images/nextjs-basic-principle/component-tree-example.png)
+
+上記の図をもとに、画面の構成要素をServer Componentsとして実装イメージを書き出します。
+
+```tsx:/posts/[postId]/page.tsx
+export default async function Page(props: {
   params: Promise<{ postId: string }>;
 }) {
-  const { postId } = await params;
+  const { postId } = await props.params;
 
   return (
-    <>
-      <PostContainer postId={postId} />
+    <div className="flex flex-col gap-4">
+      <PostContainer postId={postId}>
+        <UserProfileContainer postId={postId} />
+      </PostContainer>
       <CommentsContainer postId={postId} />
-    </>
+    </div>
   );
 }
+```
 
-async function PostContainer({ postId }: { postId: string }) {
-  const post = await getPost(postId);
+:::message
+`Container`という命名は**Container/Presentationalパターン**におけるContainerコンポーネントを意図したものです。詳細は後述の[Container/Presentationalパターン](part_2_container_presentational_pattern)にて解説します。
+:::
+
+`<PostContainer>`や`<CommentsContainer>`などのコンポーネントは仮実装で構いません。これで「1. コンポーネントの合成を考え、ツリー構造を仮実装」は完了です。あとはステップ2,3を繰り返し、各コンポーネントの詳細を実装しましょう。実装しながら適宜Server Componentsのツリー構造を見直して、必要に応じて修正することもできます。
+
+::::details 各コンポーネントの実装イメージ
+
+各Server Components（Container Components）の実装イメージは以下の通りです。データフェッチ層やPresentational Componentsの実装は省略しています。
+
+```tsx
+// `/posts/[postId]/_containers/post/container.tsx`
+export async function PostContainer({ postId }: { postId: string }) {
+  const post = await getPost(postId); // Request Memoization
+
+  return <PostPresentation post={post} />;
+}
+
+// `/posts/[postId]/_containers/user-profile/container.tsx`
+export async function UserProfileContainer({ postId }: { postId: string }) {
+  const post = await getPost(postId); // Request Memoization
+  const user = await getUser(post.authorId);
+
+  return <UserProfilePresentation user={user} />;
+}
+
+// `/posts/[postId]/_containers/comments/container.tsx`
+export async function CommentsContainer({ postId }: { postId: string }) {
+  const comments = await getComments(postId);
 
   return (
-    <PostPresentation post={post}>
-      <UserProfileContainer id={post.userId} />
-    </PostPresentation>
+    <CommentLayout>
+      {comments.map((comment) => (
+        <CommentItemContainer key={comment.id} comment={comment} />
+      ))}
+    </CommentLayout>
   );
 }
 
-// ...
+async function CommentItemContainer({ comment }: { comment: Comment }) {
+  const user = await getUser(comment.authorId); // `getUser`は内部的にDataLoaderを利用
+
+  return <CommentItemPresentation comment={comment} user={user} />;
+}
 ```
 
-ポイントは、`<PostPresentation>`が`children`として`<UserProfileContainer>`を受け取っている点です。この時点でCompositionパターンが適用されているため、`<PostPresentation>`は必要に応じてClient ComponentsにもShared Componentsにもすることができます。
+:::message
 
-これでステップ1は終了です。以降はステップ2,3を繰り返すので、仮実装にしていた部分を1つづつ実装していきましょう。
+- `<PostContainer>`や`<CommentsContainer>`は`getPost(postId)`をそれぞれ呼び出しますが、[Request Memoization](part_1_request_memoization)によって重複リクエストは発生しません。
+- `<CommentsContainer>`のように、ContainerとPresentationalが必ずしも1対1になるとは限りません。
 
-1. `<PostContainer>`や`getPost()`の実装
-2. `<PostPresentation>`の実装
-3. `<CommentsContainer>`の実装
-4. ...
+:::
 
-本章の主題は設計であり、上記は実装の詳細話になるので、ここでは省略とさせていただきます。
+::::
 
-### ディレクトリ構成案
+### 細粒度なServer Componentsとファイルコロケーション
 
-Next.jsの規約ファイルはコロケーション^[コードをできるだけ関連性のある場所に配置することを指します。]を強く意識した設計がなされており、[Route Segment↗︎](https://nextjs.org/docs/app/getting-started/layouts-and-pages#creating-a-nested-route)で利用するコンポーネントや関数もできるだけコロケーションすることが推奨されます。
+Next.jsの規約ファイルはコロケーションを強く意識した設計がなされており、[Route Segment↗︎](https://nextjs.org/docs/app/getting-started/layouts-and-pages#creating-a-nested-route)で利用するコンポーネントや関数もできるだけコロケーションすることが推奨^[参考: [公式ドキュメント↗︎](https://nextjs.org/docs/app/getting-started/project-structure#colocation)]されます。
 
-Container/Presentationalパターンにおいて、ページやレイアウトから見える単位はContainer単位です。Presentational Componentsやその他のコンポーネントは、Container Componentsのプライベートな実装詳細に過ぎません。
-
-これらを体現するContainer 1stなディレクトリ設計として、Containerの単位を`_containers`以下でディレクトリ分割することを筆者は推奨します。このディレクトリ設計では、外部から利用されうるContainer Componentsの公開を`index.tsx`で行うことを想定しています。
+前述の例では[Private Folder↗︎](https://nextjs.org/docs/app/getting-started/project-structure#private-folders)の機能を利用して、Container単位で`_containers`ディレクトリにコロケーションすることができます。
 
 ```
-_containers
-├── <Container Name> // e.g. `post-list`, `user-profile`
-│  ├── index.tsx // Container Componentsをexport
-│  ├── container.tsx
-│  ├── presentational.tsx
-│  └── ...
-└── ...
+/posts/[postId]
+├── page.tsx
+├── layout.tsx
+└── _containers
+    ├── post
+    │  ├── index.tsx // Container Componentsをexport
+    │  ├── container.tsx
+    │  ├── presentational.tsx
+    │  └── ... // その他のコンポーネントやUtilityなど
+    ├── user-profile
+    │  ├── index.tsx // Container Componentsをexport
+    │  ├── container.tsx
+    │  ├── presentational.tsx
+    │  └── ... // その他のコンポーネントやUtilityなど
+    └── comments
+       ├── index.tsx // Container Componentsをexport
+       ├── container.tsx
+       ├── presentational.tsx
+       └── ... // その他のコンポーネントやUtilityなど
 ```
 
-`_containers`のようにディレクトリ名に`_`をつけているのはNext.jsにおけるルーティングディレクトリと明確に区別する[Private Folder↗︎](https://nextjs.org/docs/app/getting-started/project-structure#colocation)の機能を利用するためです。筆者は`_components`、`_lib`のように他のSegment内共通なコンポーネントや関数も`_`をつけたディレクトリにまとめることを好みます。
-
-前述のブログ画面の実装を`app`直下からみた場合、以下のような構成になります。
-
-```
-app
-└── posts
-   └── [postId]
-      ├── page.tsx
-      ├── layout.tsx
-      ├── _containers
-      │  ├── post
-      │  │  ├── index.tsx
-      │  │  ├── container.tsx
-      │  │  ├── presentational.tsx
-      │  │  └── ... // utilやContainer独自のファイルなど
-      │  ├── user-profile
-      │  │  ├── index.tsx
-      │  │  ├── container.tsx
-      │  │  ├── presentational.tsx
-      │  │  └── ... // utilやContainer独自のファイルなど
-      │  └── comments
-      │     ├── index.tsx
-      │     ├── container.tsx
-      │     ├── presentational.tsx
-      │     └── ... // utilやContainer独自のファイルなど
-      ├── _components // 汎用的なClient Components
-      │  └── ...
-      └── _lib // ページで共通の関数など
-         └── ...
-```
-
-命名やさらに細かい分割の詳細は、プロジェクトごとに適宜定義してください。筆者が重要だと考えるのは、ディレクトリをContainer単位で、ファイルをContainer/Presentationalで分割することです。
+コロケーションしたファイルは、外部から参照されることを想定した実質的にPublicなファイルと、Privateなファイルに分けることができます。上記の例では、`index.tsx`でContainer Componentsを`export`することを想定しています。
 
 ## トレードオフ
 
 ### 広すぎるexport
 
-前述のように、Presentational Componentsは実装詳細と捉えることもできるので、できるならPresentational Componentsはプライベート定義として扱うことが好ましいと考えられます。
+前述のディレクトリ構成例における`presentational.tsx`など、コロケーションしたファイルには実質的にPrivateなファイルが含まれます。しかし、JavaScriptでは`export`にスコープを設定することはできません。
 
-[#ディレクトリ構成例](#ディレクトリ構成案)に基づいた設計の場合、Presentational Componentsは`presentational.tsx`で定義されます。
-
-```
-_containers
-├── <Container Name> // e.g. `post-list`, `user-profile`
-│  ├── index.tsx // Container Componentsをexport
-│  ├── container.tsx
-│  ├── presentational.tsx
-│  └── ...
-└── ...
-```
-
-上記の構成では`<Container Name>`の外から参照されるモジュールは`index.tsx`のみの想定です。ただし、実際には`presentational.tsx`で定義したコンポーネントもプロジェクトのどこからでも参照することができます。
-
-このような同一ディレクトリにおいてのみ利用することを想定したモジュール分割は、[eslint-plugin-import-access↗︎](https://github.com/uhyo/eslint-plugin-import-access)やbiomeの[`noPrivateImports`↗︎](https://biomejs.dev/linter/rules/no-private-imports/)を利用することで、`import`を制限することができます。
-
-上記のようなディレクトリ設計に沿わない場合でも、Presentational ComponentsはContainer Componentsのみが利用しうる**実質的なプライベート定義**として扱うようにしましょう。
+`presentational.tsx`のように実質的にPrivateなファイルは、[eslint-plugin-import-access↗︎](https://github.com/uhyo/eslint-plugin-import-access)やbiomeの[`noPrivateImports`↗︎](https://biomejs.dev/linter/rules/no-private-imports/)を利用することで、`import`可能なスコープを制限することができます。
