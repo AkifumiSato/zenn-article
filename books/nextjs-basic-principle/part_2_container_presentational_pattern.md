@@ -119,10 +119,10 @@ Client ComponentsやShared Componentsは従来通りRTLやStorybookで扱うこ�
 
 ### 実装例
 
-例としてランダムなTodoを取得・表示するページをContainer/Presentationalパターンで実装してみます。
+例としてランダムなTodoを取得・表示するコンポーネントを、Container/Presentationalパターンで実装してみます。
 
 ```tsx
-export function TodoPagePresentation({ todo }: { todo: Todo }) {
+export function RandomTodoPresentation({ todo }: { todo: Todo }) {
   return (
     <>
       <h1>{todo.title}</h1>
@@ -138,7 +138,7 @@ export function TodoPagePresentation({ todo }: { todo: Todo }) {
 
 ```tsx
 test("`todo`として渡された値がタイトルとして表示される", () => {
-  render(<TodoPagePresentation todo={dummyTodo} />);
+  render(<RandomTodoPresentation todo={dummyTodo} />);
 
   expect(
     screen.getByRole("heading", { name: dummyTodo.todo }),
@@ -149,11 +149,11 @@ test("`todo`として渡された値がタイトルとして表示される", ()
 一方Container Componentsについては以下のように、データの取得が主な処理となります。
 
 ```tsx
-export default async function Page() {
+export default async function RandomTodoContainer() {
   const res = await fetch("https://dummyjson.com/todos/random");
   const todo = ((res) => res.json()) as Todo;
 
-  return <TodoPagePresentation todo={todo} />;
+  return <RandomTodoPresentation todo={todo} />;
 }
 ```
 
@@ -161,7 +161,7 @@ export default async function Page() {
 
 ```ts
 describe("todos/random APIよりデータ取得成功時", () => {
-  test("TodoPresentationalにAPIより取得した値が渡される", async () => {
+  test("RandomTodoPresentationalにAPIより取得した値が渡される", async () => {
     // mswの設定
     server.use(
       http.get("https://dummyjson.com/todos/random", () => {
@@ -169,9 +169,9 @@ describe("todos/random APIよりデータ取得成功時", () => {
       }),
     );
 
-    const page = await Page();
+    const page = await RandomTodoContainer();
 
-    expect(page.type).toBe(TodoPagePresentation);
+    expect(page.type).toBe(RandomTodoPresentation);
     expect(page.props.todo).toEqual(dummyTodo);
   });
 });
@@ -179,11 +179,11 @@ describe("todos/random APIよりデータ取得成功時", () => {
 
 このように、コンポーネントを通常の関数のように実行すると`type`や`props`を得ることができるので、これらを元に期待値通りかテストすることができます。
 
-ただし、上記のように`expect(page.type).toBe(TodoPagePresentation);`とすると、ReactElementの構造に強く依存してしまいFlaky(壊れやすい)なテストになってしまいます。そのため、実際には[こちらの記事↗︎](https://quramy.medium.com/react-server-component-%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8-container-presentation-separation-7da455d66576#:~:text=%E3%81%8A%E3%81%BE%E3%81%912%3A%20Container%20%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8%20JSX%20%E3%81%AE%E6%A7%8B%E9%80%A0)にあるように、ReactElementを扱うユーティリティの作成やスナップショットテストなどを検討すると良いでしょう。
+ただし、上記のように`expect(page.type).toBe(RandomTodoPresentation);`とすると、ReactElementの構造に強く依存してしまいFlaky(壊れやすい)なテストになってしまいます。そのため、実際には[こちらの記事↗︎](https://quramy.medium.com/react-server-component-%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8-container-presentation-separation-7da455d66576#:~:text=%E3%81%8A%E3%81%BE%E3%81%912%3A%20Container%20%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8%20JSX%20%E3%81%AE%E6%A7%8B%E9%80%A0)にあるように、ReactElementを扱うユーティリティの作成やスナップショットテストなどを検討すると良いでしょう。
 
 ```tsx
 describe("todos/random APIよりデータ取得成功時", () => {
-  test("TodoPresentationalにAPIより取得した値が渡される", async () => {
+  test("RandomTodoPresentationalにAPIより取得した値が渡される", async () => {
     // mswの設定
     server.use(
       http.get("https://dummyjson.com/todos/random", () => {
@@ -191,16 +191,41 @@ describe("todos/random APIよりデータ取得成功時", () => {
       }),
     );
 
-    const page = await Page();
+    const page = await RandomTodoContainer();
 
     expect(
-      getProps<typeof TodoPagePresentation>(page, TodoPagePresentation),
+      getProps<typeof RandomTodoPresentation>(page, RandomTodoPresentation),
     ).toEqual({
       todo: dummyTodo,
     });
   });
 });
 ```
+
+### Container単位のディレクトリ構成例
+
+Next.jsはファイルコロケーションを強く意識して設計されており、[Route Segment↗︎](https://nextjs.org/docs/app/getting-started/layouts-and-pages#creating-a-nested-route)で利用するコンポーネントや関数もできるだけコロケーションすることが推奨^[参考: [公式ドキュメント↗︎](https://nextjs.org/docs/app/getting-started/project-structure#colocation)]されます。上記手順で得られたページやレイアウトを構成するContainer Componentsも、同様にコロケーションすることが望ましいと考えられます。
+
+以下は、筆者が推奨するディレクトリ構成の例です。[Private Folder↗︎](https://nextjs.org/docs/app/getting-started/project-structure#private-folders)を利用して、Container単位で`_containers`ディレクトリにコロケーションします。
+
+```
+/posts/[postId]
+├── page.tsx
+├── layout.tsx
+└── _containers
+    ├── random-todo
+    │  ├── index.tsx // Container Componentsをexport
+    │  ├── container.tsx
+    │  ├── presentational.tsx
+    │  └── ... // その他のコンポーネントやUtilityなど
+    └── todo-list
+       ├── index.tsx // Container Componentsをexport
+       ├── container.tsx
+       ├── presentational.tsx
+       └── ... // その他のコンポーネントやUtilityなど
+```
+
+コロケーションしたファイルは、外部から参照されることを想定した実質的にPublicなファイルと、Privateなファイルに分けることができます。上記の例では、`index.tsx`でContainer Componentsを`export`することを想定しています。
 
 ## トレードオフ
 
@@ -209,3 +234,23 @@ describe("todos/random APIよりデータ取得成功時", () => {
 本章ではRSCに対してテストのエコシステムが未成熟であることを前提にしつつ、テスト容易性を向上するための手段としてContainer/Presentationalパターンが役に立つことを主張しました。しかし、今後エコシステムの状況が変わればより容易にテストできるようになることがあるかもしれません。その場合、Container/Presentationalパターンは変化するか不要になる可能性もあります。
 
 ただし、Container相当なコンポーネント単位を意識することはRSCの設計において非常に重要です。次章[UIをツリーに分解する](part_2_container_1st_design)では、RSCのメリットを生かしつつ手戻りの少ない設計順序を提案します。
+
+### 広すぎるexport
+
+前述のように、Presentational ComponentsはContainer Componentsの実装詳細と捉えることもできるので、本来プライベート定義として扱うことが好ましいと考えられます。[Container単位のディレクトリ構成例](#container単位のディレクトリ構成例)では、Presentational Componentsは`presentational.tsx`で定義されます。
+
+```
+_containers
+├── <Container Name> // e.g. `post-list`, `user-profile`
+│  ├── index.tsx // Container Componentsをexport
+│  ├── container.tsx
+│  ├── presentational.tsx
+│  └── ...
+└── ...
+```
+
+上記の構成では`<Container Name>`の外から参照されるモジュールは`index.tsx`のみの想定です。ただ実際には、`presentational.tsx`で定義したコンポーネントもプロジェクトのどこからでも参照することができます。
+
+このように、同一ディレクトリにおいてのみ利用することを想定したモジュール分割においては、[eslint-plugin-import-access↗︎](https://github.com/uhyo/eslint-plugin-import-access)やbiomeの[`noPrivateImports`↗︎](https://biomejs.dev/linter/rules/no-private-imports/)を利用すると予期せぬ外部からの`import`を制限することができます。
+
+上記のようなディレクトリ設計に沿わない場合でも、Presentational ComponentsはContainer Componentsのみが利用しうる**実質的なプライベート定義**として扱うようにしましょう。

@@ -4,7 +4,7 @@ title: "UIをツリーに分解する"
 
 ## 要約
 
-ページやレイアウトなどの実装は、**UIをツリーに分解する**ことから始めましょう。これにより、データフェッチコロケーションやCompositionパターンの早期適用を目指します。
+Reactの基本的な設計思想は、UIをコンポーネントのツリーで設計することです。ページやレイアウトなどの実装は、**UIをツリーに分解する**ことから始めましょう。これにより、データフェッチコロケーションやCompositionパターンの早期適用を目指します。
 
 :::message
 本章の内容は、React公式ドキュメントの[「UIをツリーに分解する」](https://ja.react.dev/learn/understanding-your-ui-as-a-tree#your-ui-as-a-tree)の理解が前提です。自信のない方はこちらを先にご参照ください。
@@ -16,7 +16,13 @@ title: "UIをツリーに分解する"
 
 ## 設計・プラクティス
 
-データフェッチコロケーションとCompositionパターンを早期適用するには、**UIをツリーに分解する**ことから始めるのが効果的です。ツリー構造は、データや振る舞いごとに細粒度に分割することを意識しましょう。
+データフェッチコロケーションとCompositionパターンを早期適用するには、トップダウンな設計が効果的です。レイアウトやページといったUIを**ツリーに分解する**ことから始め、コンポーネントツリーの実装、各コンポーネントの詳細実装という流れで実装しましょう。
+
+### 「大きなコンポーネント」と「小さなコンポーネント」
+
+ReactではUIをコンポーネントとして表現します。ページやレイアウトなどのUIは「大きなコンポーネント」であり、「小さなコンポーネント」を組み合わせて実装します。RSCにおいてはServer Componentsという新たな種類のコンポーネントを組み合わせることができるようになりましたが、「小さなコンポーネント」を組み合わせて「大きなコンポーネント」を表現するという基本的な設計思想は変わりません。
+
+「大きなコンポーネント」はボトムアップに実装すると手戻りが多くなりやすいため、筆者はトップダウンに設計することを推奨します。
 
 ### 実装手順
 
@@ -57,7 +63,7 @@ title: "UIをツリーに分解する"
 
 #### 2. React要素のツリーを仮実装
 
-上記の図をもとに、分解したUIの各要素をServer Componentsとして仮実装します。ここでは[Container/Presentationalパターン](part_2_container_presentational_pattern)を元に、各Server Componentsを`{Name}Container`という命名で仮実装します。
+上記の図をもとに、分解したUIの各要素をServer Componentsとして仮実装します。ここでは次章で解説する[Container/Presentationalパターン](part_2_container_presentational_pattern)を元に、各Server Componentsを`{Name}Container`という命名で仮実装します。
 
 ```tsx:/posts/[postId]/page.tsx
 export default async function Page(props: {
@@ -131,54 +137,8 @@ async function CommentItemContainer({ comment }: { comment: Comment }) {
 
 ::::
 
-### Container単位のディレクトリ構成例
-
-Next.jsはファイルコロケーションを強く意識して設計されており、[Route Segment↗︎](https://nextjs.org/docs/app/getting-started/layouts-and-pages#creating-a-nested-route)で利用するコンポーネントや関数もできるだけコロケーションすることが推奨^[参考: [公式ドキュメント↗︎](https://nextjs.org/docs/app/getting-started/project-structure#colocation)]されます。上記手順で得られたページやレイアウトを構成するContainer Componentsも、同様にコロケーションすることが望ましいと考えられます。
-
-以下は、筆者が推奨するディレクトリ構成の例です。[Private Folder↗︎](https://nextjs.org/docs/app/getting-started/project-structure#private-folders)を利用して、Container単位で`_containers`ディレクトリにコロケーションします。
-
-```
-/posts/[postId]
-├── page.tsx
-├── layout.tsx
-└── _containers
-    ├── post
-    │  ├── index.tsx // Container Componentsをexport
-    │  ├── container.tsx
-    │  ├── presentational.tsx
-    │  └── ... // その他のコンポーネントやUtilityなど
-    ├── user-profile
-    │  ├── index.tsx // Container Componentsをexport
-    │  ├── container.tsx
-    │  ├── presentational.tsx
-    │  └── ... // その他のコンポーネントやUtilityなど
-    └── comments
-       ├── index.tsx // Container Componentsをexport
-       ├── container.tsx
-       ├── presentational.tsx
-       └── ... // その他のコンポーネントやUtilityなど
-```
-
-コロケーションしたファイルは、外部から参照されることを想定した実質的にPublicなファイルと、Privateなファイルに分けることができます。上記の例では、`index.tsx`でContainer Componentsを`export`することを想定しています。
-
 ## トレードオフ
 
-### 広すぎるexport
+### 重複するデータフェッチ
 
-前述のように、Presentational ComponentsはContainer Componentsの実装詳細と捉えることもできるので、本来プライベート定義として扱うことが好ましいと考えられます。[Container単位のディレクトリ構成例](#container単位のディレクトリ構成例)では、Presentational Componentsは`presentational.tsx`で定義されます。
-
-```
-_containers
-├── <Container Name> // e.g. `post-list`, `user-profile`
-│  ├── index.tsx // Container Componentsをexport
-│  ├── container.tsx
-│  ├── presentational.tsx
-│  └── ...
-└── ...
-```
-
-上記の構成では`<Container Name>`の外から参照されるモジュールは`index.tsx`のみの想定です。ただ実際には、`presentational.tsx`で定義したコンポーネントもプロジェクトのどこからでも参照することができます。
-
-このように、同一ディレクトリにおいてのみ利用することを想定したモジュール分割においては、[eslint-plugin-import-access↗︎](https://github.com/uhyo/eslint-plugin-import-access)やbiomeの[`noPrivateImports`↗︎](https://biomejs.dev/linter/rules/no-private-imports/)を利用すると予期せぬ外部からの`import`を制限することができます。
-
-上記のようなディレクトリ設計に沿わない場合でも、Presentational ComponentsはContainer Componentsのみが利用しうる**実質的なプライベート定義**として扱うようにしましょう。
+UIを「小さなコンポーネント」に分解し、末端のコンポーネントでデータフェッチを行うことは重複リクエストのリスクが伴います。[Request Memoization](part_1_request_memoization)の章で解説したように、Next.jsではRequest Memoizationによってレンダリング中の同一リクエストを排除するため、データフェッチ層の設計が重要です。
