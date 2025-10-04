@@ -234,13 +234,11 @@ Next.jsはファイルコロケーションを強く意識して設計されて�
 
 ### エコシステム側が将来対応する可能性
 
-本章ではRSCに対してテストのエコシステムが未成熟であることを前提にしつつ、テスト容易性を向上するための手段としてContainer/Presentationalパターンが役に立つことを主張しました。しかし、今後エコシステムの状況が変わればより容易にテストできるようになることがあるかもしれません。その場合、Container/Presentationalパターンは変化するか不要になる可能性もあります。
-
-ただし、Container相当なコンポーネント単位を意識することはRSCの設計において非常に重要です。次章[UIをツリーに分解する](part_2_container_1st_design)では、RSCのメリットを生かしつつ手戻りの少ない設計順序を提案します。
+本章では、RSCに対するテストやStorybookの対応が未成熟であることを前提にしつつ、テスト容易性を向上するための手段としてContainer/Presentationalパターンが役に立つことを主張しました。しかし、今後エコシステムの状況が変わればより容易にテストできるようになることがあるかもしれません。その場合、Container/Presentationalパターンは変化するか不要になる可能性もあります。
 
 ### 広すぎるexport
 
-前述のように、Presentational ComponentsはContainer Componentsの実装詳細と捉えることもできるので、本来プライベート定義として扱うことが好ましいと考えられます。[Container単位のディレクトリ構成例](#container単位のディレクトリ構成例)では、Presentational Componentsは`presentational.tsx`で定義されます。
+Presentational ComponentsはContainer Componentsの実装詳細と捉えることもできるので、本来プライベート定義として扱うことが好ましいと考えられます。[Container単位のディレクトリ構成例](#container単位のディレクトリ構成例)では、Presentational Componentsは`presentational.tsx`で定義されます。
 
 ```
 _containers
