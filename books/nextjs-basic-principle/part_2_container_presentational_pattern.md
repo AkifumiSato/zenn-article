@@ -29,7 +29,7 @@ test("random Todo APIより取得した`dummyTodo`がタイトルとして表示
     }),
   );
 
-  await render(<TodoPage />); // `<TodoPage>`はServer Components
+  await render(<RandomTodo />); // `<RandomTodo>`はServer Components
 
   expect(
     screen.getByRole("heading", { name: dummyTodo.title }),
@@ -169,17 +169,17 @@ describe("todos/random APIよりデータ取得成功時", () => {
       }),
     );
 
-    const page = await RandomTodoContainer();
+    const container = await RandomTodoContainer();
 
-    expect(page.type).toBe(RandomTodoPresentation);
-    expect(page.props.todo).toEqual(dummyTodo);
+    expect(container.type).toBe(RandomTodoPresentation);
+    expect(container.props.todo).toEqual(dummyTodo);
   });
 });
 ```
 
 このように、コンポーネントを通常の関数のように実行すると`type`や`props`を得ることができるので、これらを元に期待値通りかテストすることができます。
 
-ただし、上記のように`expect(page.type).toBe(RandomTodoPresentation);`とすると、ReactElementの構造に強く依存してしまいFlaky(壊れやすい)なテストになってしまいます。そのため、実際には[こちらの記事↗︎](https://quramy.medium.com/react-server-component-%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8-container-presentation-separation-7da455d66576#:~:text=%E3%81%8A%E3%81%BE%E3%81%912%3A%20Container%20%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8%20JSX%20%E3%81%AE%E6%A7%8B%E9%80%A0)にあるように、ReactElementを扱うユーティリティの作成やスナップショットテストなどを検討すると良いでしょう。
+ただし、上記のように`expect(container.type).toBe(RandomTodoPresentation);`とすると、ReactElementの構造に強く依存してしまいFlaky(壊れやすい)なテストになってしまいます。そのため、実際には[こちらの記事↗︎](https://quramy.medium.com/react-server-component-%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8-container-presentation-separation-7da455d66576#:~:text=%E3%81%8A%E3%81%BE%E3%81%912%3A%20Container%20%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8%20JSX%20%E3%81%AE%E6%A7%8B%E9%80%A0)にあるように、ReactElementを扱うユーティリティの作成やスナップショットテストなどを検討すると良いでしょう。
 
 ```tsx
 describe("todos/random APIよりデータ取得成功時", () => {
@@ -191,10 +191,13 @@ describe("todos/random APIよりデータ取得成功時", () => {
       }),
     );
 
-    const page = await RandomTodoContainer();
+    const container = await RandomTodoContainer();
 
     expect(
-      getProps<typeof RandomTodoPresentation>(page, RandomTodoPresentation),
+      getProps<typeof RandomTodoPresentation>(
+        container,
+        RandomTodoPresentation,
+      ),
     ).toEqual({
       todo: dummyTodo,
     });
