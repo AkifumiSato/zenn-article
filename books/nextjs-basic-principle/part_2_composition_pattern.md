@@ -173,4 +173,4 @@ export function Page() {
 
 Compositionパターンを駆使すればServer Componentsを中心にしつつ、部分的にClient Componentsを組み込むことが可能です。しかし、上位のコンポーネントにClient Boundaryを宣言し、後からCompositionパターンを導入しようとすると、Client Componentsの設計を大幅に変更せざるを得なくなったりServer Components中心な設計から逸脱してしまう可能性があります。
 
-このような手戻りを防ぐためのテクニックとして、次章では[Container/Presentationalパターン](part_2_container_presentational_pattern)、その次の章では[UIをツリーに分解する](part_2_container_1st_design)設計手順について解説します。
+このような手戻りを防ぐためのテクニックとして、次章では[UIをツリーに分解する](part_2_container_1st_design)設計手順について解説します。
