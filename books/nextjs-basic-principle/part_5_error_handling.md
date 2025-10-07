@@ -82,7 +82,7 @@ HTTPにおける404 Not FoundエラーはSEO影響もあるため、その他の
 :::
 
 :::message
-Next.jsには[`unauthorized()`](https://nextjs.org/docs/app/api-reference/functions/unauthorized)や[`forbidden()`](https://nextjs.org/docs/app/api-reference/functions/forbidden)も提供されていますが、執筆時現在これらは実験的機能となっています。今後変更される可能性もあるので注意しましょう。
+Next.jsには[`unauthorized()`↗︎](https://nextjs.org/docs/app/api-reference/functions/unauthorized)や[`forbidden()`↗︎](https://nextjs.org/docs/app/api-reference/functions/forbidden)も提供されていますが、執筆時現在これらは実験的機能となっています。今後変更される可能性もあるので注意しましょう。
 :::
 
 ### Server Functionsのエラー

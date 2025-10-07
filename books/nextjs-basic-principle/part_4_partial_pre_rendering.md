@@ -17,9 +17,9 @@ https://zenn.dev/akfm/articles/nextjs-partial-pre-rendering
 
 ## 背景
 
-従来Next.jsは[SSR](https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering)・[SSG](https://nextjs.org/docs/pages/building-your-application/rendering/static-site-generation)・[ISR](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)をサポートしてきました。App Routerではこれらに加え、[Streaming SSR](https://nextjs.org/docs/app/getting-started/linking-and-navigating#streaming)もサポートしています。複数のレンダリングモデルをサポートしているため付随するオプションが多数あり、複雑化している・考えることが多すぎるといったフィードバックがNext.js開発チームに多数寄せられていました。
+従来Next.jsは[SSR↗︎](https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering)・[SSG↗︎](https://nextjs.org/docs/pages/building-your-application/rendering/static-site-generation)・[ISR↗︎](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)をサポートしてきました。App Routerではこれらに加え、[Streaming SSR↗︎](https://nextjs.org/docs/app/getting-started/linking-and-navigating#streaming)もサポートしています。複数のレンダリングモデルをサポートしているため付随するオプションが多数あり、複雑化している・考えることが多すぎるといったフィードバックがNext.js開発チームに多数寄せられていました。
 
-App Routerはこれらをできるだけシンプルに整理するために、サーバー側でのレンダリングをStatic RenderingとDynamic Renderingという2つのモデルに再整理しました^[参考: [公式ドキュメント](https://nextjs.org/docs/app/getting-started/linking-and-navigating#server-rendering)]。
+App Routerはこれらをできるだけシンプルに整理するために、サーバー側でのレンダリングをStatic RenderingとDynamic Renderingという2つのモデルに再整理しました^[参考: [公式ドキュメント↗︎](https://nextjs.org/docs/app/getting-started/linking-and-navigating#server-rendering)]。
 
 | レンダリング          | タイミング            | Pages Routerとの比較 |
 | --------------------- | --------------------- | -------------------- |
@@ -30,9 +30,9 @@ App Routerはこれらをできるだけシンプルに整理するために、�
 
 ## 設計・プラクティス
 
-[Partial Pre Rendering(PPR)](https://nextjs.org/docs/app/api-reference/next-config-js/partial-prerendering)はこれらをさらに整理し、基本はStatic Rendering、`<Suspense>`境界内をDynamic Renderingとすることを可能としました。これにより、必ずしもレンダリングをRoute単位で考える必要はなくなり、1つのページ・1つのHTTPレスポンスにStaticとDynamicを混在させることができるようになりました。
+[Partial Pre Rendering(PPR)↗︎](https://nextjs.org/docs/app/api-reference/next-config-js/partial-prerendering)はこれらをさらに整理し、基本はStatic Rendering、`<Suspense>`境界内をDynamic Renderingとすることを可能としました。これにより、必ずしもレンダリングをRoute単位で考える必要はなくなり、1つのページ・1つのHTTPレスポンスにStaticとDynamicを混在させることができるようになりました。
 
-以下は[公式チュートリアル](https://nextjs.org/learn/dashboard-app/partial-prerendering)からの引用画像です。
+以下は[公式チュートリアル↗︎](https://nextjs.org/learn/dashboard-app/partial-prerendering)からの引用画像です。
 
 ![ppr shell](/images/nextjs-partial-pre-rendering/ppr-shell.png)
 

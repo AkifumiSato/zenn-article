@@ -8,7 +8,7 @@ Dynamic Renderingで特に重いコンポーネントのレンダリングは`<S
 
 ## 背景
 
-[Dynamic Rendering](https://nextjs.org/docs/app/guides/caching#static-and-dynamic-rendering)ではRoute全体をレンダリングするため、[Dynamic RenderingとData Cache](part_3_dynamic_rendering_data_cache)ではData Cacheを活用することを検討すべきであるということを述べました。しかし、キャッシュできないようなデータフェッチに限って無視できないほど遅いということはよくあります。
+[Dynamic Rendering↗︎](https://nextjs.org/docs/app/guides/caching#static-and-dynamic-rendering)ではRoute全体をレンダリングするため、[Dynamic RenderingとData Cache](part_3_dynamic_rendering_data_cache)ではData Cacheを活用することを検討すべきであるということを述べました。しかし、キャッシュできないようなデータフェッチに限って無視できないほど遅いということはよくあります。
 
 ## 設計・プラクティス
 

@@ -21,12 +21,12 @@ title: "認証と認可"
 Webアプリケーションにおいて、認証と認可は非常にありふれた一般的な要件です。
 
 :::message
-認証と認可は混在されがちですが、別物です。これらの違いについて自信がない方は、筆者の[過去記事](https://zenn.dev/akfm/articles/authentication-with-security)を参照ください。
+認証と認可は混在されがちですが、別物です。これらの違いについて自信がない方は、筆者の[過去記事↗︎](https://zenn.dev/akfm/articles/authentication-with-security)を参照ください。
 :::
 
 しかし、Next.jsにおける認証認可の実装には、従来のWebフレームワークとは異なる独自の制約が伴います。
 
-これはNext.jsが、RSCという**自律分散性**と**並行実行性**を重視したアーキテクチャ^[参考: [Reactチームが見てる世界、Reactユーザーが見てる世界](https://zenn.dev/akfm/articles/react-team-vision)]に基づいて構築されていることや、edgeランタイムとNode.jsランタイムなど**多層の実行環境**を持つといった、従来のWebフレームワークとは異なる特徴を持つことに起因します。
+これはNext.jsが、RSCという**自律分散性**と**並行実行性**を重視したアーキテクチャ^[参考: [Reactチームが見てる世界、Reactユーザーが見てる世界↗︎](https://zenn.dev/akfm/articles/react-team-vision)]に基づいて構築されていることや、edgeランタイムとNode.jsランタイムなど**多層の実行環境**を持つといった、従来のWebフレームワークとは異なる特徴を持つことに起因します。
 
 ### 並行レンダリングされるページとレイアウト
 
@@ -49,7 +49,7 @@ Cookie操作は他のコンポーネントのレンダリングに影響する�
 Next.jsのmiddlewareはユーザーからのリクエストに対して一律処理を差し込むことができますが、v15.4まではランタイムがedgeに限定されており、Node.js APIが利用できなかったりDB操作系が非推奨など様々な制限が伴います。
 
 :::message
-[Next.js v15.5](https://nextjs.org/blog/next-15-5#nodejs-middleware-stable)でmiddlewareのNode.jsランタイムがStableとなりました。
+[Next.js v15.5↗︎](https://nextjs.org/blog/next-15-5#nodejs-middleware-stable)でmiddlewareのNode.jsランタイムがStableとなりました。
 :::
 
 ## 設計・プラクティス

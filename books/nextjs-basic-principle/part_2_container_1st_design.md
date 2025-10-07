@@ -7,7 +7,7 @@ title: "UIをツリーに分解する"
 Reactの基本的な設計思想は、UI^[ここでのUIとは、データフェッチ等を含むReactコンポーネントで行う全てのことを含みます。]をコンポーネントのツリーで設計することです。ページやレイアウトなどの実装は、**UIをツリーに分解する**ことから始めましょう。これにより、データフェッチコロケーションやCompositionパターンの早期適用を目指します。
 
 :::message
-本章の内容は、React公式ドキュメントの[「UIをツリーに分解する」](https://ja.react.dev/learn/understanding-your-ui-as-a-tree#your-ui-as-a-tree)の理解が前提です。自信のない方はこちらを先にご参照ください。
+本章の内容は、React公式ドキュメントの[UIをツリーに分解する↗︎](https://ja.react.dev/learn/understanding-your-ui-as-a-tree#your-ui-as-a-tree)の理解が前提です。自信のない方はこちらを先にご参照ください。
 :::
 
 ## 背景

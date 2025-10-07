@@ -135,7 +135,7 @@ export default async function Page(props: {
 
 :::
 
-この場合、Server Functionsと`useActionState()`のみでは実現が難しいリロード復元やURLシェアが実現できます。上記例のように検索が主であるページにおいては、状態をURLに保存すること^[URLに状態を保存するには、[`location-state`](https://github.com/recruit-tech/location-state)や[`nuqs`](https://nuqs.dev/)などのライブラリの利用が便利です。]を検討すべきでしょう。`useActionState()`を使いつつ、状態をURLに保存することもできます。
+この場合、Server Functionsと`useActionState()`のみでは実現が難しいリロード復元やURLシェアが実現できます。上記例のように検索が主であるページにおいては、状態をURLに保存すること^[URLに状態を保存するには、[`location-state`↗︎](https://github.com/recruit-tech/location-state)や[`nuqs`↗︎](https://nuqs.dev/)などのライブラリの利用が便利です。]を検討すべきでしょう。`useActionState()`を使いつつ、状態をURLに保存することもできます。
 
 一方サイドナビゲーションやcmd+kで開く検索モーダルのように、リロード復元やURLシェアをする必要がないケースでは、Server Functionsと`useActionState()`の実装が非常に役立つことでしょう。
 

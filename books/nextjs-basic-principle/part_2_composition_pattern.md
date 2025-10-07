@@ -66,7 +66,7 @@ export function CreateButton({ children }: { children: React.ReactNode }) {
 ```
 
 :::message
-Server FunctionsはClient Bundleから普通の関数のように実行することが可能ですが、実際には当然通信処理が伴うため、引数や戻り値には[Reactがserialize可能なもの](https://ja.react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)のみを利用できます。
+Server FunctionsはClient Bundleから普通の関数のように実行することが可能ですが、実際には当然通信処理が伴うため、引数や戻り値には[Reactがserialize可能なもの↗︎](https://ja.react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)のみを利用できます。
 :::
 
 ::::

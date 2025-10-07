@@ -14,7 +14,7 @@ Next.jsは現在、キャッシュの大幅な刷新に取り組んでいます�
 
 ## 背景
 
-[_第3部_](./part_3)ではApp Routerにおけるキャッシュの理解が重要であるとし、解説してきましたが、多層のキャッシュや複数の概念が登場し、難しいと感じた方も多かったのではないでしょうか。実際、App Router登場当初から現在に至るまでキャッシュに関する批判的意見^[[Next.jsのDiscussion](https://github.com/vercel/next.js/discussions/54075)では、批判的な意見や改善要望が多く寄せられました。]は多く、現在のNext.jsにおける最も大きな課題の一つと言えるでしょう。
+[_第3部_](./part_3)ではApp Routerにおけるキャッシュの理解が重要であるとし、解説してきましたが、多層のキャッシュや複数の概念が登場し、難しいと感じた方も多かったのではないでしょうか。実際、App Router登場当初から現在に至るまでキャッシュに関する批判的意見^[[Next.jsのDiscussion↗︎](https://github.com/vercel/next.js/discussions/54075)では、批判的な意見や改善要望が多く寄せられました。]は多く、現在のNext.jsにおける最も大きな課題の一つと言えるでしょう。
 
 開発者の混乱を解決する最もシンプルな方法は、キャッシュをデフォルトで有効化する形をやめて、オプトイン方式に変更することです。ただし、Next.jsは**デフォルトで高いパフォーマンス**を実現することを重視したフレームワークであるため、このような変更はコンセプトに反します。
 
@@ -26,7 +26,7 @@ Next.jsは、キャッシュにまつわる混乱の解決とデフォルトで�
 
 https://nextjs.org/docs/app/api-reference/config/next-config-js/dynamicIO
 
-ここで言う動的I/O処理にはデータフェッチや`headers()`や`cookies()`などの[Dynamic APIs](https://nextjs.org/docs/app/guides/caching#dynamic-apis)が含まれ^[動的I/O処理には`Date`、`Math`といったNext.jsが拡張してるモジュールや、任意の非同期関数なども含まれます]、Dynamic IOではこれらの処理を含む場合、以下いずれかの対応が必要となります。
+ここで言う動的I/O処理にはデータフェッチや`headers()`や`cookies()`などの[Dynamic APIs↗︎](https://nextjs.org/docs/app/guides/caching#dynamic-apis)が含まれ^[動的I/O処理には`Date`、`Math`といったNext.jsが拡張してるモジュールや、任意の非同期関数なども含まれます]、Dynamic IOではこれらの処理を含む場合、以下いずれかの対応が必要となります。
 
 - **`<Suspense>`**: 非同期コンポーネントを`<Suspense>`境界内に配置し、Dynamic Renderingにする
 - **`"use cache"`**: 非同期関数や非同期コンポーネントに`"use cache"`を指定して、Static Renderingにする
@@ -124,7 +124,7 @@ export async function getData() {
 
 `"use cache"`を使ったキャッシュでは、Dynamic IO以前より自由度の高いキャッシュ戦略が可能となります。具体的には、キャッシュのタグや有効期間の指定方法がより柔軟になりました。
 
-Dynamic IO以前は`fetch()`のオプションでタグを指定するなどしていたため、データフェッチ後にタグをつけることができませんでしたが、Dynamic IOでは[`cacheTag()`](https://nextjs.org/docs/app/api-reference/functions/cacheTag)でタグを指定するため、`fetch()`後にタグを付与するなど柔軟な指定が可能になりました。
+Dynamic IO以前は`fetch()`のオプションでタグを指定するなどしていたため、データフェッチ後にタグをつけることができませんでしたが、Dynamic IOでは[`cacheTag()`↗︎](https://nextjs.org/docs/app/api-reference/functions/cacheTag)でタグを指定するため、`fetch()`後にタグを付与するなど柔軟な指定が可能になりました。
 
 ```tsx
 import { unstable_cacheTag as cacheTag } from "next/cache";
@@ -142,7 +142,7 @@ async function getBlogPosts(page: number) {
 }
 ```
 
-同様に、キャッシュの有効期限も[`cacheLife()`](https://nextjs.org/docs/app/api-reference/functions/cacheLife)で指定できます。`cacheLife()`は`"minutes"`などの`profile`と呼ばれる時間指定に関するラベル文字列を引数にとり、`"use cache"`指定時に`cacheLife()`を明示的に指定することを推奨されています。
+同様に、キャッシュの有効期限も[`cacheLife()`↗︎](https://nextjs.org/docs/app/api-reference/functions/cacheLife)で指定できます。`cacheLife()`は`"minutes"`などの`profile`と呼ばれる時間指定に関するラベル文字列を引数にとり、`"use cache"`指定時に`cacheLife()`を明示的に指定することを推奨されています。
 
 ```tsx
 import { unstable_cacheLife as cacheLife } from "next/cache";
@@ -240,7 +240,7 @@ export default nextConfig;
 
 ### キャッシュの永続化
 
-Dynamic IOにおけるキャッシュの永続化は`next.config.ts`を通じてカスタマイズ可能ですが、Dynamic IO以前からある[Custom Cache Handler](https://nextjs.org/docs/app/api-reference/config/next-config-js/incrementalCacheHandlerPath)とは別物になります。少々複雑ですが、Dynamic IO以前のものが`cacheHandler`で設定できたのに対し、Dynamic IOのキャッシュハンドラーは`experimental.cacheHandlers`で設定します。
+Dynamic IOにおけるキャッシュの永続化は`next.config.ts`を通じてカスタマイズ可能ですが、Dynamic IO以前からある[Custom Cache Handler↗︎](https://nextjs.org/docs/app/api-reference/config/next-config-js/incrementalCacheHandlerPath)とは別物になります。少々複雑ですが、Dynamic IO以前のものが`cacheHandler`で設定できたのに対し、Dynamic IOのキャッシュハンドラーは`experimental.cacheHandlers`で設定します。
 
 ```ts :next.config.ts
 import type { NextConfig } from "next";
@@ -267,7 +267,7 @@ export default nextConfig;
 
 ### キャッシュに関する制約
 
-`"use cache"`のキャッシュのキーは自動でコンパイラが識別してくれるので非常に便利ですが、一方[シリアル化](https://ja.react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)不可能なものはキャッシュのキーに含まれないため注意が必要です。下記のように関数を引数に取る場合は、`"use cache"`を使用しない方が意図しない動作を防ぐことができます。
+`"use cache"`のキャッシュのキーは自動でコンパイラが識別してくれるので非常に便利ですが、一方[シリアル化↗︎](https://ja.react.dev/reference/rsc/use-server#serializable-parameters-and-return-values)不可能なものはキャッシュのキーに含まれないため注意が必要です。下記のように関数を引数に取る場合は、`"use cache"`を使用しない方が意図しない動作を防ぐことができます。
 
 ```tsx
 async function cachedFunctionWithCallback(callback: () => void) {

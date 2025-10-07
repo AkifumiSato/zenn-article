@@ -63,7 +63,7 @@ fetch(`https://...`, {
 `unstable_cache()`を使うことで、DBアクセスなどでもData Cacheを利用することが可能です。
 
 :::message alert
-`unstable_cache()`は将来的に[`"use cache"`](https://nextjs.org/docs/app/api-reference/directives/use-cache)に置き換えられる予定です。
+`unstable_cache()`は将来的に[`"use cache"`↗︎](https://nextjs.org/docs/app/api-reference/directives/use-cache)に置き換えられる予定です。
 :::
 
 ```tsx
