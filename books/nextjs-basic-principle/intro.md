@@ -35,6 +35,7 @@ https://gihyo.jp/book/2024/978-4-297-14061-8
 
 ## 変更履歴
 
+- 2025/10: [クライアントとサーバーのバンドル境界](part_2_bundle_boundary)追加、全体の改定<!-- https://github.com/AkifumiSato/zenn-article/pull/81 -->
 - 2025/01: Next.js v15対応<!-- https://github.com/AkifumiSato/zenn-article/pull/69 -->
 - 2024/10: [Server Componentsの純粋性](part_4_pure_server_components)や[第5部 その他のプラクティス](part_5)の追加、一部校正<!-- https://github.com/AkifumiSato/zenn-article/pull/67 -->
 - 2024/08: 初稿<!-- https://github.com/AkifumiSato/zenn-article/pull/65 -->
