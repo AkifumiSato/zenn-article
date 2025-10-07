@@ -29,9 +29,10 @@ ReactではUIをコンポーネントとして表現します。ページやレ�
 具体的には、以下のように進めることを推奨します。
 
 1. 設計: **UIをツリーに分解する**
-2. 仮実装: React要素（主にServer Components）のツリーを仮実装
-3. 実装: Server Componentsを実装
-4. 実装: Shared/Client Componentsを実装
+2. 仮実装: コンポーネントのツリーを仮実装
+3. 実装: 各コンポーネントの詳細実装
+   a. Server Componentsを実装
+   b. Shared/Client Componentsを実装
 
 :::message
 最初に決めたツリー構造に固執する必要はありません。実装を進める中でツリーを見直すことも重要です。
@@ -61,7 +62,7 @@ ReactではUIをコンポーネントとして表現します。ページやレ�
 
 ![APIの依存関係](/images/nextjs-basic-principle/component-tree-example.png)
 
-#### 2. React要素のツリーを仮実装
+#### 2. コンポーネントのツリーを仮実装
 
 上記の図をもとに、分解したUIの各要素をServer Componentsとして仮実装します。ここでは次章で解説する[Container/Presentationalパターン](part_2_container_presentational_pattern)を元に、各Server Componentsを`{Name}Container`という命名で仮実装します。
 
@@ -82,7 +83,7 @@ export default async function Page(props: {
 }
 ```
 
-#### 3,4: 各コンポーネントの詳細実装
+#### 3. 各コンポーネントの詳細実装
 
 以降は、仮実装となっているContainer Componentsの詳細な実装を行い、UIを完成させます。
 
