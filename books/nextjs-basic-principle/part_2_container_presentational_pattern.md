@@ -29,7 +29,7 @@ test("random Todo APIより取得した`dummyTodo`がタイトルとして表示
     }),
   );
 
-  await render(<TodoPage />); // `<TodoPage>`はServer Components
+  await render(<RandomTodo />); // `<RandomTodo>`はServer Components
 
   expect(
     screen.getByRole("heading", { name: dummyTodo.title }),
@@ -119,93 +119,164 @@ Client ComponentsやShared Componentsは従来通りRTLやStorybookで扱うこ�
 
 ### 実装例
 
-例としてランダムなTodoを取得・表示するページをContainer/Presentationalパターンで実装してみます。
+[UIをツリーに分解する](part_2_container_1st_design)の実装例同様、ブログ記事情報の取得と表示を担うコンポーネントをContainer/Presentationalパターンで実装してみます。
 
-```tsx
-export function TodoPagePresentation({ todo }: { todo: Todo }) {
-  return (
-    <>
-      <h1>{todo.title}</h1>
-      <pre>
-        <code>{JSON.stringify(todo, null, 2)}</code>
-      </pre>
-    </>
-  );
+#### Container Componentsの実装とテスト
+
+Container Componentsではブログ記事情報の取得を行い、Presentational Componentsにデータを渡します。
+
+```tsx:/posts/[postId]/_containers/post/container.tsx
+export async function PostContainer({
+  postId,
+  children,
+}: {
+  postId: string;
+  children: React.ReactNode;
+}) {
+  const post = await getPost(postId); // Request Memoization
+
+  return <PostPresentation post={post}>{children}</PostPresentation>;
 }
 ```
 
-上記のように、Presentational Componentsはデータを受け取って表示するだけのシンプルなコンポーネントです。場合によってはClient Componentsにすることもあるでしょう^[参考: [Client Componentsのユースケース](part_2_client_components_usecase)]。このようなコンポーネントのテストは従来同様RTLを使ってテストできます。
+:::message
 
-```tsx
-test("`todo`として渡された値がタイトルとして表示される", () => {
-  render(<TodoPagePresentation todo={dummyTodo} />);
+- `getPost(postId)`のようにデータフェッチ層を分離することで、[Request Memoization](part_1_request_memoization)による重複リクエスト排除を活用しやすくなります。
+- 上記例ではContainerとPresentationalが1対1となっていますが、必ずしも1対1になるとは限りません。
 
-  expect(
-    screen.getByRole("heading", { name: dummyTodo.todo }),
-  ).toBeInTheDocument();
-});
-```
+:::
 
-一方Container Componentsについては以下のように、データの取得が主な処理となります。
+前述の通り、`<PostContainer>`のような非同期コンポーネントはRTLで`render()`することができないため、コンポーネントとしてテストすることはできません。そのため、単なる関数として実行して戻り値を検証します。
 
-```tsx
-export default async function Page() {
-  const res = await fetch("https://dummyjson.com/todos/random");
-  const todo = ((res) => res.json()) as Todo;
+以下は簡易的なテストケースの実装例です。
 
-  return <TodoPagePresentation todo={todo} />;
-}
-```
-
-非同期なServer ComponentsはRTLで`render()`することができないので、単なる関数として実行して戻り値を検証します。以下は簡易的なテストケースの実装例です。
-
-```ts
-describe("todos/random APIよりデータ取得成功時", () => {
-  test("TodoPresentationalにAPIより取得した値が渡される", async () => {
+```ts:/posts/[postId]/_containers/post/container.test.tsx
+describe("PostAPIよりデータ取得成功時", () => {
+  test("PostPresentationにAPIより取得した値が渡される", async () => {
     // mswの設定
     server.use(
-      http.get("https://dummyjson.com/todos/random", () => {
-        return HttpResponse.json(dummyTodo);
+      http.get("https://dummyjson.com/posts/postId", () => {
+        return HttpResponse.json(post);
       }),
     );
 
-    const page = await Page();
+    const { type, props } = await PostContainer({ postId: "1" });
 
-    expect(page.type).toBe(TodoPagePresentation);
-    expect(page.props.todo).toEqual(dummyTodo);
+    expect(type).toBe(PostPresentation);
+    expect(props.post).toEqual(post);
   });
 });
 ```
 
 このように、コンポーネントを通常の関数のように実行すると`type`や`props`を得ることができるので、これらを元に期待値通りかテストすることができます。
 
-ただし、上記のように`expect(page.type).toBe(TodoPagePresentation);`とすると、ReactElementの構造に強く依存してしまいFlaky(壊れやすい)なテストになってしまいます。そのため、実際には[こちらの記事↗︎](https://quramy.medium.com/react-server-component-%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8-container-presentation-separation-7da455d66576#:~:text=%E3%81%8A%E3%81%BE%E3%81%912%3A%20Container%20%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8%20JSX%20%E3%81%AE%E6%A7%8B%E9%80%A0)にあるように、ReactElementを扱うユーティリティの作成やスナップショットテストなどを検討すると良いでしょう。
+ただし、上記のようなテストは`ReactElement`の構造に強く依存してしまいFlaky(壊れやすい)なテストになってしまいます。そのため、実際には[こちらの記事↗︎](https://quramy.medium.com/react-server-component-%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8-container-presentation-separation-7da455d66576#:~:text=%E3%81%8A%E3%81%BE%E3%81%912%3A%20Container%20%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8%20JSX%20%E3%81%AE%E6%A7%8B%E9%80%A0)にあるように、`ReactElement`を扱うユーティリティの作成やスナップショットテストなどを検討すると良いでしょう。
 
 ```tsx
-describe("todos/random APIよりデータ取得成功時", () => {
-  test("TodoPresentationalにAPIより取得した値が渡される", async () => {
+describe("PostAPIよりデータ取得成功時", () => {
+  test("PostPresentationにAPIより取得した値が渡される", async () => {
     // mswの設定
     server.use(
-      http.get("https://dummyjson.com/todos/random", () => {
-        return HttpResponse.json(dummyTodo);
+      http.get("https://dummyjson.com/posts/postId", () => {
+        return HttpResponse.json(post);
       }),
     );
 
-    const page = await Page();
+    const container = await PostContainer({ postId: "1" });
 
     expect(
-      getProps<typeof TodoPagePresentation>(page, TodoPagePresentation),
+      getProps<typeof PostPresentation>(container, PostPresentation),
     ).toEqual({
-      todo: dummyTodo,
+      post,
     });
   });
 });
 ```
 
+#### Presentational Componentsの実装とテスト
+
+一方Presentational Componentsは、データを受け取って表示するだけのシンプルなコンポーネントになります。
+
+```tsx
+export function PostPresentation({ post }: { post: Post }) {
+  return (
+    <>
+      <h1>{post.title}</h1>
+      <pre>
+        <code>{JSON.stringify(post, null, 2)}</code>
+      </pre>
+    </>
+  );
+}
+```
+
+必要に応じて`"use client"`を宣言し、Client Componentsにすることもできます。
+
+このようなコンポーネントは従来同様RTLやStorybookを使って、容易にテストできます。
+
+```tsx
+test("`post`として渡された値がタイトルとして表示される", () => {
+  const post = {
+    title: "test post",
+  };
+  render(<PostPresentation post={post} />);
+
+  expect(
+    screen.getByRole("heading", {
+      name: "test post",
+      level: 1,
+    }),
+  ).toBeInTheDocument();
+});
+```
+
+### Container単位のディレクトリ構成例
+
+Next.jsはファイルコロケーションを強く意識して設計されており、[Route Segment↗︎](https://nextjs.org/docs/app/getting-started/layouts-and-pages#creating-a-nested-route)で利用するコンポーネントや関数もできるだけコロケーションすることが推奨^[参考: [公式ドキュメント↗︎](https://nextjs.org/docs/app/getting-started/project-structure#colocation)]されます。上記手順で得られたページやレイアウトを構成するContainer Componentsも、同様にコロケーションすることが望ましいと考えられます。
+
+以下は、筆者が推奨するディレクトリ構成の例です。[Private Folder↗︎](https://nextjs.org/docs/app/getting-started/project-structure#private-folders)を利用して、Container単位で`_containers`ディレクトリにコロケーションします。
+
+```
+/posts/[postId]
+├── page.tsx
+├── layout.tsx
+└── _containers
+    ├── post
+    │  ├── index.tsx // Container Componentsをre export
+    │  ├── container.tsx
+    │  ├── presentational.tsx
+    │  └── ... // その他のコンポーネントやUtilityなど
+    └── user-profile
+       ├── index.tsx // Container Componentsをre export
+       ├── container.tsx
+       ├── presentational.tsx
+       └── ... // その他のコンポーネントやUtilityなど
+```
+
+コロケーションしたファイルは、外部から参照されることを想定した実質的にPublicなファイルと、Privateなファイルに分けることができます。上記の例では、`index.tsx`でContainer Componentsをre exportすることを想定しています。
+
 ## トレードオフ
 
 ### エコシステム側が将来対応する可能性
 
-本章ではRSCに対してテストのエコシステムが未成熟であることを前提にしつつ、テスト容易性を向上するための手段としてContainer/Presentationalパターンが役に立つことを主張しました。しかし、今後エコシステムの状況が変わればより容易にテストできるようになることがあるかもしれません。その場合、Container/Presentationalパターンは変化するか不要になる可能性もあります。
+本章では、RSCに対するテストやStorybookの対応が未成熟であることを前提にしつつ、テスト容易性を向上するための手段としてContainer/Presentationalパターンが役に立つことを主張しました。しかし、今後エコシステムの状況が変わればより容易にテストできるようになることがあるかもしれません。その場合、Container/Presentationalパターンは変化するか不要になる可能性もあります。
 
-ただし、Container相当なコンポーネント単位を意識することはRSCの設計において非常に重要です。次章[Container 1stな設計](part_2_container_1st_design)では、RSCのメリットを生かしつつ手戻りの少ない設計順序を提案します。
+### 広すぎるexport
+
+Presentational ComponentsはContainer Componentsの実装詳細と捉えることもできるので、本来プライベート定義として扱うことが好ましいと考えられます。[Container単位のディレクトリ構成例](#container単位のディレクトリ構成例)では、Presentational Componentsは`presentational.tsx`で定義されます。
+
+```
+_containers
+├── <Container Name> // e.g. `post-list`, `user-profile`
+│  ├── index.tsx // Container Componentsをre export
+│  ├── container.tsx
+│  ├── presentational.tsx
+│  └── ...
+└── ...
+```
+
+上記の構成では`<Container Name>`の外から参照されるモジュールは`index.tsx`のみの想定です。ただ実際には、`presentational.tsx`で定義したコンポーネントもプロジェクトのどこからでも参照することができます。
+
+このように、同一ディレクトリにおいてのみ利用することを想定したモジュール分割においては、[eslint-plugin-import-access↗︎](https://github.com/uhyo/eslint-plugin-import-access)やbiomeの[`noPrivateImports`↗︎](https://biomejs.dev/linter/rules/no-private-imports/)を利用すると予期せぬ外部からの`import`を制限することができます。
+
+上記のようなディレクトリ設計に沿わない場合でも、Presentational ComponentsはContainer Componentsのみが利用しうる**実質的なプライベート定義**として扱うようにしましょう。
