@@ -50,7 +50,7 @@ ReactではUIをコンポーネントとして表現します。ページやレ�
 - 著者情報
 - コメント一覧
 
-これらの情報の取得には、以下のAPIを利用するものとします。
+これらのデータの取得には、以下のAPIを利用するものとします。
 
 - PostAPI: 投稿IDをもとにブログ記事情報を取得するAPI
 - UserAPI: ユーザーIDをもとにユーザー情報を取得するAPI
@@ -114,23 +114,11 @@ export async function PostContainer({
 }
 
 // `/posts/[postId]/_containers/user-profile/container.tsx`
-export async function UserProfileContainer({
-  postId,
-  children,
-}: {
-  postId: string;
-  children: React.ReactNode;
-}) {
+export async function UserProfileContainer({ postId }: { postId: string }) {
   const post = await getPost(postId); // Request Memoization
   const user = await getUser(post.authorId);
 
-  return (
-    <div>
-      {/* ...省略... */}
-      {children}
-      {/* ...省略... */}
-    </div>
-  );
+  return <div>{/* ...省略... */}</div>;
 }
 
 // `/posts/[postId]/_containers/comments/container.tsx`
@@ -149,7 +137,7 @@ export async function CommentsContainer({ postId }: { postId: string }) {
 async function CommentItemContainer({ comment }: { comment: Comment }) {
   const user = await getUser(comment.authorId); // `getUser`は内部的にDataLoaderを利用
 
-  return <CommentItemPresentation comment={comment} user={user} />;
+  return <div>{/* ...省略... */}</div>;
 }
 ```
 
