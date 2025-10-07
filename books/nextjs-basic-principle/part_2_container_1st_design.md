@@ -50,7 +50,7 @@ ReactではUIをコンポーネントとして表現します。ページやレ�
 - 著者情報
 - コメント一覧
 
-これらに対応するデータソースとして、以下のAPIを利用するものとします。
+これらの情報の取得には、以下のAPIを利用するものとします。
 
 - PostAPI: 投稿IDをもとにブログ記事情報を取得するAPI
 - UserAPI: ユーザーIDをもとにユーザー情報を取得するAPI
@@ -58,13 +58,13 @@ ReactではUIをコンポーネントとして表現します。ページやレ�
 
 #### 1. UIをツリー構造に分解する
 
-画面の要素をデータソースの依存関係を元に、UIをツリーに分解します。
+UIを画面の要素が依存するデータを元にツリーに分解します。
 
 ![APIの依存関係](/images/nextjs-basic-principle/component-tree-example.png)
 
 #### 2. コンポーネントのツリーを仮実装
 
-上記の図をもとに、分解したUIの各要素をServer Componentsとして仮実装します。ここでは次章で解説する[Container/Presentationalパターン](part_2_container_presentational_pattern)を元に、各Server Componentsを`{Name}Container`という命名で仮実装します。
+上記の図をもとに、分解したUIの各要素をServer Componentsとして仮実装します。ここでデータフェッチするコンポーネントを`{Name}Container`という命名で仮実装します^[`Container`という命名は、[Container/Presentationalパターン](part_2_container_presentational_pattern)を元にしています。]。
 
 ```tsx:/posts/[postId]/page.tsx
 export default async function Page(props: {
@@ -91,22 +91,46 @@ export default async function Page(props: {
 
 ::::details 各コンポーネントの実装イメージ
 
-以下はContainer Componentsの実装イメージです。データフェッチ層やPresentational Componentsは省略しています。
+以下はContainer Componentsの実装イメージです。データフェッチ層などの実装は省略しています。
 
 ```tsx
 // `/posts/[postId]/_containers/post/container.tsx`
-export async function PostContainer({ postId }: { postId: string }) {
+export async function PostContainer({
+  postId,
+  children,
+}: {
+  postId: string;
+  children: React.ReactNode;
+}) {
   const post = await getPost(postId); // Request Memoization
 
-  return <PostPresentation post={post} />;
+  return (
+    <div>
+      {/* ...省略... */}
+      {children}
+      {/* ...省略... */}
+    </div>
+  );
 }
 
 // `/posts/[postId]/_containers/user-profile/container.tsx`
-export async function UserProfileContainer({ postId }: { postId: string }) {
+export async function UserProfileContainer({
+  postId,
+  children,
+}: {
+  postId: string;
+  children: React.ReactNode;
+}) {
   const post = await getPost(postId); // Request Memoization
   const user = await getUser(post.authorId);
 
-  return <UserProfilePresentation user={user} />;
+  return (
+    <div>
+      {/* ...省略... */}
+      {children}
+      {/* ...省略... */}
+    </div>
+  );
 }
 
 // `/posts/[postId]/_containers/comments/container.tsx`
@@ -114,11 +138,11 @@ export async function CommentsContainer({ postId }: { postId: string }) {
   const comments = await getComments(postId);
 
   return (
-    <CommentLayout>
+    <div>
       {comments.map((comment) => (
-        <CommentItemContainer key={comment.id} comment={comment} />
+        <div key={comment.id}>{/* ...省略... */}</div>
       ))}
-    </CommentLayout>
+    </div>
   );
 }
 
@@ -129,17 +153,12 @@ async function CommentItemContainer({ comment }: { comment: Comment }) {
 }
 ```
 
-:::message
-
-- `<PostContainer>`や`<CommentsContainer>`は`getPost(postId)`をそれぞれ呼び出しますが、[Request Memoization](part_1_request_memoization)によって重複リクエストは発生しません。
-- `<CommentsContainer>`のように、ContainerとPresentationalが必ずしも1対1になるとは限りません。
-
-:::
-
 ::::
 
 ## トレードオフ
 
-### 重複するデータフェッチ
+### 重複するデータフェッチやN+1データフェッチ
 
 UIを「小さなコンポーネント」に分解し、末端のコンポーネントでデータフェッチを行うことは重複リクエストのリスクが伴います。[Request Memoization](part_1_request_memoization)の章で解説したように、Next.jsではRequest Memoizationによってレンダリング中の同一リクエストを排除するため、データフェッチ層の設計が重要です。
+
+また、配列を扱う際には[DataLoader](part_1_data_loader)を利用することで、N+1データフェッチを解消することができます。

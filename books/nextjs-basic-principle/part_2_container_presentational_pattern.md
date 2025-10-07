@@ -150,12 +150,18 @@ test("`todo`として渡された値がタイトルとして表示される", ()
 
 ```tsx
 export default async function RandomTodoContainer() {
-  const res = await fetch("https://dummyjson.com/todos/random");
-  const todo = ((res) => res.json()) as Todo;
+  const todo = await getRandomTodo();
 
   return <RandomTodoPresentation todo={todo} />;
 }
 ```
+
+:::message
+
+- `getRandomTodo()`のようにデータフェッチ層を分離することで、[Request Memoization](part_1_request_memoization)による重複リクエスト排除を活用しやすくなります。
+- 上記例ではContainerとPresentationalが1対1となっていますが、必ずしも1対1になるとは限りません。
+
+:::
 
 非同期なServer ComponentsはRTLで`render()`することができないので、単なる関数として実行して戻り値を検証します。以下は簡易的なテストケースの実装例です。
 
