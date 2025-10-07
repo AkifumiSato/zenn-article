@@ -242,18 +242,18 @@ Next.jsはファイルコロケーションを強く意識して設計されて�
 ├── layout.tsx
 └── _containers
     ├── post
-    │  ├── index.tsx // Container Componentsをexport
+    │  ├── index.tsx // Container Componentsをre export
     │  ├── container.tsx
     │  ├── presentational.tsx
     │  └── ... // その他のコンポーネントやUtilityなど
     └── user-profile
-       ├── index.tsx // Container Componentsをexport
+       ├── index.tsx // Container Componentsをre export
        ├── container.tsx
        ├── presentational.tsx
        └── ... // その他のコンポーネントやUtilityなど
 ```
 
-コロケーションしたファイルは、外部から参照されることを想定した実質的にPublicなファイルと、Privateなファイルに分けることができます。上記の例では、`index.tsx`でContainer Componentsを`export`することを想定しています。
+コロケーションしたファイルは、外部から参照されることを想定した実質的にPublicなファイルと、Privateなファイルに分けることができます。上記の例では、`index.tsx`でContainer Componentsをre exportすることを想定しています。
 
 ## トレードオフ
 
@@ -268,7 +268,7 @@ Presentational ComponentsはContainer Componentsの実装詳細と捉えるこ�
 ```
 _containers
 ├── <Container Name> // e.g. `post-list`, `user-profile`
-│  ├── index.tsx // Container Componentsをexport
+│  ├── index.tsx // Container Componentsをre export
 │  ├── container.tsx
 │  ├── presentational.tsx
 │  └── ...
