@@ -33,6 +33,10 @@ https://nextjs.org/learn
 
 https://gihyo.jp/book/2024/978-4-297-14061-8
 
+## 謝辞
+
+本書の執筆にあたり、[koichikさん↗︎](https://x.com/koichik)にレビュー協力をいただきました。多大な時間を割いてレビューや議論にお付き合いいただいたおかげで、本書をより良いものにできました。本当にありがとうございます。
+
 ## 変更履歴
 
 - 2025/10: [クライアントとサーバーのバンドル境界](part_2_bundle_boundary)追加、全体の改定<!-- https://github.com/AkifumiSato/zenn-article/pull/81 -->
