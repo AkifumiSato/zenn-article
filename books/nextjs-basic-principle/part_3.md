@@ -2,7 +2,7 @@
 title: "第3部 キャッシュ"
 ---
 
-App Routerには4層のキャッシュが存在し、デフォルトで積極的に利用されます。以下は[公式の表](https://nextjs.org/docs/app/building-your-application/caching#overview)を翻訳したものです。
+Next.jsには4層のキャッシュが存在し、デフォルトで積極的に利用されます。以下は[公式の表↗︎](https://nextjs.org/docs/app/guides/caching#overview)を翻訳したものです。
 
 | Mechanism               | What              | Where  | Purpose                                    | Duration                                |
 | ----------------------- | ----------------- | ------ | ------------------------------------------ | --------------------------------------- |
@@ -12,10 +12,10 @@ App Routerには4層のキャッシュが存在し、デフォルトで積極的
 | **Router Cache**        | RSC Payload       | Client | ナビゲーションごとのリクエスト削減         | ユーザーセッション・時間 (revalidate可) |
 
 :::message
-Next.js v15で[キャッシュのデフォルト設定の見直し](https://nextjs.org/blog/next-15-rc#caching-updates)が行われ、従来ほど積極的なキャッシュは行われなくなりました。
-現在実験的機能である[Dynamic IO](https://nextjs.org/docs/app/api-reference/config/next-config-js/dynamicIO)ではさらに、サーバーサイドキャッシュはデフォルトで無効化され、オプトインでキャッシュ可能な設計に変更することが検討されています。
+Next.js v15で[キャッシュのデフォルト設定の見直し↗︎](https://nextjs.org/blog/next-15-rc#caching-updates)が行われ、従来ほど積極的なキャッシュは行われなくなりました。
+現在実験的機能である[`cacheComponents`↗︎](https://nextjs.org/docs/app/api-reference/config/next-config-js/cacheComponents)フラグでは、さらにサーバーサイドキャッシュはデフォルトで無効化され、`"use cache"`でキャッシュをオプトインする設計に変更することが検討されています。
 :::
 
-すでにRequest Memoizationについては[_第1部 データフェッチ_](part_1)で解説しましたが、これはNext.jsサーバーに対するリクエスト単位の非常に短い期間でのみ利用されるキャッシュであり、これが問題になることはほとんどないと考えられます。一方他の3つについてはもっと長い期間および広いスコープで利用されるため、開発者が意図してコントロールしなければ予期せぬキャッシュによるバグに繋がりかねません。そのため、App Routerを利用する開発者にとってこれらの理解は非常に重要です。
+すでに[Request Memoization](part_1_request_memoization)については解説しましたが、これはNext.jsサーバーに対するリクエスト単位という非常に短い期間でのみ利用されるキャッシュであり、これが問題になることはほとんどないと考えられます。一方他の3つについてはもっと長い期間および広いスコープで利用されるため、開発者が意図してコントロールしなければ予期せぬキャッシュによるバグに繋がりかねません。そのため、Next.jsを利用する開発者にとってこれらの理解は非常に重要です。
 
-第3部ではApp Routerにおけるキャッシュの考え方や仕様、コントロールの方法などを解説します。
+第3部ではNext.jsにおけるキャッシュの考え方や仕様、コントロールの方法などを解説します。

@@ -1,162 +1,152 @@
 ---
-title: "Container 1stな設計とディレクトリ構成"
+title: "UIをツリーに分解する"
 ---
 
 ## 要約
 
-画面の設計はまずContainer Componentsのみで行い、Presentational Componentsは後から追加することを心がけましょう。そうすることでCompositionパターンを早期に適用した設計が可能になり、大きな手戻りを防ぐことができます。
+Reactの基本的な設計思想は、UI^[ここでのUIとは、データフェッチ等を含むReactコンポーネントで行う全てのことを含みます。]をコンポーネントのツリーで設計することです。ページやレイアウトなどの実装は、**UIをツリーに分解する**ことから始めましょう。これにより、データフェッチコロケーションやCompositionパターンの早期適用を目指します。
+
+:::message
+本章の内容は、React公式ドキュメントの[UIをツリーに分解する↗︎](https://ja.react.dev/learn/understanding-your-ui-as-a-tree#your-ui-as-a-tree)の理解が前提です。自信のない方はこちらを先にご参照ください。
+:::
 
 ## 背景
 
-[_第1部 データフェッチ_](part_1)ではServer Componentsの設計パターンを、[_第2部 コンポーネント設計_](part_2)ではここまでClient Componentsも含めたコンポーネント全体の設計パターンを解説してきました。ここまで順に読んでいただいた方は、すでに多くの設計パターンを理解されてることと思います。
-
-しかし、これらを「理解してること」と「使いこなせること」は別問題です。
-
-- テストを書けること
-- TDDで開発できること
-
-これらに大きな違いがあることと同じく、
-
-- 設計パターンを理解してること
-- 設計パターンを駆使して設計できること
-
-これらにも大きな違いがあります。
-
-React Server Componentsでは特に、Compositionパターンを後から適用しようとすると大幅なClient Componentsの設計見直しや書き換えが発生しがちです。こういった手戻りを防ぐためにも、設計の手順はとても重要です。
+[第1部 データフェッチ](part_1)でServer Componentsの設計パターンを、[第2部 コンポーネント設計](part_2)ではここまでClient Componentsの設計パターンを解説してきました。特に、[データフェッチ コロケーション](part_1_colocation)や[Compositionパターン](part_2_composition_pattern)は、後から適用しようとすると大きな手戻りを生む可能性があるため、早期から考慮して設計することが重要です。
 
 ## 設計・プラクティス
 
-筆者が提案する設計手順は、画面の設計はまずContainer Componentsのみで行い、Presentational Componentsやそこで使うClient Componentsは後から実装する、といういわば**Container 1stな設計手法**です。これは、最初から**Compositionパターンありきで設計する**ことと同義です。
+データフェッチコロケーションとCompositionパターンを早期適用するには、トップダウンな設計が効果的です。レイアウトやページといったUIを**ツリーに分解する**ことから始め、コンポーネントツリーの実装、各コンポーネントの詳細実装という流れで実装しましょう。
 
-具体的には以下のような手順になります。
+### 「大きなコンポーネント」と「小さなコンポーネント」
 
-1. Container Componentsのツリー構造を書き出す
-2. Container Componentsを実装
-3. Presentational Components(Shared/Client Components)を実装
-4. 2,3を繰り返す
+ReactではUIをコンポーネントとして表現します。ページやレイアウトなどのUIは「大きなコンポーネント」であり、「小さなコンポーネント」を組み合わせて^[ここでの「大きい」「小さい」とは、コンポーネントの位置関係を表すものです。コンポーネントの実装のサイズ（行数）ではありません。]実装します。RSCにおいてはServer Componentsという新たな種類のコンポーネントを組み合わせることができるようになりましたが、「小さなコンポーネント」を組み合わせて「大きなコンポーネント」を表現するという基本的な設計思想は変わりません。
 
-この手順ではServer Componentsツリーをベースに設計することで、最初からCompositionパターンを適用した状態・あるいは適用しやすい状態を目指します。これにより、途中でContainer Componentsが増えたとしても修正範囲が少なく済むというメリットもあります。
+「大きなコンポーネント」はボトムアップに実装すると手戻りが多くなりやすいため、筆者はトップダウンに設計することを推奨します。
+
+### 実装手順
+
+具体的には、以下のように進めることを推奨します。
+
+1. 設計: **UIをツリーに分解する**
+2. 仮実装: コンポーネントのツリーを仮実装
+3. 実装: 各コンポーネントの詳細実装
+   a. Server Componentsを実装
+   b. Shared/Client Componentsを実装
 
 :::message
-「まずはContainerのツリー構造から設計する」ことが重要なのであって、「最初に決めた設計を守り切る」ことは重要ではありません。実装を進める中でContainerツリーの設計を見直すことも重要です。
+最初に決めたツリー構造に固執する必要はありません。実装を進める中でツリーを見直すことも重要です。
 :::
 
 ### 実装例
 
-よくあるブログ記事の画面実装を例に、Container 1stな設計を実際にやってみましょう。ここでは特に重要なステップ1を詳しく見ていきます。
+以下のようなブログ記事画面を例として考えてみます。
 
-画面に必要な情報はPost、User、Commentsの3つを仮定し、それぞれに対してContainer Componentsを考えます。
+![UIをツリー構造に分解する](/images/nextjs-basic-principle/blog-ui-example.png =400x)
 
-- `<PostContainer postId={postId}>`
-- `<UserProfileContainer id={post.userId}>`
-- `<CommentsContainer postId={postId}>`
+この画面は以下のような要素で構成されています。
 
-`postId`はURLから取得できますが`userId`はPost情報に含まれているので、`<UserProfileContainer>`は`<PostContainer>`で呼び出される形になります。一方`<CommentsContainer>`は`postId`を元にレンダリングされるので、`<PostContainer>`と並行に呼び出すことが可能です。
+- ブログ記事情報
+- 著者情報
+- コメント一覧
 
-これらを加味して、まずはContainer Componentsのツリー構造を`page.tsx`に実際に書き出してみます。各ContainerやPresentational Componentsの実装は後から行うので、ここでは仮実装で構造を設計することに集中しましょう。
+これらのデータの取得には、以下のAPIを利用するものとします。
 
-```tsx
-export default async function Page({
-  params,
-}: {
+- PostAPI: 投稿IDをもとにブログ記事情報を取得するAPI
+- UserAPI: ユーザーIDをもとにユーザー情報を取得するAPI
+- CommentsAPI: 投稿IDをもとにコメント一覧を取得するAPI
+
+#### 1. UIをツリー構造に分解する
+
+UIを画面の要素が依存するデータを元にツリーに分解します。
+
+![APIの依存関係](/images/nextjs-basic-principle/component-tree-example.png)
+
+#### 2. コンポーネントのツリーを仮実装
+
+上記の図をもとに、分解したUIの各要素をServer Componentsとして仮実装します。ここでデータフェッチするコンポーネントを`{Name}Container`という命名で仮実装します^[`Container`という命名は、[Container/Presentationalパターン](part_2_container_presentational_pattern)を元にしています。]。
+
+```tsx:/posts/[postId]/page.tsx
+export default async function Page(props: {
   params: Promise<{ postId: string }>;
 }) {
-  const { postId } = await params;
+  const { postId } = await props.params;
 
   return (
-    <>
-      <PostContainer postId={postId} />
+    <div className="flex flex-col gap-4">
+      <PostContainer postId={postId}>
+        <UserProfileContainer postId={postId} />
+      </PostContainer>
       <CommentsContainer postId={postId} />
-    </>
+    </div>
   );
 }
+```
 
-async function PostContainer({ postId }: { postId: string }) {
-  const post = await getPost(postId);
+#### 3. 各コンポーネントの詳細実装
+
+以降は、仮実装となっているContainer Componentsの詳細な実装を行い、UIを完成させます。
+
+各コンポーネントの詳細な実装は主題ではないため、本章では省略します。
+
+::::details 各コンポーネントの実装イメージ
+
+以下はContainer Componentsの実装イメージです。データフェッチ層などの実装は省略しています。
+
+```tsx
+// `/posts/[postId]/_containers/post/container.tsx`
+export async function PostContainer({
+  postId,
+  children,
+}: {
+  postId: string;
+  children: React.ReactNode;
+}) {
+  const post = await getPost(postId); // Request Memoization
 
   return (
-    <PostPresentation post={post}>
-      <UserProfileContainer id={post.userId} />
-    </PostPresentation>
+    <div>
+      {/* ...省略... */}
+      {children}
+      {/* ...省略... */}
+    </div>
   );
 }
 
-// ...
+// `/posts/[postId]/_containers/user-profile/container.tsx`
+export async function UserProfileContainer({ postId }: { postId: string }) {
+  const post = await getPost(postId); // Request Memoization
+  const user = await getUser(post.authorId);
+
+  return <div>{/* ...省略... */}</div>;
+}
+
+// `/posts/[postId]/_containers/comments/container.tsx`
+export async function CommentsContainer({ postId }: { postId: string }) {
+  const comments = await getComments(postId);
+
+  return (
+    <div>
+      {comments.map((comment) => (
+        <div key={comment.id}>{/* ...省略... */}</div>
+      ))}
+    </div>
+  );
+}
+
+async function CommentItemContainer({ comment }: { comment: Comment }) {
+  const user = await getUser(comment.authorId); // `getUser`は内部的にDataLoaderを利用
+
+  return <div>{/* ...省略... */}</div>;
+}
 ```
 
-ポイントは、`<PostPresentation>`が`children`として`<UserProfileContainer>`を受け取っている点です。この時点でCompositionパターンが適用されているため、`<PostPresentation>`は必要に応じてClient ComponentsにもShared Componentsにもすることができます。
-
-これでステップ1は終了です。以降はステップ2,3を繰り返すので、仮実装にしていた部分を1つづつ実装していきましょう。
-
-1. `<PostContainer>`や`getPost()`の実装
-2. `<PostPresentation>`の実装
-3. `<CommentsContainer>`の実装
-4. ...
-
-本章の主題は設計であり、上記は実装の詳細話になるので、ここでは省略とさせていただきます。
-
-### ディレクトリ構成案
-
-App Routerの規約ファイルはコロケーションを強く意識した設計がなされており、Route Segmentで利用するコンポーネントや関数もできるだけコロケーションすることが推奨されます。
-
-Container/Presentationalパターンにおいて、ページやレイアウトから見える単位はContainer単位です。Presentational Componentsやその他のコンポーネントは、Container Componentsのプライベートな実装詳細に過ぎません。
-
-これらを体現するContainer 1stなディレクトリ設計として、Containerの単位を`_containers`以下でディレクトリ分割することを提案します。このディレクトリ設計では、外部から利用されうるContainer Componentsの公開を`index.tsx`で行うことを想定しています。
-
-```
-_containers
-├── <Container Name> // e.g. `post-list`, `user-profile`
-│  ├── index.tsx // Container Componentsをexport
-│  ├── container.tsx
-│  ├── presentational.tsx
-│  └── ...
-└── ...
-```
-
-`_containers`のようにディレクトリ名に`_`をつけているのはApp Routerにおけるルーティングディレクトリと明確に区別する[Private Folder](https://nextjs.org/docs/app/building-your-application/routing/colocation#private-folders)の機能を利用するためです。筆者は`_components`、`_lib`のように他のSegment内共通なコンポーネントや関数も`_`をつけたディレクトリにまとめることを好みます。
-
-`app`直下からみた時には以下のような構成になります。
-
-```
-app
-├── <Segment>
-│  ├── page.tsx
-│  ├── layout.tsx
-│  ├── _containers
-│  │  ├── <Container Name>
-│  │  │  ├── index.tsx
-│  │  │  ├── container.tsx
-│  │  │  ├── presentational.tsx
-│  │  │  └── ...
-│  │  └── ...
-│  ├── _components // 汎用的なClient Components
-│  ├── _lib // 汎用的な関数など
-│  └── ...
-└── ...
-```
-
-命名やさらに細かい分割の詳細は、プロジェクトごとに適宜修正してもいいと思います。筆者が重要だと思うのはディレクトリをContainer単位で、ファイルをContainer/Presentationalで分割することです。
+::::
 
 ## トレードオフ
 
-### 広すぎるexport
+### 重複するデータフェッチやN+1データフェッチ
 
-前述のように、Presentational ComponentsはContainer Componentsの実装詳細と捉えることもできるので、本来Presentational Componentsはプライベート定義として扱うことが好ましいと考えられます。
+UIを「小さなコンポーネント」に分解し、末端のコンポーネントでデータフェッチを行うことは重複リクエストのリスクが伴います。[Request Memoization](part_1_request_memoization)の章で解説したように、Next.jsではRequest Memoizationによってレンダリング中の同一リクエストを排除するため、データフェッチ層の設計が重要です。
 
-[ディレクトリ構成例](#ディレクトリ構成案)に基づいた設計の場合、Presentational Componentsは`presentational.tsx`で定義されます。
-
-```
-_containers
-├── <Container Name> // e.g. `post-list`, `user-profile`
-│  ├── index.tsx // Container Componentsをexport
-│  ├── container.tsx
-│  ├── presentational.tsx
-│  └── ...
-└── ...
-```
-
-上記の構成では`<Container Name>`の外から参照されるモジュールは`index.tsx`のみの想定です。ただ実際には、`presentational.tsx`で定義したコンポーネントもプロジェクトのどこからでも参照することができます。
-
-このような同一ディレクトリにおいてのみ利用することを想定したモジュール分割においては、[eslint-plugin-import-access](https://github.com/uhyo/eslint-plugin-import-access)を利用すると予期せぬ外部からのimportを制限することができます。
-
-上記のようなディレクトリ設計に沿わない場合でも、Presentational ComponentsはContainer Componentsのみが利用しうる**実質的なプライベート定義**として扱うようにしましょう。
+また、配列を扱う際には[DataLoader](part_1_data_loader)を利用することで、N+1データフェッチを解消することができます。

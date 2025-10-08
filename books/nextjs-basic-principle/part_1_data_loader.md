@@ -12,11 +12,11 @@ title: "N+1とDataLoader"
 
 ## 背景
 
-前述の[_データフェッチ コロケーション_](part_1_colocation)や[_並行データフェッチ_](part_1_concurrent_fetch)を実践し、データフェッチやコンポーネントを細かく分割していくと、ページ全体で発生するデータフェッチの管理が難しくなり2つの問題を引き起こします。
+前述の[データフェッチ コロケーション](part_1_colocation)や[並行データフェッチ](part_1_concurrent_fetch)を実践し、データフェッチやコンポーネントを細かく分割していくと、ページ全体で発生するデータフェッチの管理が難しくなり2つの問題を引き起こします。
 
-1つは重複したデータフェッチです。これについてはNext.jsの機能である[_Request Memoization_](part_1_request_memoization)によって解消されるため、前述のようにデータフェッチ層を分離・共通化してれば我々開発者が気にすることはほとんどありません。
+1つは重複したデータフェッチです。これについてはNext.jsの機能である[Request Memoization](part_1_request_memoization)によって解消されるため、前述のようにデータフェッチ層を分離・共通化していればほとんど問題ありません。
 
-もう1つは、いわゆる**N+1**なデータフェッチです。データフェッチを細粒度に分解していくと、N+1データフェッチになる可能性が高まります。
+もう1つは、いわゆる**N+1**^[参考: [[解説] SQLクエリのN+1問題↗︎](https://qiita.com/muroya2355/items/d4eecbe722a8ddb2568b)]なデータフェッチです。データフェッチを細粒度に分解していくと、N+1データフェッチになる可能性が高まります。
 
 以下の例では投稿の一覧を取得後、子コンポーネントで著者情報を取得しています。
 
@@ -96,7 +96,7 @@ type User = {
 
 上記のようなN+1データフェッチを避けるため、API側では`https://dummyjson.com/users/?id=1&id=2&id=3...`のように、idを複数指定してUser情報を一括で取得できるよう設計するパターンがよく知られています。
 
-このようなバックエンドAPIと、Next.js側で[DataLoader](https://github.com/graphql/dataloader)を利用することで前述のようなN+1データフェッチを解消することができます。
+このようなバックエンドAPIと、Next.js側で[DataLoader↗︎](https://github.com/graphql/dataloader)を利用することで前述のようなN+1データフェッチを解消することができます。
 
 ### DataLoader
 
@@ -104,7 +104,7 @@ DataLoaderはGraphQLサーバーなどでよく利用されるライブラリで
 
 1. バッチ処理する関数を定義
 2. DataLoaderのインスタンスを生成
-3. 短期間^[バッチングスケジュールの詳細は[公式の説明](https://github.com/graphql/dataloader?tab=readme-ov-file#batch-scheduling)を参照ください。]に`dataLoader.load(id)`を複数回呼び出すと、`id`の配列がバッチ処理に渡される
+3. 短期間^[バッチングスケジュールの詳細は[公式の説明↗︎](https://github.com/graphql/dataloader?tab=readme-ov-file#batch-scheduling)を参照ください。]に`dataLoader.load(id)`を複数回呼び出すと、`id`の配列がバッチ処理に渡される
 4. バッチ処理が完了すると`dataLoader.load(id)`のPromiseが解決される
 
 以下は非常に簡単な実装例です。
@@ -117,14 +117,17 @@ async function myBatchFn(keys: readonly number[]) {
     `https://dummyjson.com/posts/?${keys.map((key) => `id=${key}`).join("&")}`,
   );
   const { posts } = (await res.json()) as { posts: Post[] };
-  return keys.map((key) => posts.find((post) => post.id === key) ?? null);
+  return posts;
 }
 
 const myLoader = new DataLoader(myBatchFn);
 
-// 呼び出しはDataLoaderによってまとめられ、`myBatchFn([1, 2])`が呼び出される
-myLoader.load(1);
-myLoader.load(2);
+// 呼び出しはDataLoaderによってまとめられ、`myBatchFn([1, 2, 3])`が呼び出される
+const posts = await Promise.all([
+  myLoader.load(1),
+  myLoader.load(2),
+  myLoader.load(3),
+]);
 ```
 
 ### Next.jsにおけるDataLoaderの利用
@@ -155,16 +158,16 @@ async function batchGetUser(keys: readonly number[]) {
     `https://dummyjson.com/users/?${keys.map((key) => `id=${key}`).join("&")}`,
   );
   const { users } = (await res.json()) as { users: User[] };
-  return keys.map((key) => users.find((user: User) => user.id === key) ?? null);
+  return users;
 }
 
 // ...
 ```
 
-ポイントは`getUserLoader`が`React.cache()`を利用していることです。DataLoaderはキャッシュ機能があるため、ユーザーからのリクエストを跨いでインスタンスを共有してしまうと予期せぬデータ共有につながります。そのため、**ユーザーからのリクエスト単位でDataLoaderのインスタンスを生成**する必要があり、これを実現するために[React Cache](https://nextjs.org/docs/app/building-your-application/caching#react-cache-function)を利用しています。
+ポイントは`getUserLoader`が`React.cache()`を利用していることです。DataLoaderはキャッシュ機能があるため、ユーザーからのリクエストを跨いでインスタンスを共有してしまうと予期せぬデータ共有につながります。そのため、**ユーザーからのリクエスト単位でDataLoaderのインスタンスを生成**する必要があり、これを実現するために[React Cache↗︎](https://ja.react.dev/reference/react/cache)を利用しています。
 
 :::message alert
-Next.jsやReactのコアメンテナである[Sebastian Markbåge氏](https://bsky.app/profile/sebmarkbage.calyptus.eu)の過去ツイート（アカウントごと削除済み）によると、React Cacheがリクエスト単位で保持される仕様は将来的に保障されたものではないようです。執筆時点では他に情報がないため、上記実装を参考にする場合には必ず動作確認を行ってください。
+Next.jsやReactのコアメンテナである[Sebastian Markbåge氏↗︎](https://bsky.app/profile/sebmarkbage.calyptus.eu)の過去ツイート（アカウントごと削除済み）によると、React Cacheがリクエスト単位で保持される仕様は将来的に保障されたものではないようです。執筆時点では他に情報がないため、上記実装を参考にする場合には必ず動作確認を行ってください。
 :::
 
 上記のように実装することで、`getUser()`のインターフェースは変えずにN+1データフェッチを解消することができます。
@@ -175,4 +178,4 @@ Next.jsやReactのコアメンテナである[Sebastian Markbåge氏](https://bs
 
 ここで紹介した設計パターンはいわゆる**Lazy Loading**パターンの一種です。バックエンドAPI側の実装・パフォーマンス観点からLazy Loadingが適さない場合は**Eager Loading**パターン、つまりN+1の最初の1回のリクエストで関連する必要な情報を全て取得することを検討しましょう。
 
-Eager Loadingパターンはやりすぎると、密結合で責務が大きすぎるいわゆる**God API**になってしまう傾向にあります。これらの詳細については次章の[_細粒度のREST API設計_](part_1_fine_grained_api_design)で解説します。
+Eager Loadingパターンは偏りすぎると、密結合で責務が大きすぎるいわゆる**God API**になってしまいます。これらの詳細については次章の[細粒度のREST API設計](part_1_fine_grained_api_design)で解説します。

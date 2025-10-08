@@ -10,12 +10,12 @@ title: "データフェッチ on Server Components"
 
 Reactにおけるコンポーネントは従来クライアントサイドでの処理を主体としていたため、クライアントサイドにおけるデータフェッチのためのライブラリや実装パターンが多く存在します。
 
-- [SWR](https://swr.vercel.app/)
-- [React Query](https://react-query.tanstack.com/)
+- [SWR↗︎](https://swr.vercel.app/)
+- [React Query↗︎](https://react-query.tanstack.com/)
 - GraphQL
-  - [Apollo Client](https://www.apollographql.com/docs/react/)
-  - [Relay](https://relay.dev/)
-- [tRPC](https://trpc.io/)
+  - [Apollo Client↗︎](https://www.apollographql.com/docs/react/)
+  - [Relay↗︎](https://relay.dev/)
+- [tRPC↗︎](https://trpc.io/)
 - etc...
 
 しかしクライアントサイドでデータフェッチを行うことは、多くの点でデメリットを伴います。
@@ -28,7 +28,7 @@ REST APIにおいて通信回数を優先すると**God API**と呼ばれる責�
 
 ### 様々な実装コスト
 
-クライアントサイドのデータフェッチでは、[Reactが推奨](https://ja.react.dev/reference/react/useEffect#what-are-good-alternatives-to-data-fetching-in-effects)してるように多くの場合キャッシュ機能を搭載した3rd partyライブラリを利用します。一方リクエスト先に当たるAPIは、パブリックなネットワークに公開するためより堅牢なセキュリティが求められます。
+クライアントサイドのデータフェッチでは多くの場合、[Reactが推奨↗︎](https://ja.react.dev/reference/react/useEffect#what-are-good-alternatives-to-data-fetching-in-effects)してるようにキャッシュ機能を搭載した3rd partyライブラリを利用します。一方リクエスト先に当たるAPIは、パブリックなネットワークに公開するためより堅牢なセキュリティが求められます。
 
 これらの理由からクライアントサイドでデータフェッチする場合には、3rd partyライブラリの学習・責務設計・API側のセキュリティ対策など様々な開発コストが発生します。
 
@@ -38,13 +38,19 @@ REST APIにおいて通信回数を優先すると**God API**と呼ばれる責�
 
 ## 設計・プラクティス
 
-Reactチームは前述の問題を個別の問題と捉えず、根本的にはReactがサーバーをうまく活用できてないことが問題であると捉えて解決を目指しました。その結果生まれたのが**React Server Components**(以下RSC)アーキテクチャです。
+Reactチームは前述の問題を個別の問題と捉えず、根本的にはReactがサーバーをうまく活用できてないことが問題であると捉えて解決を目指しました。その結果生まれたのが**React Server Components**（**RSC**）アーキテクチャです。
 
 https://ja.react.dev/reference/rsc/server-components
 
-App RouterはRSCをサポートしており、データフェッチはServer Componentsで行うことが[ベストプラクティス](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-on-the-server)とされています。
+Next.jsはRSCをサポートしており、[データフェッチはServer Componentsで行う↗︎](https://nextjs.org/docs/app/getting-started/fetching-data)ことがベストプラクティスとされています。
 
-これにより、以下のようなメリットを得られます。
+:::message alert
+「Server Componentsには`"use server"`が必要」という誤解が散見されますが、これは**誤り**です。`"use server"`は関数を[Server Functions↗︎](https://ja.react.dev/reference/rsc/server-functions)としてマークし、クライアントサイドから呼び出し可能にするものであり、Server Componentsに指定するためのものではありません。
+
+詳しくは[クライアントとサーバーのバンドル境界](part_2_bundle_boundary)を参照ください。
+:::
+
+データフェッチをServer Componentsで行うにより、以下のようなメリットを得られます。
 
 ### 高速なバックエンドアクセス
 
@@ -81,7 +87,7 @@ Server Componentsの実行結果はHTMLやRSC Payloadとしてクライアント
 
 ### ユーザー操作とデータフェッチ
 
-ユーザー操作に基づくデータフェッチはServer Componentsで行うことが困難な場合があります。詳細は後述の[_ユーザー操作とデータフェッチ_](part_1_interactive_fetch)を参照してください。
+ユーザー操作に基づくデータフェッチはServer Componentsで行うことが困難な場合があります。詳細は後述の[ユーザー操作とデータフェッチ](part_1_interactive_fetch)を参照してください。
 
 ### GraphQLとの相性の悪さ
 
@@ -90,5 +96,7 @@ RSCにGraphQLを組み合わせることは**メリットよりデメリット�
 GraphQLはその特性上、前述のようなパフォーマンスと設計のトレードオフが発生しませんが、RSCも同様にこの問題を解消するため、これをメリットとして享受できません。それどころか、RSCとGraphQLを協調させるための知見やライブラリが一般に不足してるため、実装コストが高くバンドルサイズも増加するなど、デメリットが多々含まれます。
 
 :::message
-RSCの最初のRFCは、Relayの初期開発者の1人でGraphQLを通じてReactにおけるデータフェッチのベストプラクティスを追求してきた[Joe Savona氏](https://twitter.com/en_js)によって提案されました。そのため、RSCはGraphQLの持っているメリットや課題を踏まえて設計されているという**GraphQLの精神的後継**の側面を持ち合わせていると考えることができます。
+RSCの最初のRFCは、Relayの初期開発者の1人でGraphQLを通じてReactにおけるデータフェッチのベストプラクティスを追求してきた[Joe Savona氏↗︎](https://twitter.com/en_js)によって提案されました。そのため、RSCはGraphQLの持っているメリットや課題を踏まえて設計されているという**GraphQLの精神的後継**の側面を持ち合わせていると考えることができます。
+
+より詳しくは、[Reactチームが見てる世界、Reactユーザーが見てる世界↗︎](https://zenn.dev/akfm/articles/react-team-vision)で解説しているので、ご参照ください。
 :::
