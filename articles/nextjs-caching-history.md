@@ -173,7 +173,7 @@ https://zenn.dev/akfm/articles/nextjs-partial-pre-rendering
 
 ## Cache Re-Architecture: 根本的な改善（v15~v16）
 
-v14~v15でNext.jsのCacheは着実に改善を重ねました。しかし、多層のCacheや予想困難な影響範囲など、根本的な複雑さは解消されていませんでした。根本的な複雑性の解消には、根本的なリアーキテクチャが必要でした。そこで打ち出されたのが`"use cache"`というディレクティブでキャッシュを宣言する世界観です。
+v14~v15でNext.jsのCacheは着実に改善を重ねました。しかし、多層のCacheや予想困難な影響範囲など、根本的な複雑さは解消されず、これらの解消には破壊的変更を伴うリアーキテクチャが必要だと思われました。そこで打ち出されたのが`"use cache"`というディレクティブでキャッシュを宣言する世界観です。
 
 ```tsx
 // Function Level
@@ -196,7 +196,7 @@ export default async function Page() {
 }
 ```
 
-`"use cache"`は2024年のNext Confや公式ブログ[Our Journey with Caching](https://nextjs.org/blog/our-journey-with-caching)でDynamic IOというフラグで実装中であることが発表されました。その後、v16でPPRとDynamic IOを統合した[Cache Components](https://nextjs.org/docs/app/getting-started/cache-components)が導入されました。
+`"use cache"`は2024年のNext Confや公式ブログ[Our Journey with Caching](https://nextjs.org/blog/our-journey-with-caching)で発表されました。発表当時はPPR、`"use cache"`、Dynamic IO^[Dynamic IO: 動的処理を伴うコンポーネントには`<Suspense>`が必須となる世界観]がそれぞれ打ち出されており、最終的な世界観が不明瞭でしたが、2025年に発表されたv16ではこれらを統合する形で[Cache Components](https://nextjs.org/docs/app/getting-started/cache-components)が導入されました。
 
 :::message
 Cache Componentsはフラグによって有効化できます。フラグを有効化しなければ従来の世界観を維持することができます。
@@ -204,14 +204,23 @@ Cache Componentsはフラグによって有効化できます。フラグを有�
 
 Cache Componentsは`"use cache"`を始め、様々な技術的変更によって構成されています。
 
-### `"use cache"`
+### `"use cache"`とRSCの世界観
 
-### `<Suspense>`
+### 解消された課題
 
-### PPR
+- 前述の課題がここまででどうかいしょうされたか整理
 
-### Segment Cache
+### Cache Componentsとパフォーマンス
+
+- 課題解消のネックだったパフォーマンス懸念について
 
 ## 考察
 
+- 彼らはコミュニティと真摯に向き合った
+- 慎重な「抽象化」
+- Segment Cacheで同時にRouter Cacheもリアーき
+
 ## 感想
+
+- viteのPluginも開発中
+- まだまだ発展途上
