@@ -96,19 +96,18 @@ export const revalidate = false;
 
 ### 課題3: 不透明な仕様
 
-TBW: 課題と改善点が対応関係になるように全体見直し
-
-前述の課題はサーバー側のCache（Data Cache, Full Route Cache）に関するものでしたが、クライアント側のCacheであるRouter Cacheについても様々な課題がありました。
-
-- StaticなRouteは 5m Cacheされる
-- DynamicなRouteは 30s Cacheされる
-- 上記仕様や、Router Cacheが破棄されるタイミングについて記載がなかった
+筆者の主観ですが、App Router初期におけるCacheは「フレームワーク側が意識するものであって開発者が意識する必要はない」という価値観で設計されていたように感じます。そのため前述の4層のCacheの存在や、各Cacheの詳細な仕様は公式ドキュメントでは明示されておらず、開発者は挙動やコードリーディングから仕様を推測する必要がありました。
 
 このことは2年前のJSConf JPで筆者が発表した内容でも触れています。
 
 https://jsconf.jp/2023/talk/akfm-sato-1/
 
-また、Router Cacheのバグも相まって、バグなのか仕様なのかわからない挙動は開発者に多くの混乱と不安をもたらしました。
+特に、Router Cacheは30sか5mの間明示的に破棄しなければCacheされるという仕様があり、これが多くの混乱を生みました。
+
+- StaticなRouteは 5m Cacheされる
+- DynamicなRouteは 30s Cacheされる
+
+このような仕様はフレームワーク初期におけるバグの多さも相まって、バグなのか仕様なのか判別できず、多くの開発者に混乱と不安をもたらしました。
 
 ## Cache Improvement: 議論と改善（v14~v15）
 
@@ -120,36 +119,7 @@ https://github.com/vercel/next.js/discussions/54075
 
 「コミュニティが求めてるユースケースは何か？」、「Router Cacheの寿命は設定できれば解決するのか？」「他の解決方法はないのか？」といった議論が重ねられ、Next.js開発チームは改善方針を慎重に検討しました。
 
-### 改善1: ドキュメントの改善
-
-App Router当初のCacheはともかくドキュメントが不足していたため、仕様を理解するには挙動の観測とコードリーディングが必要でしたが、上記Discussionなどを経て、公式ドキュメントにCache戦略の詳細を解説するページとして[Caching in Next.js](https://nextjs.org/docs/app/guides/caching)が追加されました。これにより、Next.js開発チームが描いてるCache戦略の詳細が明示され、透明性が向上しました。
-
-- 4層のCacheの明記
-- 各Cacheの役割
-- Static, Dynamic Renderingやこれらの条件になるDynamic APIsの定義
-
-### 改善2: staleTimesオプション
-
-[#課題3: 不透明で不安定なRouter Cache](#課題3-不透明で不安定なrouter-cache)で触れた通り、当初のApp RouterではRouter Cacheの有効期限は固定されており、設定できませんでしたが、これを設定可能にするオプションとしてv14.2で`staleTimes`が追加されました。
-
-```ts
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  experimental: {
-    staleTimes: {
-      dynamic: 30,
-      static: 180,
-    },
-  },
-};
-
-export default nextConfig;
-```
-
-また、DynamicなRouteが30s Cacheされることについても多くの混乱を招いたため、v15で`staleTimes.dynamic`のデフォルトは30sから0sに変更されました。
-
-### 改善3: `fetch()`のデフォルトCache廃止
+### 改善1: `fetch()`のデフォルトCache廃止
 
 `fetch()`がデフォルトでCacheされることについても多くの混乱を招いたため、v15で`fetch()`のデフォルトCacheが廃止されました。
 
@@ -174,9 +144,46 @@ https://zenn.dev/akfm/articles/nextjs-partial-pre-rendering
 
 ::::
 
+### 改善2: ドキュメントの改善
+
+App Router当初のCacheはともかくドキュメントが不足していたため、仕様を理解するには挙動の観測とコードリーディングが必要でしたが、上記Discussionなどを経て、公式ドキュメントにCache戦略の詳細を解説するページとして[Caching in Next.js](https://nextjs.org/docs/app/guides/caching)が追加されました。これにより、Next.js開発チームが描いてるCache戦略の詳細が明示され、透明性が向上しました。
+
+- 4層のCacheの明記
+- 各Cacheの役割
+- Static, Dynamic Renderingやこれらの条件になるDynamic APIsの定義
+
+### 改善3: staleTimesオプション
+
+[#課題3: 不透明で不安定なRouter Cache](#課題3-不透明で不安定なrouter-cache)で触れた通り、当初のApp RouterではRouter Cacheの有効期限は固定されており、設定できませんでしたが、これを設定可能にするオプションとしてv14.2で`staleTimes`が追加されました。
+
+```ts
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  experimental: {
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
+  },
+};
+
+export default nextConfig;
+```
+
+また、DynamicなRouteが30s Cacheされることについても多くの混乱を招いたため、v15で`staleTimes.dynamic`のデフォルトは30sから0sに変更されました。
+
 ## Cache Re-Architecture: 根本的な改善（v15~v16）
 
-v14~v15でNext.jsのCacheは着実に改善を重ねました。しかし、多層のCacheや予想困難な影響範囲など、根本的な複雑さは解消されず、これらの解消には破壊的変更を伴うリアーキテクチャが必要だと思われました。そこで打ち出されたのが`"use cache"`というディレクティブでキャッシュを宣言する世界観です。
+v14~v15でNext.jsのCacheは着実に改善を重ねました。しかし、多層のCacheや予想困難な影響範囲など、根本的な複雑さは解消されませんでした。
+
+| v13の課題                       | v14~v15での改善                                          | 残った課題                                               |
+| ------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
+| 課題1: 予想困難なデータフェッチ | 改善1: `fetch()`のデフォルトCache廃止                    | 初期よりは改善したが、以前として予想困難なデータフェッチ |
+| 課題2: 複雑なCache設定          | -                                                        | 複雑なCache設定の理解と設計難易度                        |
+| 課題3: 不透明な仕様             | 改善2: ドキュメントの改善<br>改善3: staleTimesオプション | -                                                        |
+
+これらの解消には破壊的変更を伴うリアーキテクチャが必要だと思われました。そこで打ち出されたのが`"use cache"`というディレクティブでキャッシュを宣言する世界観です。
 
 ```tsx
 // Function Level
