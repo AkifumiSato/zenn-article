@@ -1,6 +1,6 @@
 ---
 title: "Next.js Cache回想"
-emoji: "👨‍💻"
+emoji: "🔄"
 type: "idea" # tech: 技術記事 / idea: アイデア
 topics: ["nextjs"]
 published: true
@@ -10,7 +10,8 @@ published: true
 
 - この記事は[JSConf JP 2025で発表した内容](https://jsconf.jp/2025/en/talks/nextjs-caching-re-architecture)を、記事として執筆しなおしたものです。
 - この記事は2年前の[JSConf JPで筆者が発表した内容](https://jsconf.jp/2023/talk/akfm-sato-1/)に対するアンサーソングを含みます。
-  :::
+
+:::
 
 Next.jsは従来より、デフォルトで高いパフォーマンスを実現するフレームワークであることを重視してきました。App Routerにおいても、積極的なCache活用をはじめさまざまなチューニングにより、高いパフォーマンスの実現を目指してきました。一方で、積極的なCache活用や複雑すぎるCacheの影響範囲は、開発者に多くの混乱をもたらしました。
 
@@ -47,7 +48,7 @@ App Routerにおいても、Pages Routerで培われた静的化によるパフ�
 | **Full Route Cache**    | HTMLやRSC payload | Server | レンダリングコストの最適化                 | 永続的 (revalidate可)                   |
 | **Router Cache**        | RSC Payload       | Client | ナビゲーションごとのリクエスト削減         | ユーザーセッション・時間 (revalidate可) |
 
-これらはそれぞれ最適化の観点が異なるため、理解すれば高度なチューニングや設計が可能です。一方で多層のCacheはそれ自体が複雑なため、バグやドキュメント不足、高い設計難易度など開発者に多くの負担を強いることとなりました。
+これらはそれぞれ最適化の観点が異なるため、理解すれば高度なチューニングや設計が可能です。一方で多層のCacheはそれ自体が複雑なため、バグやドキュメント不足、高い設計難易度など開発者に多くの負担を強いることとなりました。筆者が特に強く課題を感じていた点をいくつか例示します。
 
 ### 課題1: 予想困難なデータフェッチ
 
@@ -93,7 +94,9 @@ export const revalidate = false;
 
 実際には、これらの設定を活用してRoute Segment単位で最適化するより、最上位のLayoutで`export const dynamic = "force-dynamic";`を設定してCacheをデフォルトでOpt-outする方が、一般的なベストプラクティスとなっていたと思います。
 
-### 課題3: 不透明で不安定なRouter Cache
+### 課題3: 不透明な仕様
+
+TBW: 課題と改善点が対応関係になるように全体見直し
 
 前述の課題はサーバー側のCache（Data Cache, Full Route Cache）に関するものでしたが、クライアント側のCacheであるRouter Cacheについても様々な課題がありました。
 
@@ -202,11 +205,53 @@ export default async function Page() {
 Cache Componentsはフラグによって有効化できます。フラグを有効化しなければ従来の世界観を維持することができます。
 :::
 
-Cache Componentsは`"use cache"`を始め、様々な技術的変更によって構成されています。
-
 ### `"use cache"`とRSCの世界観
 
+`"use cache"`はRSCで採用されている`"use client"`や`"use server"`と類似した、Next.js独自^[将来的には[vite-plugin-react-use-cache](https://github.com/jacob-ebey/vite-plugin-react-use-cache)など、Next.jsの`"use cache"`相当の機能が他フレームワークで利用可能になる可能性があります。]のディレクティブです。`"use cache"`によってNext.jsは、RSCの世界観を拡張しているとも言い換えられます。
+
+Reactチームの[Dan Abramov氏のブログ](https://overreacted.io/what-does-use-client-do/#two-worlds-two-doors)によると、
+RSCの世界観は「_2つの世界、2つのドア_」と見なすことができます。ServerとClient、2つの世界を行き来するためのドアが`"use client"`と`"use server"`です。
+
+![RSC Door](/images/nextjs-caching-history/rsc-door.png =450x)
+
+`"use cache"`も同様に、Serverの向こう側にCacheの世界を定義してServerからCacheの世界へのドアとみなすことができます。
+
+![Cache Components](/images/nextjs-caching-history/cache-door.png)
+
+また、`"use cache"`が宣言されたコンポーネントは、`"use client"`同様Compositionパターンが適用可能です。
+
+```tsx
+/**
+ * example:
+ * <PostContent id={id}> // Cached
+ *   <AuthorProfile postId={id} /> // Not Cached
+ * </PostContent>
+ */
+async function PostContent({
+  id,
+  children,
+}: {
+  id: number;
+  // 📝`ReactNode`のようなSerializableできないものは、Cacheのキーに含まれない=Composable
+  children: React.ReactNode;
+}) {
+  "use cache";
+  const post = await getPost(id);
+
+  return (
+    <>
+      <h1>{post.title}</h1>
+      {children}
+    </>
+  );
+}
+```
+
+RSCはじめ、昨今ReactチームはComposableな設計思想を重視しています。`"use cache"`も同様に、Composableな設計を踏襲している点も、RSCの世界観と整合性が取れている点です。
+
 ### 解消された課題
+
+`"use cache"`によってCacheは宣言的になったため、従来の
 
 - 前述の課題がここまででどうかいしょうされたか整理
 
