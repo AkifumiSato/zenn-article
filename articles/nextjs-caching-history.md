@@ -10,7 +10,7 @@ published: true
 この記事は[JSConf JP 2025で発表した内容](https://jsconf.jp/2025/en/talks/nextjs-caching-re-architecture)を、記事として執筆しなおしたものです。
 :::
 
-Next.jsは従来より、デフォルトで高いパフォーマンスを実現するフレームワークであることを重視してきました。App RouterにおいてもSSR・Streaming・Cacheなど様々な最適化により、高いパフォーマンスの実現を目指してきました。一方で、積極的なCache活用や複雑すぎるCacheの影響範囲は、開発者に多くの混乱をもたらしました。
+Next.jsは従来より、デフォルトで高いパフォーマンスを実現するフレームワークであることを重視してきました。App RouterにおいてもSSR・Streaming・Cacheなど様々な最適化により、高いパフォーマンスの実現を目指してきました。しかし一方で、積極的なCache活用や複雑すぎるCacheの影響範囲は、開発者に多くの混乱をもたらしました。
 
 v16で導入された**Cache Components**は、Next.jsのCacheのメンタルモデルを大きく変更するものであり、これまでの多くの課題を解決しうるリアーキテクチャです。この記事では、Cache Componentsが何を解決しようとしているのか、なぜリアーキテクチャに至ったのかなどの歴史的経緯を解説します。
 
@@ -32,7 +32,7 @@ Next.jsには現在、**Pages Router**と**App Router**という2つのRouterが
 | 2024/10 | Next.js@v15.0   | `params`などの破壊的変更、PPRなど   |
 | 2025/10 | Next.js@v16.0   | Cache Components                    |
 
-Pages Routerは現在でも利用可能ですが、Next.jsにおける新規の機能開発などは行われておらず、現在Next.jsを使った開発はApp Routerが主流^[参考: [Vercelのテックリードのツイート](https://x.com/timneutkens/status/1982905913741644089)]となりつつあります。
+Pages Routerは現在でも利用可能ですが、Next.jsにおける新規の機能開発などは行われておらず、現在Next.jsを使った開発はApp Routerが主流^[参考: [Vercelのテックリードのツイート](https://x.com/timneutkens/status/1982905913741644089)]となっています。
 
 ## Legacy Cache: App Router初期のCache（v13~v14）
 
@@ -66,7 +66,7 @@ export default async function Page() {
 }
 ```
 
-しかし、このコードの読み手が`await getRandomTodo()`のCache挙動について正しく理解するには、多岐にわたるコードや設定を参照する必要があります。具体的には、`getRandomTodo()`の中の実装と外の実装どちらも確認しないと、Opt-outされるかどうか判断できませんでした。
+しかし、このコードの読み手が`await getRandomTodo()`のCache挙動について正しく理解するには、多岐にわたるコードや設定を参照する必要があります。具体的には、`getRandomTodo()`の内部実装と呼び出し元の実装、その双方を確認しなければOpt-outされるかどうかを正しく判断できませんでした。
 
 - `getRandomTodo()`内で呼び出しているであろう`fetch()`で、`cache: "no-store"`や`next: { revalidate: 0 }`がオプション指定されているかどうか
 - `getRandomTodo()`の内または外で、`cookies()`や`headers()`などを利用しているかどうか
@@ -103,7 +103,7 @@ App Router初期におけるCacheは「フレームワーク側が意識する�
 
 当初のRouter Cacheは、StaticなRouteは5m、DynamicなRouteは30s保持され、これを更新するには**全Router Cacheを命令的に破棄**するしかありませんでした。また、これらの時間についてはハードコーディングされているため設定することもできず、issueでは[patch-package](https://www.npmjs.com/package/patch-package)でpatchする人も現れました。
 
-フレームワーク初期におけるバグの多さも相まって、多くの開発者はこの挙動がバグなのか仕様なのか判別できず、大きな混乱を招きました。
+フレームワーク初期におけるバグの多さも相まって、多くの開発者はこの挙動がバグなのか仕様なのか判別できず、開発者に大きな混乱を招きました。
 
 ::::details 余談: JSConf JP(2023)での発表
 
@@ -128,7 +128,7 @@ https://github.com/vercel/next.js/Discussions/54075
 
 v15では、`fetch()`によるData Cacheがデフォルトで無効化されました。これは破壊的変更でしたが、従来`fetch()`がデフォルトでCacheすることについて多くの混乱が見られたため、筆者はこれをとても大きな改善だったと捉えています。
 
-一方で、Full Route CacheをOpt-outしてDynamic Renderingするには、引き続き`fetch()`に`cache: "no-store"`を指定する必要がありました。この点において、`fetch()`のデフォルトの振る舞いは引き続き開発者に混乱を招いたため、**改善はしたが解消はしなかった**と筆者は感じています。
+一方で、Full Route CacheをOpt-outしてDynamic Renderingするには、引き続き`fetch()`に`cache: "no-store"`を指定する必要がありました。この点において、`fetch()`のデフォルトの振る舞いは引き続き開発者に混乱を招いたため、状況の改善こそ見られたものの、**根本的な課題の解消には至らなかった**と筆者は捉えています。
 
 ```ts
 const res = await fetch(`https://...`, {
@@ -190,7 +190,7 @@ Next.jsはv14~v15で着実にCacheの改善を重ねました。しかし、多�
 | 課題2: 複雑なCache設定          | -                                                        | 複雑なCache設定の理解と設計難易度              |
 | 課題3: 不透明な仕様             | 改善2: ドキュメントの改善<br>改善3: staleTimesオプション | -                                              |
 
-これらの解消には破壊的変更を伴うリアーキテクチャが必要だと思われました。そこで打ち出されたのが`"use cache"`でキャッシュを宣言する世界観です。
+これらの解消には破壊的変更を伴うリアーキテクチャが必要だと思われました。そこで打ち出されたのが`"use cache"`で明示的にキャッシュを宣言するという世界観です。
 
 ```tsx
 // Function Level
@@ -223,7 +223,7 @@ ReactチームのDan Abramov氏は[ブログ記事](https://overreacted.io/what-
 
 ![RSC Door](/images/nextjs-caching-history/rsc-door.png =450x)
 
-`"use cache"`も同様に、**Cacheの世界とドア**を定義してるものと看做すことができます。
+`"use cache"`も同様に、Serverの世界から**Cacheの世界**へのドアを定義してるものと看做すことができます。
 
 ![Cache Components](/images/nextjs-caching-history/cache-door.png)
 
@@ -263,17 +263,50 @@ async function PostContent({
 }
 ```
 
-### Cacheの課題と解消
+### Cacheの課題と解消まとめ
 
-- 前述の課題がここまででどうかいしょうされたか整理
+v13からv16までで、Cacheに関する課題がどう解消されたか整理します。
 
-## 考察
+| v13の課題                       | v14~v15での改善                                          | v16での改善                                       |
+| ------------------------------- | -------------------------------------------------------- | ------------------------------------------------- |
+| 課題1: 予想困難なデータフェッチ | 改善1: `fetch()`のデフォルトCache廃止                    | `"use cache"`による明示的なCache宣言              |
+| 課題2: 複雑なCache設定          | -                                                        | `"use cache"`によるOpt-in型の設計と設定変数の廃止 |
+| 課題3: 不透明な仕様             | 改善2: ドキュメントの改善<br>改善3: staleTimesオプション | -                                                 |
 
-- 彼らはコミュニティと真摯に向き合った
-- 慎重な「抽象化」
-- Segment Cacheで同時にRouter Cacheもリアーき
+段階を経つつ、根本的な課題まで踏み込んで解消されたと筆者は感じています。
+
+### 新たな課題
+
+Next.jsのCacheはここまでで明らかに改善されたと感じる一方、もう課題がないわけではありません。Cache Componentsの安定性向上と機能追加はこれからだと思われますし、コミュニティ側も`"use cache"`について理解を深めるのに時間がかかるものと思われます。
+
+個人的にはセルフホスティングでNext.jsを利用することが多いため、Cache Componentsで追加された新たな[cacheHandler**s**](https://nextjs.org/docs/app/api-reference/config/next-config-js/cacheHandlers)との向き合い方も重要な課題です。従来の[cacheHandler](https://nextjs.org/docs/app/api-reference/config/next-config-js/incrementalCacheHandlerPath)（従来の設定には`s`がない）における[@neshca/cache-handler](https://caching-tools.github.io/next-shared-cache/)のように、3rd partyのライブラリが一定の抽象化を担ってくれれば、導入ハードルが一気に下がると思われます。
+
+また、`"use cache"`のより発展的なディレクティブとして、新たなディレクティブを導入する動きも見受けられます。[`"use cache: private"`](https://nextjs.org/docs/app/api-reference/directives/use-cache-private)と[`"use cache: remote"`](https://nextjs.org/docs/app/api-reference/directives/use-cache-remote)は公式ドキュメントでそれぞれ説明を確認することができますが、まだ開発チームから大きなアナウンスはありません。このように分岐したディレクティブが増えていくことがいい設計として受け入れられるのかどうかも含め、動向を注視する必要があります。
+
+## 私見
+
+最後に、ここまで述べたCacheの変遷について筆者なりに私見を述べます。
+
+### 考察
+
+`"use cache"`の設計をリードしたのは[Sebastian Markbåge](https://ja.react.dev/community/team#sebastian-markb%C3%A5ge)氏です。彼はReact開発チームとNext.js開発チームを兼任するメンバーであり、ReactやNext.jsのビジョンに強く貢献してきた人物です。ReactのhooksやReact Fiberのビジョンはまさに、彼が大きく貢献した部分です。
+
+以下はJSConf EU 2014での彼の発言です。
+
+> "It's much easier to recover from no abstraction than the wrong abstraction."
+>
+> 「間違った抽象化から回復するよりも、抽象化がない状態から回復する方がずっと簡単だ」
+
+このように彼は、抽象化の導入には慎重な検討が必要というスタンスをReact初期から貫いています。今回のCacheの変遷についても、彼のこのスタンスが強く感じられます。当初のCacheは開発者が強く意識しなくていいようにしたいという意図も起因して、具体的な設定やAPIに依存する設計となっていました。しかし、その後のコミュニティからのフィードバックやPPRの発見などを経て、`"use cache"`という抽象化にいたったと言えます。
+
+つまり、当初から`"use cache"`という抽象化を見出すことは不可能だったことでしょう。`"use cache"`は彼やNext.js開発チームの慎重な検討と、数多のフィードバックの積み重ねがあってこその成果だと言えます。
 
 ## 感想
 
-- viteのPluginも開発中
-- まだまだ発展途上
+`"use cache"`の登場により、`"use client"`や`"use server"`を含めた「ディレクティブによる抽象化」に対する是非の議論が、昨今再燃してるように筆者は感じています。SNSなどを観察してると肯定的な意見が多いようですが、批判的な声も目立ちます。これに関する筆者の意見としては、既存エコシステムにおける実現性やJavaScriptの仕様における制約などを鑑みると、「理想解ではないが現実解」だったのではないかと考えています。視認性や拡張性の観点では、Rustの属性風マクロのような書き方の方が良いかもしれませんが、残念ながらJavaScriptに現状そのような仕様はなく、仕様策定には非常に長い年月がかかるのが現実です。かといって既存エコシステムを無視してそのような新たなシンタックスを導入すれば、おそらくディレクティブの比ではない批判を受けていたことでしょう。このように既存エコシステムの観点や、フレームワークの仕様統一の観点や人間工学的な観点など、さまざまな観点で検証していくと、ディレクティブは最も現実的な解だったと感じています。実際、`"use client"`の仕様策定に関する[当時のディスカッション](https://github.com/reactjs/rfcs/pull/189)を読み直してみても、筆者にはなかった案や観点で多くの議論がなされており、彼らが筆者よりはるかに広い観点でディレクティブの導入について検証していたことを感じます。
+
+今回の`"use cache"`についても同様に、広い観点と多くの議論を経たからこその「優れた抽象化」を筆者は感じています。あれだけ複雑だったCacheをRSCの世界観と繋げて再設計したこと、それでいてRSCの世界観を一才損なってないことに筆者は非常に驚愕しましたし、長い時間をかけ攻撃的な批判にも負けず、コミュニティの課題を解消すべく真摯に向き合い続けてくれたNext.js開発チームの姿勢には、強い感謝を抱かずにはいられません。
+
+`"use cache"`はv15で発表され、v16でバラバラだったPPR・Dynamic IO・`"use cache"`が統合したCache Componentsという1つの世界観が示されたことで、Next.jsのCacheは1つ大きな節目を迎えつつあるのを筆者は感じています。しかし、残念ながらこれでNext.jsのCacheのストーリーは終わりではありません。`"use cache: private"`や`"use cache: remote"`のように、Next.jsはCacheをさらに進化させていくことでしょう。これらがコミュニティに受け入れられるのかどうか、また議論の末変更されるのかなど、引き続き状況を注視していく必要があります。
+
+ただ、ここまでのNext.js開発チームの仕事ぶりは素晴らしいものだったと筆者は思います。そしてこれらからも、時に間違いつつもまた慎重に検討を重ねて、Next.js開発チームは「優れた抽象化」を見つけていくであろうことを、筆者は彼らに期待しています。
