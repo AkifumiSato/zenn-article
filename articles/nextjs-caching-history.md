@@ -118,7 +118,7 @@ https://jsconf.jp/2023/talk/akfm-sato-1/
 
 このような状況を解消すべく、Next.js開発チームはDiscussionを作成し、そこで開発チームの描いてる世界観とコミュニティの需要をすり合わせ始めました。
 
-https://github.com/vercel/next.js/Discussions/54075
+https://github.com/vercel/next.js/discussions/54075
 
 このDiscussionは冒頭から非常に長い説明で始まっており、また、コミュニティからの質問や要望に対しても非常に丁寧に回答しており、丁寧なコミュニケーションを心がけている様子が伺えます。「コミュニティが求めてるユースケースは何か？」、「Router Cacheの寿命は設定できれば解決するのか？」「他の解決方法はないのか？」など、さまざまな議論が重ねられました。
 
