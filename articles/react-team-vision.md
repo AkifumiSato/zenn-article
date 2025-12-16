@@ -71,7 +71,7 @@ Metaでは昔からクライアントサイド・API Gateway（=BFF）・バッ�
 
 これらの課題を解決すべく開発されたのが、GraphQLです。
 
-2013年にReactが本格的に採用されると、ReactとGraphQLを統合する必要が出てきました。これを実現すべく開発されたのが[Relay](https://relay.dev/)です。RelayはGraphQL Colocationを用いて、Reactコンポーネントが必要とするデータを自身で定義できるようなアーキテクチャを採用しています。
+2013年にReactが本格的に採用されると、ReactとGraphQLを統合する必要が出てきました。これを実現すべく開発されたのが[Relay](https://relay.dev/)です。RelayはFragment Colocationを用いて、Reactコンポーネントが必要とするデータを自身で定義できるようなアーキテクチャを採用しています。
 
 ```tsx: author-details.tsx
 const authorDetailsFragment = graphql`
@@ -120,11 +120,11 @@ GraphQLとRelayは2015年にOSS化され、Meta社内ではReact&Relay（GraphQL
 
 ![Top-down Data Fetching](/images/react-team-vision/top-level-data-fetching.png)
 
-一方RelayではGraphQL Colocationを用いて、必要なデータを自身で定義できます。さらに言えば、GraphQLサーバーの各Resolverも自律的にデータフェッチを行います。
+一方RelayではFragment Colocationを用いて、必要なデータを自身で定義できます。さらに言えば、GraphQLサーバーの各Resolverも自律的にデータフェッチを行います。
 
-![GraphQL Colocation](/images/react-team-vision/graphql-co-location.png)
+![Fragment Colocation](/images/react-team-vision/graphql-co-location.png)
 
-クライアントサイド〜BFFの通信は1つにまとめられていますが、これはRelayがGraphQL Colocationをまとめて1つのQueryに集約していることで成り立っています。
+クライアントサイド〜BFFの通信は1つにまとめられていますが、これはRelayがFragmentをまとめて1つのQueryに集約していることで成り立っています。
 
 ### Flux/Reduxに見る中央集権的アーキテクチャ
 
@@ -172,7 +172,7 @@ React Server Componentsとはアーキテクチャ名称であり、Server Compo
 
 先述のGraphQLの図と、React Server Componentsにおけるデータフェッチを表した図を以下にしまします。
 
-![GraphQL Colocation](/images/react-team-vision/graphql-co-location.png)
+![Fragment Colocation](/images/react-team-vision/graphql-co-location.png)
 
 ![React Server Components](/images/react-team-vision/react-server-components.png)
 
@@ -218,7 +218,7 @@ function UserCassette({ id }: { id: string }) {
 
 しかし、現実には多くのReactユーザーがBoomer Fetching相当な実装を好んでしていました。このような実装が好まれた背景にはいくつかの要因が考えられますが、以下の2つが要因として多かったのではないかと筆者は考えています。
 
-- 自律分散的アーキテクチャを好むが、GraphQLやGraphQL Colocationを採用していなかった
+- 自律分散的アーキテクチャを好むが、GraphQLやFragment Colocationを採用していなかった
 - Boomer Fetchingによるパフォーマンス影響を許容したり、軽視したり、もしくは認識できてなかった
 
 このように、「Reactチームにとってはアンチパターン、しかし一部Reactユーザーの間では好んで使われている」というすれ違いが、React19 RCでの[破壊的変更に関する議論](https://github.com/facebook/react/issues/29898)を引き起こしました。
