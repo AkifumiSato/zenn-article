@@ -6,7 +6,7 @@ title: "Cache Componentsの世界観"
 
 Cache Componentsは、PPRと明示的なCacheの選択により、**デフォルトで高いパフォーマンス**と**優れた開発者体験**の両立を目指したものです。
 
-開発者はデータフェッチなどの動的な処理を扱う際に、`"use cache"`によるStatic Shellへの追加か`<Suspense>`によるリクエスト時レンダリング遅延か、どちらかを選択する必要があります。
+開発者はデータフェッチなどの動的な処理を扱う際に、`"use cache"`によるStatic Shellへの追加か`<Suspense>`によるリクエスト時までレンダリング遅延するか、どちらかを選択する必要があります。
 
 ## 背景
 
@@ -48,10 +48,6 @@ TBW
 TBW
 
 ## トレードオフ
-
-### ポップコーンUI
-
-TBW
 
 ### Activity≠BF Cache
 
