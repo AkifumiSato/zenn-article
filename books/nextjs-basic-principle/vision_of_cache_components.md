@@ -4,29 +4,46 @@ title: "Cache Componentsの世界観"
 
 ## 要約
 
+Cache Componentsは、PPRと明示的なCacheの選択により、**デフォルトで高いパフォーマンス**と**優れた開発者体験**の両立を目指したものです。
+
+開発者はデータフェッチなどの動的な処理を扱う際に、`"use cache"`によるStatic Shellへの追加か`<Suspense>`によるリクエスト時レンダリング遅延か、どちらかを選択する必要があります。
+
 ## 背景
 
-- 従来App Routerにおいて、Cacheは開発者の混乱の元だった
-- この2年ほどで、Next.js開発チームはCacheの改善を着実に行なってきたが、それでもなおCacheは複雑だった
-- 複雑に感じる最も大きな原因は、多層のCacheがOpt-outで設計されていたことによるもの
-- Next.js開発チーム
+- Next.jsのコンセプト
+  - 「デフォルトで高いパフォーマンス」と「優れた開発者体験」
+  - App Routerではこれらに基づいて、CacheはOpt-out可能だができるだけ開発者が気にしなくていいように設計されていた
+- 開発者の混乱
+  - しかし現実には、Cacheは開発者の混乱の元だった
+  - いわゆるWebアプリケーションにおいてCache可能なものは決して多くはなく、Opt-outするにはCacheを気にするしかなかった
+- 着実な改善と根本的な課題
+  - Next.js開発チームは少しづつ慎重にCacheの改善を重ね、v13~15で確実に良くなった
+  - しかし、それでもなおCacheは複雑だった
+  - 根本的な複雑さは、Opt-out型の設計に起因してると考えられた
+- Next.js開発チームのジレンマ
+  - Opt-in型にすれば「デフォルトで高いパフォーマンス」が犠牲になる
+  - 何も変えなければ「優れた開発者体験」が犠牲になり続ける
+  - この非常に困難なジレンマを解いたのが**Cache Components**
 
 ## 設計・プラクティス
 
-- Cache Components: 再設計されたCacheの世界観
-- PPR・DynamicIO・`"use cache"`が統合された
-- 開発者は非同期IOを扱うのに、Suspenseか`"use cache"`を明示的に選択する必要がある
-- これにより、ユーザーに即座にフィードバックするような実装を促しつつ、Cacheするしないを開発者が明示的に選択することができる
+- Cache Components
+  - 再設計されたCacheの世界観
+  - PPR・DynamicIO・`"use cache"`が統合された
 
-### Suspense: リクエスト時レンダリング
-
-TBW
-
-### `"use cache"`: プリレンダリング
+### PPR(Partial Pre-Rendering)
 
 TBW
 
-### Activityによる状態の復元
+### Dynamic IO
+
+TBW
+
+### `"use cache"`
+
+TBW
+
+### その他: Activity
 
 TBW
 
@@ -36,6 +53,6 @@ TBW
 
 TBW
 
-### Activity≠BF Cache的挙動
+### Activity≠BF Cache
 
 TBW
