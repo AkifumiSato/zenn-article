@@ -26,7 +26,10 @@ TBW
 
 ## トレードオフ
 
-### 非同期だがStatic Shellに含まれる処理
+### Prerenderに含まれる動的処理
+
+- `await import()`
+- `fs.readFileSync()`
 
 TBW
 

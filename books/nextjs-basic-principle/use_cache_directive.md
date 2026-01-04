@@ -17,8 +17,8 @@ https://zenn.dev/akfm/articles/nextjs-caching-history
 - `"use cache"`はComponentや関数がCache可能であることを宣言するもの
 - Static Shellを拡張したり、リクエスト間でCacheを共有したりできる。ただし...
   - https://github.com/vercel/next.js/issues/85240#issuecomment-3560124078
-    - `"use cache"`はClientやServerのインメモリなCacheと考えておくのが良さそう
-    - マルチプロセスのセルフホスティングにおいてはCache不整合の原因になるし、VercelのCacheHandlerは永続化しないよう設定されてるので、「リクエスト間でCacheを共有」するなら`"use cache: remote"`を使いましょう（次章にて解説）
+    - `"use cache"`はCache可能なことをNext.jsに伝える物であり、Static Shellの拡張やインメモリで扱われる物と考えるべきで、必ずしもCacheされるとは限らない（プラットフォームや設定による）
+    - マルチプロセスのセルフホスティングにおいてはCache不整合の原因になるし、VercelのCacheHandlerは`"use cache"`によるインメモリCacheを無効化してるので、リクエスト間でCacheを共有するなら`"use cache: remote"`を使いましょう（次章にて解説）
 
 ### `"use cache"`
 

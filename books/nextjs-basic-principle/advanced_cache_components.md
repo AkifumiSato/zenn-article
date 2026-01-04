@@ -39,4 +39,5 @@ TBW
   - 仕組みは不明だが、Static Shellは共有できてるらしい
     - https://x.com/108yen___/status/2007466546906714345?s=20
 - セルフホスティングにおけるマルチプロセスでは逆に、Static Shellを共有する仕組みを導入しないと`"use cache"`+`updateTag(tag)`が動かないと思われる
-  - 複数プロセスでCacheの整合性を担保するには自分でCacheHandlersを設定することが必須となる
+  - 複数プロセスでは`"use cache: remote"`+`updateTag(tag)`にするのが良さそう
+  - 複数プロセスでCacheの整合性を担保するには、CacheHandlersを設定することが必須
