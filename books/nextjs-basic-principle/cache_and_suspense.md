@@ -4,7 +4,7 @@ title: "Dynamic Renderingの境界"
 
 ## 要約
 
-リクエスト時までレンダリング遅延するには`loading.tsx`による暗黙的な`<Suspense>`境界追加か、明示的な`<Suspense>`境界が必要です。ポップコーンUIにならないような`<Suspense>`境界を見極めましょう。
+Cache Componentsの世界観にはPPRが含まれており、Dynamic Renderingを扱うには`loading.tsx`か明示的な`<Suspense>`境界が必要です。これらを設定する際には、ポップコーンUIにならないように注意しましょう。
 
 ## 背景
 

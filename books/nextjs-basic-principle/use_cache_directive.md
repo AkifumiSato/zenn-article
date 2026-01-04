@@ -36,6 +36,10 @@ TBW
 
 TBW
 
+### `revalidateTag(tag)`
+
+TBW
+
 ## トレードオフ
 
 ### 自動で算出されるCacheのkey
