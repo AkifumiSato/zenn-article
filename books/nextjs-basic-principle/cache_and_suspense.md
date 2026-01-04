@@ -1,5 +1,5 @@
 ---
-title: "Static ShellとSuspense境界"
+title: "Dynamic Renderingの境界"
 ---
 
 ## 要約

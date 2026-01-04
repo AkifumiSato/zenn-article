@@ -1,5 +1,5 @@
 ---
-title: "CacheHandlersと高度なCache活用"
+title: "高度なCacheと制御"
 ---
 
 ## 要約
