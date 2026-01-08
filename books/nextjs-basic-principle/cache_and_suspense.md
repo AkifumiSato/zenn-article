@@ -15,12 +15,6 @@ Cache Componentsの世界観にはPPRが含まれており、Dynamic Rendering�
 
 動的なページにおいて`<Suspense>`境界の設計にはいくつかのパターンがあります。
 
-- `loading.tsx`を配置（大抵はこれで十分）
-- ページ全体がDynamic Renderingな場合
-- `<Suspense>`
-- ページの一部のみがDynamic Renderingな場合
-- ページ全体がDynamic Rendering&低速な部分を遅延させるために
-
 ### `loading.tsx`による`<Suspense>`境界の追加
 
 - ページ全体がDynamic Renderingな場合
