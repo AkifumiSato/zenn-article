@@ -9,18 +9,40 @@ Cache Componentsの世界観にはPPRが含まれており、Dynamic Rendering�
 ## 背景
 
 - Cache Componentsでは、1つのRouteをStatic Shell・動的コンテンツ・Cacheされたデータやコンポーネントに分解して考えることができる
-- デフォルトでPageはPre-Renderingされるため、`"use cache"`によるStatic Shellへの追加か`<Suspense>`によるリクエスト時までレンダリング遅延するか選ばなければならない
+- デフォルトでPageはPre-Renderingされるため、Dynamic Renderingを扱うには`<Suspense>`でリクエスト時までレンダリング遅延する境界を宣言する必要があります
 
 ## 設計・プラクティス
 
-- 動的なページでは`loading.tsx`による`<Suspense>`境界追加を活用しよう
-- 部分的に遅延レンダリングさせたいなら`<Suspense>`を明示的に宣言しよう
+動的なページにおいて`<Suspense>`境界の設計にはいくつかのパターンがあります。
+
+- `loading.tsx`を配置（大抵はこれで十分）
+- ページ全体がDynamic Renderingな場合
+- `<Suspense>`
+- ページの一部のみがDynamic Renderingな場合
+- ページ全体がDynamic Rendering&低速な部分を遅延させるために
 
 ### `loading.tsx`による`<Suspense>`境界の追加
+
+- ページ全体がDynamic Renderingな場合
+- 大抵はこれで十分
+
+```tsx
+// <Layout>: layout.tsx
+// <Page>: page.tsx
+<Layout>
+  <Suspense fallback={<loading.tsx />}>
+    <Page />
+  </Suspense>
+</Layout>
+```
 
 TBW
 
 ### 明示的な`<Suspense>`境界の追加
+
+- ページの大部分がPre-Rendering可能で一部がDynamic Renderingな場合
+- ページ全体がDynamic Renderingだが部分的に低速でStreaming配信を分割したい時
+- ポップコーンUIに軽く言及＆リンク
 
 TBW
 
@@ -33,6 +55,9 @@ TBW
 
 TBW
 
-### ポップコーンUI
+### `<Suspense>`の乱用とポップコーンUI
+
+- ポップコーンUIの定義
+- `<Suspense>`の乱用に気をつけよう
 
 TBW
