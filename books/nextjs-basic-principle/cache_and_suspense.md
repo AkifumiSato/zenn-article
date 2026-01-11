@@ -25,6 +25,7 @@ Cache ComponentsにおいてDynamic Renderingを扱うには、`<Suspense>`境�
 
 ```tsx
 // <Layout>: layout.tsx
+// <Loading>: loading.tsx
 // <Page>: page.tsx
 <Layout>
   <Suspense fallback={<Loading />}>
