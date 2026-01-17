@@ -17,15 +17,19 @@ title: "Cacheの保存先"
 - `"use cache"`や`"use cache: remote"`はCacheHandlersで制御可能^[VercelなどではStatic Shellの取り扱いが異なるため、必ずしもCacheHandlersが使われるわけではないことに注意]
   - デフォルトだとインメモリに保存されるようになっており、サーバー間共有できない
 
-:::message
-`"use cache"`は`"use cache: default"`のaliasでもあります。
-:::
+### `"use cache"`（`"use cache: default"`）
+
+- `"use cache"`の保存先は`default`
+- `"use cache"`はStatic Shellや`default`に保存される
+  - Vercelにおいては、Static ShellはCDNに保存されrevalidateが可能
+  - セルフホスティングの場合はデフォルトだとインメモリに保村されるため、複数プロセスで共有できない
+  - 後述の`cacheHandlers.default`で設定は可能だが、まずは `"use cache: remote"`の利用を検討すべき
 
 ### `"use cache: remote"`
 
 - 文字通り、リモートにあるCache保存先を選択したい場合に利用することを想定したディレクティブ
 - RedisやS3など、何かしら外部に永続化先を用意して参照する
-- 当然ネットワーク通信を伴うため、静的な場合と比べて低速になりうるため、可能な限り`"use cache"`を使うべきではある
+- ネットワーク通信は低速なため、`"use cache"`を使ってインメモリやローカルに永続化する方が高速
 
 ### `"use cache: private"`(experimental)
 
@@ -33,7 +37,7 @@ title: "Cacheの保存先"
 - 主にユーザー単位データの保存などに利用されることを想定してると考えられる
 - experimentalなのは機能開発の途中だからだと思われる
 
-### CacheHandlers
+### CacheHandler
 
 - Cacheを複数プロセスで共有するには、`"use cache: remote"`が適切
   - https://github.com/vercel/next.js/issues/85240#issuecomment-3560124078
