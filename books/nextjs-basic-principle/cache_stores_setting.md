@@ -28,7 +28,7 @@ title: "Cacheの保存先"
 ### `"use cache: remote"`
 
 - 文字通り、リモートにあるCache保存先を選択したい場合に利用することを想定したディレクティブ
-- RedisやS3など、何かしら外部に永続化先を用意して参照する
+- 永続化先としてRedisなどを用意して参照する
 - ネットワーク通信は低速なため、`"use cache"`を使ってインメモリやローカルに永続化する方が高速
 
 ### `"use cache: private"`(experimental)
