@@ -13,14 +13,13 @@ Cache Componentsの世界観にはPPRが含まれており、Dynamic Rendering�
 
 ## 設計・プラクティス
 
-Cache ComponentsにおいてDynamic Renderingを扱うには、`<Suspense>`境界内で扱う必要があります。`loading.tsx`が設定されている場合、Next.jsはPageに対し`<Suspense>`境界を追加します。
+Cache ComponentsにおいてDynamic Renderingを扱うには、`<Suspense>`が必要です。
 
-### 動的な要素が多いRoute
+### `loading.tsx`の活用
 
-- 動的な要素が多いRouteでは、`loading.tsx`による`<Suspense>`境界の追加を活用しましょう
+- `loading.tsx`が設定されている場合、Next.jsは`page.tsx`に対し`<Suspense>`境界を追加する
   - これにより、`page.tsx`はDynamic Renderingとなる
-    - memo: 厳密には`page.tsx`や`layout.tsx`からdefault exportされてるコンポーネント、説明のわかりやすさからファイル名で説明すること明記
-  - 静的なレイアウト部分は`layout.tsx`で記述
+  - `layout.tsx`はStatic Rendering、`page.tsx`はDynamic Renderingのように分けることができる
     - `layout.tsx`は下層Routeと共有されるので注意（トレードオフへ）
 
 ```tsx
@@ -36,21 +35,26 @@ Cache ComponentsにおいてDynamic Renderingを扱うには、`<Suspense>`境�
 
 ### `page.tsx`や`layout.tsx`の一部のみが動的なRoute
 
-- `page.tsx`や`layout.tsx`のごく一部のみが動的な場合、明示的に`<Suspense>`境界を追加する
-  - e.g. 商品ページなど、実装例を追記
+- `page.tsx`や`layout.tsx`のごく一部のみが動的な場合は、`loading.tsx`ではなく明示的に`<Suspense>`境界を追加する方が良いこともある
+  - e.g. ブログ記事でコメント部分のみ動的な場合を例に解説
+  - Cache ComponentsはPPRとなっているため、`layout.tsx`自体をDynamic RenderingにしてしまうとPPRのメリットが薄れてしまう。なのでできるだけ静的にすべき
 
 ### パフォーマンスチューニング
 
-- 動的な要素が多いRouteかつ、一部のレンダリングをパフォーマンス観点で遅延させたい場合には明示的に`<Suspense>`境界を追加することが有効
-- 乱用するとポップコーンUIになる（リンク追加）
+- `page.tsx`の一部が低速な場合には、明示的な`<Suspense>`境界を追加することでクライアントへの送信を分割することで、パフォーマンスが改善する可能性がある
+  - （実装例追加）
+  - 乱用するとポップコーンUIになる（リンク追加）
 
 ## トレードオフ
 
 ### 下層Routeと共有される`layout.tsx`
 
-- `layout.tsx`は下層Routeと共有されるため、扱いづらいことも多い
-- `layout.tsx`が下層Routeに共有されるのを避けたい場合
-  - Route Groupを使って共有レイアウトの`layout.tsx`とRoute固有レイアウトの`layout.tsx`を分けることを推奨
+- 前述の通りCache Componentsにおいて`layout.tsx`はRouteの静的部分の記述先として使うことができる
+- しかし、`layout.tsx`は下層Routeと共有されるため、扱いづらいことも多い
+- `layout.tsx`が下層Routeに共有されるのを避けたい場合にはいくつか手段がある
+  - 推奨: Route Groupを使って共有レイアウトの`layout.tsx`とRoute固有レイアウトの`layout.tsx`を分ける
+  - layout.tsxは共有レイアウトとし、Route固有部分 (`page.tsx`) は全て動的にする
+  - layout.tsxは共有レイアウトとし、`loading.tsx`は使わず、`page.tsx`内に`<Suspense>`を記述する
 
 ```
 (products)/[id]/
@@ -65,10 +69,6 @@ Cache ComponentsにおいてDynamic Renderingを扱うには、`<Suspense>`境�
     ├── layout.tsx
     └── page.tsx
 ```
-
-- 他にも以下の手段がある
-  - layout.tsxは共有レイアウトとし、Route固有部分 (`page.tsx`) は全て動的にする
-  - layout.tsxは共有レイアウトとし、`loading.tsx`は使わず、`page.tsx`内に<Suspense>を記述する
 
 ### ポップコーンUI
 
