@@ -29,7 +29,7 @@ chapters:
   - vision_of_cache_components
   - cache_and_suspense
   - use_cache_directive
-  - advanced_cache_components
+  - cache_stores_setting
   - part_4
   - part_4_pure_server_components
   - part_4_suspense_and_streaming
