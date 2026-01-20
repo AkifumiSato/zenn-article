@@ -20,7 +20,7 @@ title: "Cacheの保存先"
 ### `"use cache"`（`"use cache: default"`）
 
 - `"use cache"`の保存先は`default`
-- `"use cache"`はStatic Shellや`default`に保存される
+- `"use cache"`やStatic Shellは`default`に保存される
   - Vercelにおいては、Static ShellはCDNに保存されrevalidateが可能
   - セルフホスティングの場合はデフォルトだとインメモリに保村されるため、複数プロセスで共有できない
   - 後述の`cacheHandlers.default`で設定は可能だが、まずは `"use cache: remote"`の利用を検討すべき
@@ -29,7 +29,7 @@ title: "Cacheの保存先"
 
 - 文字通り、リモートにあるCache保存先を選択したい場合に利用することを想定したディレクティブ
 - 永続化先としてRedisなどを用意して参照する
-- ネットワーク通信は低速なため、`"use cache"`を使ってインメモリやローカルに永続化する方が高速
+- ネットワーク通信は低速なため、`"use cache"`でローカルに保存・参照する方が高速
 
 ### `"use cache: private"`(experimental)
 
