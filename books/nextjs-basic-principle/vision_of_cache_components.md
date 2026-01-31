@@ -6,7 +6,7 @@ title: "Cache Componentsの世界観"
 
 Cache Componentsは[PPR↗︎](https://zenn.dev/akfm/articles/nextjs-partial-pre-rendering)とCacheの改善^[参考記事: [Next.js Cache回想↗︎](https://zenn.dev/akfm/articles/nextjs-caching-history)]により、**デフォルトで高いパフォーマンス**と**優れた開発者体験**の両立を目指したものです。
 
-Cache Componentsにおいてデータフェッチなど動的な処理を扱う際に、開発者は`"use cache"`か`<Suspense>`かどちらかを選択する必要があります。
+Cache Componentsにおいてデータフェッチなど動的な処理を扱う際に、開発者は`<Suspense>`か`"use cache"`かどちらかを選択する必要があります。
 
 ## 背景
 
@@ -56,33 +56,39 @@ PPRに関する詳細な説明は筆者の過去の記事[「PPR - pre-rendering
 >
 > 商品ページ全体やナビゲーションはstatic renderingで静的化され、一方カートやレコメンド情報といったユーザーごとに異なるUI部分はdynamic renderingにすることができます。もちろん商品情報自体が更新されることもあるでしょうが、この例では必要に応じてrevalidateすることを想定しています。
 
-以降Static Renderingされたページ部分のことを、公式の説明に則り**Static Shell**と呼称します。
+以降Static Renderingされたページ部分のことを**Static Shell**、Dynamic Renderingな部分のことを**Dynamic Content**と呼称します。
 
 ### Dynamic IO
 
-**Dynamic IO**は2024年10月のNext Confで発表された、Next.jsにおける新しいコンセプトを実証するための実験的モードです。Dynamic IOはその名の通り、主に動的I/O処理に対する振る舞いを大きく変更するものです。
-
-具体的には、以下の処理に対する振る舞いが変更されます。
+**Dynamic IO**は文字通り、Next.jsにおける動的I/O処理の扱いを大きく変更するもので、動的I/O処理を扱うには`<Suspense>`もしくは後述の`"use cache"`が必要^[Dynamic APIsはリクエスト時の情報を基本としているため、`"use cache"`することはできません。]になります。具体的には、以下のような処理を扱う場合に`<Suspense>`が必要になります。
 
 - データフェッチ: `fetch()`やDBアクセスなど
 - [Dynamic APIs](https://nextjs.org/docs/app/guides/caching#dynamic-apis): `headers()`や`cookies()`など
 - Next.jsがラップするモジュール: `Date`、`Math`、Node.jsの`crypto`モジュールなど
 - 任意の非同期関数(マイクロタスクを除く)
 
-Dynamic IOでこれらを扱う際には`<Suspense>`境界内に配置、もしくは後述の`"use cache"`でキャッシュ可能であることを宣言する必要があります^[Dynamic APIsはリクエスト時の情報を基本としているため、`"use cache"`することはできません。]。
+Cache ComponentsではPPRとDynamic IOを統合します。PPRはユニークで高いパフォーマンスが期待できる戦略ですが、Static ShellとDynamic Contentの境界を強く意識する必要があります。Dynamic IOでは上記のAPIをStatic Shell内で扱えないことで、境界への意識と予期せぬパフォーマンス劣化を防ぐことを目指しています。
 
 ### `"use cache"`
 
-`"use cache"`は、コンポーネントや関数、もしくはファイルがCache可能であることを宣言するディレクティブです。`"use client"`や`"use server"`は[クライアントとサーバーのバンドル境界](./part_2_bundle_boundary)を宣言するものですが、`"use cache"`はCacheの境界を宣言するものです。`"use cache"`が宣言されたコンポーネントや関数はbuild時に呼び出される可能性があり、これによりStatic Shellに動的データやコンポーネントを含むことができます。
+`"use cache"`は、コンポーネントや関数、もしくはファイルがCache可能であることを宣言するディレクティブです。`"use client"`や`"use server"`は[クライアントとサーバーのバンドル境界](./part_2_bundle_boundary)を宣言するものですが、`"use cache"`は**Cacheの境界**を宣言するものです。`"use cache"`が宣言されたコンポーネントや関数はbuild時に呼び出される可能性があり、これによりStatic Shellに動的データやコンポーネントを含むことができます。
 
 `"use cache"`に関する詳細な使い方は後述の["use cache"とCache制御関数](./use_cache_directive)で解説します。
 
-### その他: Activity
+### その他: `<Activity>`
 
-TBW
+Cache Componentsを有効にすると、Next.jsは[`<Activity>`](https://ja.react.dev/reference/react/Activity)を使ってRouteを保護します。これまでは`useState()`によるコンポーネントの状態はページ遷移時のアンマウントで破棄されていましたが、Cache Componentsではアンマウントではなく`<Activity>`でRouteを保持する^[執筆時点では[最大3つまで](https://github.com/vercel/next.js/pull/77992)Routeを保持します。]ため、Route間の遷移で状態が復元されます。
+
+これは特にブラウザバック・フォワード時に状態が復元されて見えるので、UX的に望ましい状態だと考えられます。
 
 ## トレードオフ
 
-### Activity≠BF Cache
+### `<Activity>`≠BF Cache
 
-TBW
+`<Activity>`によるブラウザバック時の体験向上は望ましい体験ですが、これはいわゆるブラウザの[BF Cache(Back Forward Cache)](https://web.dev/i18n/ja/bfcache/#bfcache%E3%81%AE%E5%9F%BA%E6%9C%AC)とは少々異なる点があります。管理する単位がRoute単位であって、履歴エントリー単位ではないので、ページA -> ページB -> ページAのように、同一URLへブラウザバックではなくリンクから遷移しても状態が復元されてしまいます。これはMPAにおけるブラウザ遷移体験とは異なる体験です。
+
+また、前述の通り執筆時現在では最大3つまでしかRouteを保持できない点もUX上の大きな欠点です。
+
+このようなトレードオフは、[nuqs](https://nuqs.dev/)などを利用してURLに状態を保存するか、もしくは筆者がメンテナンスしてる[location-state](https://github.com/recruit-tech/location-state)を利用することで解消することができます。location-stateは履歴エントリー単位での状態の復元をサポートするライブラリです。詳細は以下記事をご参照ください。
+
+https://zenn.dev/akfm/articles/location-state
