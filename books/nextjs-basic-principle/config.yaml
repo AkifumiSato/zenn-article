@@ -27,7 +27,7 @@ chapters:
   - part_3_data_mutation
   - part_3_1
   - vision_of_cache_components
-  - cache_and_suspense
+  - dynamic_content_suspense
   - use_cache_directive
   - cache_stores_setting
   - part_4
