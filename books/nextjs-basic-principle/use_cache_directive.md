@@ -30,7 +30,7 @@ Cache Componentsは新しい世界観として再設計されたもので、Cach
 
 ### `"use cache"`
 
-`"use cache"`は、Static Shellに動的処理やコンポーネントを含めることができるよう設計されていますが、Static Shellに含まれない場合には主にインメモリCacheとして扱われます。
+`"use cache"`は、Static Shellに動的処理やコンポーネントを含めることを主なユースケースとして想定してますが、Dynamic Content内の一部から利用することも可能で、この場合にはインメモリCache^[次章の[`cacheHandlers.default`](./cache_stores_setting#use-cache-default)を設定することで、保存先を変更することができます。]として扱われます。
 
 しかし、セルフホスティングでは多くの場合マルチプロセスで動作するため、インメモリなCacheはリクエスト間で共有できない可能性がありますが、リクエスト間でCacheを共有したいという要件は非常に一般的です。リクエスト間でCacheを共有したい場合には、`"use cache"`ではなく、[次章で解説する`"use cache: remote"`](./cache_stores_setting)を利用しましょう。
 
