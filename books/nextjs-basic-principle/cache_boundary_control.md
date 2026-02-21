@@ -1,5 +1,5 @@
 ---
-title: "Static Renderingの境界と制御"
+title: "Cacheの境界と制御"
 ---
 
 ## 要約

@@ -28,7 +28,7 @@ chapters:
   - part_3_1
   - explicit_cache_composability
   - dynamic_rendering_boundary
-  - static_boundary_control
+  - cache_boundary_control
   - cache_directives_and_stores
   - part_4
   - part_4_pure_server_components
