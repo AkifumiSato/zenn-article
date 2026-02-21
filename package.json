@@ -22,12 +22,10 @@
     "url": "https://github.com/AkifumiSato/zenn-article/issues"
   },
   "homepage": "https://github.com/AkifumiSato/zenn-article#readme",
-  "dependencies": {
-    "zenn-cli": "0.2.3"
-  },
   "devDependencies": {
     "prettier": "3.6.2",
     "pretty-quick": "4.2.2",
-    "simple-git-hooks": "2.13.1"
+    "simple-git-hooks": "2.13.1",
+    "zenn-cli": "0.4.5"
   }
 }
