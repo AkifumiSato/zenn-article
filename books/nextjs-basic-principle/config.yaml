@@ -27,7 +27,7 @@ chapters:
   - part_3_data_mutation
   - part_3_1
   - explicit_cache_composability
-  - dynamic_rendering_boundary
+  - dynamic_content_boundary
   - cache_boundary_control
   - cache_directives_and_stores
   - part_4

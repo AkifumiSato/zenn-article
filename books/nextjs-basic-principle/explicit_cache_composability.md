@@ -44,7 +44,7 @@ Cache Componentsは実験的機能として開発されていたPPR・Dynamic IO
 
 ### PPR(Partial Pre-Rendering)
 
-**PPR**はPartial Pre-Renderingの略称で、ページをStatic Renderingしつつ一部をDynamic Renderingにすることができる、文字通りPartial（部分的）にPre-Renderingするレンダリング戦略です。
+**PPR**はPartial Pre-Renderingの略称で、ページをStatic Renderingしつつ一部をDynamic Renderingにすることができる、文字通りPartial（部分的）にPre-Rendering（事前レンダリング）するレンダリング戦略です。
 
 詳細な経緯や解説は筆者の過去の記事[PPR - pre-rendering新時代の到来とSSR/SSG論争の終焉↗︎](https://zenn.dev/akfm/articles/nextjs-partial-pre-rendering#ppr%E3%81%A8%E3%81%AF)をご参照ください。ここでは一部説明を抜粋します。
 
