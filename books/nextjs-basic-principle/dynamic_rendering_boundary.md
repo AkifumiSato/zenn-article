@@ -1,5 +1,5 @@
 ---
-title: "Dynamic ContentとSuspense"
+title: "Dynamic Renderingの境界"
 ---
 
 ## 要約

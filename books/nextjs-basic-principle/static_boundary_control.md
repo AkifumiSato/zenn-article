@@ -1,5 +1,5 @@
 ---
-title: '"use cache"とCache制御関数'
+title: "Static Renderingの境界と制御"
 ---
 
 ## 要約
