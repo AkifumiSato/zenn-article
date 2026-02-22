@@ -4,47 +4,44 @@ title: "Cacheの境界と制御"
 
 ## 要約
 
-`"use cache"`はComponentや関数がCache可能であることを宣言するもので、Cacheの制御関数と組み合わせて利用します。Cacheを活用し、高いパフォーマンスや耐障害性の実現を心がけましょう。
+`"use cache"`はComponentや関数がCache可能であることを宣言するもので、Cacheの制御関数と組み合わせて利用します。Cacheを活用し、高いパフォーマンスや耐障害性を心がけましょう。
 
 ## 背景
 
-Next.js開発チームはApp Routerの開発当初、暗黙的なCache制御により、開発者がCacheを意識しなくて済むような世界観こそ理想的だと考えていました。そのため、App Router登場当初のCacheはデフォルトで有効で、`headers()`や`fetch()`のオプションなどによって暗黙的にOpt-outされるような設計になっていました。
-
-しかし、実際にはこのような設計は開発者に多くの混乱を招いたため、慎重な検討を重ねながら改善を進めていきました。以下はその改善の一部です。
-
-- ドキュメントの改善
-- `fetch()`のデフォルトCache廃止
-- `staleTimes`オプションの追加
-
-しかし、根本的な設計思想の改善はリアーキテクチャなしには困難でした。
-
-Cache Componentsは新しい世界観として再設計されたもので、Cacheは`"use cache"`によってOpt-inできるような設計に変更されました。
-
 :::message
-より詳しい歴史的経緯については、筆者の過去の記事[Next.js Cache回想↗︎](https://zenn.dev/akfm/articles/nextjs-caching-history)をご参照ください。
+以下は筆者の過去記事[Next.js Cache回想↗︎](https://zenn.dev/akfm/articles/nextjs-caching-history)と重複します。より詳細な内容を知りたい方はこちらの記事をご参照ください。
 :::
+
+Next.js開発チームは当初、開発者が意識しなくて済むような暗黙的なCache制御こそ理想的だと考えていました。そのため、App Router登場当初のCacheはデフォルトで有効で、`headers()`や`fetch()`のオプションなどによって暗黙的にOpt-outされるような設計になっていました。また、当時はPPRの実装や概念も存在しなかったため、Route単位でStatic/Dynamic Renderingを切り替えるしかなく、多層のCacheによる最適化が試みられていました。
+
+このような**暗黙的で多層のCache戦略**は開発者に多くの混乱を招いたため、Cache Componentsでは従来の戦略から脱却すべく、**明示的で合成可能なCache戦略**を採用しています。
 
 ## 設計・プラクティス
 
 `"use cache"`はComponentや関数が**Cache可能であること**を宣言するものです。言い換えると、Next.jsは`"use cache"`が宣言されたComponentや関数を必ずしも**Cacheするとは限りません**。
 
+RSCでは`"use client"`と`"use server"`2つのディレクティブが導入されましたが、これらは[「2つの世界、2つのドア」](./part_2_bundle_boundary#%E3%80%8C2%E3%81%A4%E3%81%AE%E4%B8%96%E7%95%8C%E3%80%812%E3%81%A4%E3%81%AE%E3%83%89%E3%82%A2%E3%80%8D)と考えることができます。Next.jsの`"use cache"`はRSCの世界を拡張し、もう1つ**Cachedな世界とドア**を導入したものと考えることができます。
+
+![RSCの世界観とNext.jsのCache](/images/nextjs-caching-history/cache-door.png)
+_RSCの世界観とNext.jsのCache_
+
 ### `"use cache"`
 
-`"use cache"`は、Static Shellに動的処理やコンポーネントを含めることを主なユースケースとして想定してますが、Dynamic Content内の一部から利用することも可能で、この場合にはインメモリCache^[次章の[`cacheHandlers.default`](./cache_stores_setting#use-cache-default)を設定することで、保存先を変更することができます。]として扱われます。
+`"use cache"`は、Static Shellに動的処理やコンポーネントを含めることを主なユースケースとして想定していますが、Dynamic Content内の一部から利用することも可能で、この場合にはインメモリCache^[次章の[`cacheHandlers.default`](./cache_stores_setting#use-cache-default)を設定することで、保存先を変更することができます。]として扱われます。
 
 しかし、セルフホスティングでは多くの場合マルチプロセスで動作するため、インメモリなCacheはリクエスト間で共有できない可能性がありますが、リクエスト間でCacheを共有したいという要件は非常に一般的です。リクエスト間でCacheを共有したい場合には、`"use cache"`ではなく、[次章で解説する`"use cache: remote"`](./cache_stores_setting)を利用しましょう。
 
-:::message
-Vercelはサーバーレス環境で動作するため、`"use cache"`ではCacheされないケースがあるそうです。詳細はこちらの[issueのコメント↗︎](https://github.com/vercel/next.js/issues/85240#issuecomment-3560124078)をご参照ください。
-:::
+::::details Vercelと`"use cache"`
+Vercelのランタイムはサーバーレスのため、Dynamic Contentから参照される`"use cache"`はCacheされません。詳細な仕様や背景については[こちらのコメント↗︎](https://github.com/vercel/next.js/issues/85240#issuecomment-3560124078)をご参照ください。
+::::
 
 ### `cacheLife(profile)`
 
 [`cacheLife(profile)`↗︎](https://nextjs.org/docs/app/api-reference/functions/cacheLife)は、Cacheの有効期限を設定するための関数です。`profile`はCacheの有効期限に関する以下3つのタイミングを指定することができ、これらをまとめた設定であるprofile文字列やObjectを渡すことができます。
 
-- `stale`: この時間内は、クライアントがサーバーをチェックせずにキャッシュされたデータを使用します
-- `revalidate`: この時間が経過すると、次のリクエスト時にバックグラウンドでデータが更新されます
-- `expire`: この時間が経過すると、次のリクエスト時にデータを更新します
+- `stale`: クライアントサイドでキャッシュを利用する期間
+- `revalidate`: 次のリクエスト時にバックグラウンドでデータが更新されるまでの期間
+- `expire`: 次のリクエスト時にレンダリングをブロックしてデータを再取得するまでの期間
 
 ```ts
 // 'days': stale: 5 minutes, revalidate: 1 day, expire: 1 week
@@ -54,7 +51,7 @@ cacheLife("days");
 cacheLife({ stale: 300 });
 ```
 
-Next.jsが提供する`profile`は以下のようになっています。カスタムプロファイルを設定することや、`profile`にObjectで詳細な設定を渡すことも可能です。
+Next.jsがデフォルトで提供する`profile`は以下のようになっています。
 
 | プロファイル | 主な用途                             | stale | revalidate | expire |
 | ------------ | ------------------------------------ | ----- | ---------- | ------ |
@@ -84,7 +81,9 @@ export async function getPosts() {
 
 ### `updateTag(tag)`, `revalidateTag(tag)`
 
-[`updateTag(tag)`↗︎](https://nextjs.org/docs/app/api-reference/functions/updateTag)は、指定したtagが付与されたCacheを**更新**するためのAPIです。[`revalidateTag(tag)`↗︎](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)も同様にCacheを更新するためのAPIですが、こちらはバックグラウンドで更新を行い、その間は古いCacheを参照します。
+[`updateTag(tag)`↗︎](https://nextjs.org/docs/app/api-reference/functions/updateTag)は、指定したtagが付与されたCacheを**即座に更新**するためのAPIです。更新された結果は、即座に画面に反映されます。
+
+一方、[`revalidateTag(tag)`↗︎](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)も同様にCacheを更新するためのAPIですが、こちらはバックグラウンドで更新を行い、その間は古いCacheを参照します。
 
 ```tsx
 "use server";
@@ -102,14 +101,16 @@ export default async function updatePost() {
 
 ### 自動で算出されるCacheのkey
 
-`"use cache"`によるCacheのkeyは、Next.jsによって自動で算出されます。
+`"use cache"`によるCacheのkeyは、Next.jsによって[自動で算出↗︎](https://nextjs.org/docs/app/api-reference/directives/use-cache#cache-keys)されます。
 
 1. Build ID: 各ビルドごとに一意なID
 2. Function ID: コード内の関数の場所やシグネチャから計算される安全なハッシュ
 3. Serializable arguments: コンポーネントのPropsや関数の引数（シリアライズ可能なもの）
 4. HMR refresh hash（開発時のみ）: ホットモジュールリプレース時にキャッシュを無効化します
 
-特に3.のSerializable argumentsは、コンポーネントのPropsや関数の引数をキーとして使用しますが、`ReactNode`などシリアライズできないものは**キーに含まれません**。この仕組みにより、`"use cache"`を使用したコンポーネントはCacheのkeyに`children`を含みません。
+特に留意すべき点として、コンポーネントのPropsや関数の引数をキーとして使用しますが、`ReactNode`などシリアライズできないものは**キーに含まれません**。
+
+言い換えると、`"use cache"`なコンポーネントの`children`は、Cacheのkeyに含まれないため、Cachedなコンポーネントの`children`にDynamicなコンポーネントを渡すことができます。
 
 ```tsx
 export default function Page() {

@@ -121,6 +121,6 @@ Vercelなどプラットフォームにデプロイする場合には`cacheHandl
 
 プラットフォーム側の構成や`cacheHandlers`の設定の詳細は、各プラットフォームに依存するためブラックボックスな可能性があります。
 
-VercelではNext.jsをサーバーレス環境へデプロイするため、`default`のインメモリCacheはリクエストごとに破棄されます。Static ShellはCDNに保存されるためrevalidateが可能ですが、Dynamic Content内の`"use cache"`は実質利用できないとされています。詳しくは[こちらのissue↗︎](https://github.com/vercel/next.js/issues/85240#issuecomment-3560124078)をご参照ください。
+VercelではNext.jsをサーバーレス環境へデプロイするため、`default`のインメモリCacheはリクエストごとに破棄されます。Static ShellはCDNに保存されるためrevalidateが可能ですが、Dynamic Content内の`"use cache"`は実質利用できないとされています。詳細な仕様や背景については[こちらのコメント↗︎](https://github.com/vercel/next.js/issues/85240#issuecomment-3560124078)をご参照ください。
 
 ただし、実際には[Dynamic APIsを利用しなければCacheできる↗︎](https://zenn.dev/link/comments/d578f971c18c22)との情報もあり、仕様が明確でないので、利用時には各々挙動を確認することをお勧めします。

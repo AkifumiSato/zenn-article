@@ -39,10 +39,6 @@ Dynamic Contentはネットワーク通信などを伴う動的な処理や、[R
 
 `"use cache"`が宣言された関数やコンポーネントはStatic Shellに含まれる以外にも、Dynamic Content内から参照することが可能です。この場合`"use cache"`は、デフォルトではインメモリCacheのマーカーとして機能します。
 
-:::message
-Vercelでは意図して、Dynamic Content内における`"use cache"`をCacheしません。詳細な仕様や背景については[こちらのコメント↗︎](https://github.com/vercel/next.js/issues/85240#issuecomment-3560124078)をご参照ください。
-:::
-
 ## 設計・プラクティス
 
 Dynamic Contentは`<Suspense>`によって境界付けられます。Routeに`loading.tsx`が存在する場合は暗黙的に`<Suspense>`境界が設定されるので、Cache Componentsでは積極的に`loading.tsx`を活用しましょう。
