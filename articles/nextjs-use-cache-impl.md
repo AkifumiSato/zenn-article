@@ -18,12 +18,12 @@ published: true
 
 ## Dynamic IOの成り立ち
 
-[Dynamic IO](https://nextjs.org/docs/canary/app/api-reference/config/next-config-js/dynamicIO)は2024年10月のNext Confで発表された、Next.jsにおける新しいコンセプトを実証するための実験的モードです。Dynamic IOはその名の通り、主に動的I/O処理に対する振る舞いを大きく変更するものです。
+[Dynamic IO](https://nextjs.org/blog/our-journey-with-caching)は2024年10月のNext Confで発表された、Next.jsにおける新しいコンセプトを実証するための実験的モードです。Dynamic IOはその名の通り、主に動的I/O処理に対する振る舞いを大きく変更するものです。
 
 具体的には、以下の処理に対する振る舞いが変更されます。
 
 - データフェッチ: `fetch()`やDBアクセスなど
-- [Dynamic APIs](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-apis): `headers()`や`cookies()`など
+- [Dynamic APIs](https://nextjs.org/docs/app/guides/caching#dynamic-apis): `headers()`や`cookies()`など
 - Next.jsがラップするモジュール: `Date`、`Math`、Node.jsの`crypto`モジュールなど
 - 任意の非同期関数(マイクロタスクを除く)
 
