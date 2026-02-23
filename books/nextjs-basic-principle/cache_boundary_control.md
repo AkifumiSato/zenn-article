@@ -4,32 +4,68 @@ title: "Cacheの境界と制御"
 
 ## 要約
 
-`"use cache"`はComponentや関数がCache可能であることを宣言するもので、Cacheの制御関数と組み合わせて利用します。制御関数の種類や役割を理解して、Cacheを活用しましょう。
+`"use cache"`はCacheの境界を宣言するもので、Cacheの制御関数と組み合わせて利用します。制御関数の種類や役割を理解して、Cacheを活用しましょう。
 
 ## 背景
 
-:::message
-以下は筆者の過去記事[Next.js Cache回想↗︎](https://zenn.dev/akfm/articles/nextjs-caching-history)と重複します。より詳細な内容を知りたい方はこちらの記事をご参照ください。
-:::
+[明示的で合成可能なCache戦略](explicit_cache_composability)で解説したように、Cache Componentsでは`"use cache"`を関数やファイルで宣言することで関数やコンポーネントが**Cache可能である**ことを表明します。
 
-Next.js開発チームは当初、開発者が意識しなくて済むような暗黙的なCache制御こそ理想的だと考えていました。そのため、App Router登場当初のCacheはデフォルトで有効で、`headers()`や`fetch()`のオプションなどによって暗黙的にOpt-outされるような設計になっていました。また、当時はPPRの実装や概念も存在しなかったため、Route単位でStatic/Dynamic Renderingを切り替えるしかなく、多層のCacheによる最適化が試みられていました。
+```tsx
+async function PostContainer({ slug }: { slug: string }) {
+  "use cache";
 
-このような**暗黙的で多層のCache戦略**は開発者に多くの混乱を招いたため、Cache Componentsでは従来の戦略から脱却すべく、**明示的で合成可能なCache戦略**を採用しています。
+  const post = await getPost({ slug });
+
+  return (
+    <main>
+      <h1>{post.title}</h1>
+      ...
+    </main>
+  );
+}
+```
+
+これは、従来の暗黙的で多層のCache戦略とは全く異なるものです。
+
+### 従来のCache境界と制御
+
+従来のCacheは多層で、特にサーバーサイドにおいてはFull Route CacheとData Cacheの役割と相互影響などを考慮する必要がありました。
+
+Full Route Cacheは、以下のように[Route Segment Config↗︎](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config)で設定するよう設計されていました。
+
+```tsx
+// layout.tsx | page.tsx
+export const revalidate = 0; // 1以上でStatic Rendering
+```
+
+Data Cacheは`fetch()`などの引数で設定するよう設計されていました。そのため、データフェッチの戻り値をベースにtaggingするような実装はできませんでした。
+
+```tsx
+async function getPost({ slug }: { slug: string }) {
+  return fetch(`https://...`, {
+    next: {
+      tags: ["posts", slug], // ⚠️データフェッチ結果をtaggingすることができない
+    },
+  });
+}
+```
+
+これらの設定が相互に影響することもあるため、従来のCacheは広範な影響範囲を考慮する必要がありました。
 
 ## 設計・プラクティス
 
-`"use cache"`はComponentや関数が**Cache可能であること**を宣言するものです。言い換えると、Next.jsは`"use cache"`が宣言されたComponentや関数を必ずしも**Cacheするとは限りません**。
+Cache Componentsでは`"use cache"`で関数やコンポーネントをCacheするため、従来よりも影響範囲が明確で、RSCとの親和性が高い設計となっています。
 
 RSCでは`"use client"`と`"use server"`2つのディレクティブが導入されましたが、これらは[「2つの世界、2つのドア」](part_2_bundle_boundary#%E3%80%8C2%E3%81%A4%E3%81%AE%E4%B8%96%E7%95%8C%E3%80%812%E3%81%A4%E3%81%AE%E3%83%89%E3%82%A2%E3%80%8D)と考えることができます。Next.jsの`"use cache"`はRSCの世界を拡張し、もう1つ**Cachedな世界とドア**を導入したものと考えることができます。
 
 ![RSCの世界観とNext.jsのCache](/images/nextjs-caching-history/cache-door.png)
 _RSCの世界観とNext.jsのCache_
 
-### `"use cache"`
+### `"use cache"`のユースケース
 
 `"use cache"`は、Static Shellに動的処理やコンポーネントを含めることを主なユースケースとして想定していますが、Dynamic Content内から参照することも可能で、この場合にはインメモリCache^[次章の[`cacheHandlers.default`](cache_stores_setting#use-cache-default)を設定することで、保存先を変更することができます。]として扱われます。
 
-しかし、セルフホスティングでは多くの場合マルチプロセスで動作するため、インメモリなCacheはリクエスト間で共有できない可能性がありますが、リクエスト間でCacheを共有したいという要件は非常に一般的です。リクエスト間でCacheを共有したい場合には、`"use cache"`ではなく、次章で解説する[`"use cache: remote"`](cache_stores_setting)を利用しましょう。
+しかし、セルフホスティングでは多くの場合マルチプロセスで動作するため、インメモリなCacheはリクエスト間で共有できない可能性があります。リクエスト間でCacheを共有したい場合には、`"use cache"`ではなく、次章で解説する[`"use cache: remote"`](cache_stores_setting)を利用しましょう。
 
 ### `cacheLife(profile)`
 

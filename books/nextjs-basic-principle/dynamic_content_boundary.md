@@ -58,8 +58,8 @@ export default async function PostPage({
 
   return (
     <>
-      <PostContent id={id} />
-      <Comments id={id} />
+      <PostContainer id={id} />
+      <CommentsContainerContainer id={id} />
     </>
   );
 }
@@ -114,11 +114,11 @@ export default async function PostPage({
 
   return (
     <>
-      {/* <PostContent>: Static Rendering */}
-      <PostContent id={id} />
+      {/* <PostContainer>: Static Rendering */}
+      <PostContainer id={id} />
       <Suspense fallback={<Loading />}>
-        {/* <Comments>: Dynamic Rendering */}
-        <Comments id={id} />
+        {/* <CommentsContainer>: Dynamic Rendering */}
+        <CommentsContainer id={id} />
       </Suspense>
     </>
   );
@@ -154,11 +154,11 @@ export default async function ProductPage({
 
   return (
     <>
-      <ProductDetails id={id} />
-      <ProductReviews id={id} />
+      <ProductDetailsContainer id={id} />
+      <ProductReviewsContainer id={id} />
       <Suspense fallback={<Loading />}>
         {/* おすすめ商品の取得が非常に低速なので、chunkを分割 */}
-        <ProductRecommendations id={id} />
+        <RecommendationsContainer id={id} />
       </Suspense>
     </>
   );
@@ -215,13 +215,13 @@ export default function ProductPage({
 
   return (
     <>
-      {/* <ProductDetails>: Static Rendering */}
-      <ProductDetails id={id} />
-      {/* <ProductReviews>: Static Rendering */}
-      <ProductReviews id={id} />
+      {/* <ProductDetailContainer>: Static Rendering */}
+      <ProductDetailContainer id={id} />
+      {/* <ProductReviewsContainer>: Static Rendering */}
+      <ProductReviewsContainer id={id} />
       <Suspense fallback={<Loading />}>
-        {/* <ProductRecommendations>: Dynamic Rendering */}
-        <ProductRecommendations id={id} />
+        {/* <RecommendationsContainer>: Dynamic Rendering */}
+        <RecommendationsContainer id={id} />
       </Suspense>
     </>
   );

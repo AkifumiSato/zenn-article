@@ -75,13 +75,13 @@ export default async function Page({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  // `<Post />`はStatic
+  // `<PostContainer />`はStatic
   // `<Comments />`はDynamic
   return (
     <>
-      <Post slug={slug} />
+      <PostContainer slug={slug} />
       <Suspense fallback={<>Loading...</>}>
-        <Comments slug={slug} />
+        <CommentsContainer slug={slug} />
       </Suspense>
     </>
   );
