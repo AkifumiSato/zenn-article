@@ -4,7 +4,7 @@ title: "Cacheの境界と制御"
 
 ## 要約
 
-`"use cache"`はCacheの境界を宣言するもので、Cacheの制御関数と組み合わせて利用します。制御関数の種類や役割を理解して、Cacheを活用しましょう。
+`"use cache"`はCacheの境界を宣言するもので、Cacheの制御は制御関数によって行います。従来の設定による制御と比べると、制御関数は高い自由度とより詳細な設定が可能になっています。
 
 ## 背景
 
@@ -31,14 +31,14 @@ async function PostContainer({ slug }: { slug: string }) {
 
 従来のCacheは多層で、特にサーバーサイドにおいてはFull Route CacheとData Cacheの役割と相互影響などを考慮する必要がありました。
 
-Full Route Cacheは、以下のように[Route Segment Config↗︎](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config)で設定するよう設計されていました。
+Full Route Cacheの制御は、以下のように[Route Segment Config↗︎](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config)で行うことが可能です。
 
 ```tsx
 // layout.tsx | page.tsx
 export const revalidate = 0; // 1以上でStatic Rendering
 ```
 
-Data Cacheは`fetch()`などの引数で設定するよう設計されていました。そのため、データフェッチの戻り値をベースにtaggingするような実装はできませんでした。
+一方Data Cacheの制御は、`fetch()`の引数で制御が可能です。
 
 ```tsx
 async function getPost({ slug }: { slug: string }) {
@@ -50,7 +50,7 @@ async function getPost({ slug }: { slug: string }) {
 }
 ```
 
-これらの設定が相互に影響することもあるため、従来のCacheは広範な影響範囲を考慮する必要がありました。
+当然ながら、データフェッチの戻り値をベースにtaggingするような実装はできません。また、Full Route CacheとData Cacheは密結合な関係にあり、影響範囲は非常に複雑でした。
 
 ## 設計・プラクティス
 
@@ -63,9 +63,9 @@ _RSCの世界観とNext.jsのCache_
 
 ### `"use cache"`のユースケース
 
-`"use cache"`は、Static Shellに動的処理やコンポーネントを含めることを主なユースケースとして想定していますが、Dynamic Content内から参照することも可能で、この場合にはインメモリCache^[次章の[`cacheHandlers.default`](cache_stores_setting#use-cache-default)を設定することで、保存先を変更することができます。]として扱われます。
+`"use cache"`は、Static Shellに動的処理やコンポーネントを含めることを主なユースケースとして想定していますが、Dynamic Content内から参照することも可能で、この場合にはインメモリCache^[次章の[`cacheHandlers.default`](cache_stores_setting#use-cache-default)を設定することで、保存先を変更することができます。]のマーカーとして機能します。
 
-しかし、セルフホスティングでは多くの場合マルチプロセスで動作するため、インメモリなCacheはリクエスト間で共有できない可能性があります。リクエスト間でCacheを共有したい場合には、`"use cache"`ではなく、次章で解説する[`"use cache: remote"`](cache_stores_setting)を利用しましょう。
+しかし、現代のホスティング環境は多くの場合複数プロセスで動作するため、インメモリなCacheはリクエスト間で共有できません。リクエスト間でCacheを共有したい場合には、`"use cache"`ではなく、次章で解説する[`"use cache: remote"`](cache_stores_setting)を利用しましょう。
 
 ### `cacheLife(profile)`
 
@@ -83,7 +83,7 @@ cacheLife("days");
 cacheLife({ stale: 300 });
 ```
 
-Next.jsがデフォルトで提供する`profile`は以下のようになっています。
+Next.jsが提供する`profile`は以下のようになっています。
 
 | プロファイル | 主な用途                             | stale | revalidate | expire |
 | ------------ | ------------------------------------ | ----- | ---------- | ------ |
@@ -113,7 +113,7 @@ export async function getPosts() {
 
 ### `updateTag(tag)`, `revalidateTag(tag)`
 
-[`updateTag(tag)`↗︎](https://nextjs.org/docs/app/api-reference/functions/updateTag)は、指定したtagが付与されたCacheを**即座に更新**するためのAPIです。更新された結果は、即座に画面に反映されます。
+[`updateTag(tag)`↗︎](https://nextjs.org/docs/app/api-reference/functions/updateTag)は、対象のtagに関連するCacheを**即座に更新**するためのAPIです。更新された結果は、即座に画面に反映されます。
 
 一方、[`revalidateTag(tag)`↗︎](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)も同様にCacheを更新するためのAPIですが、こちらはバックグラウンドで更新を行い、その間は古いCacheを参照します。
 
@@ -125,7 +125,7 @@ import { updateTag } from "next/cache";
 export default async function updatePost() {
   // ...
 
-  updateTag("my-data");
+  updateTag("my-data"); // or `revalidateTag("my-data");`
 }
 ```
 
@@ -142,7 +142,7 @@ export default async function updatePost() {
 
 特に留意すべき点として、コンポーネントのPropsや関数の引数をキーとして使用しますが、`ReactNode`などシリアライズできないものは**キーに含まれません**。
 
-この制約により、`"use cache"`においても[Compositionパターン](part_2_composition_pattern)が適用できます。
+このような仕組みのため、`"use cache"`においても[Compositionパターン](part_2_composition_pattern)が適用できます。
 
 ```tsx
 export default function Page() {

@@ -29,7 +29,7 @@ chapters:
   - explicit_cache_composability
   - dynamic_content_boundary
   - cache_boundary_control
-  - cache_directives_and_stores
+  - remote_cache
   - part_4
   - part_4_pure_server_components
   - part_4_suspense_and_streaming

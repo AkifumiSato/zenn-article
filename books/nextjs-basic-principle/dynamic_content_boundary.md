@@ -4,7 +4,7 @@ title: "Dynamic Contentの境界"
 
 ## 要約
 
-Cache ComponentsはPPRをベースとしており、1つのRouteにStatic Shell・Dynamic Content・Cached Data（Component）が含まれます。Route内でDynamic Contentの境界を扱うには、`loading.tsx`か`<Suspense>`境界が必要です。
+Cache ComponentsはPPRをベースとしており、1つのRouteにStatic Shell・Dynamic Content・Cached Dataが含まれます。Route内でDynamic Contentの境界を扱うには、`loading.tsx`か`<Suspense>`境界が必要です。
 
 `<Suspense>`の乱用は[ポップコーンUI](#ポップコーンui)を引き起こすので、慎重に設計しましょう。
 
@@ -14,19 +14,19 @@ Cache ComponentsのRouteは以下3つで構成されます。
 
 - **Static Shell**: 事前レンダリングされたHTMLやRSC Payloadの外郭
 - **Dynamic Content**: リクエスト毎にレンダリングされる`<Suspense>`境界の内側
-- **Cached Data（Component）**: Cacheされたデータやコンポーネント
+- **Cached Data**: Cacheされたデータやコンポーネント
 
 ### Static Shell
 
 **Static Shell**は事前レンダリングされたHTMLやRSC Payloadの外郭です。Next.jsはリクエストを受け取り次第、即座にStatic Shellをブラウザに配信します。
 
-事前レンダリング中`"use cache"`によりCache可能とされた関数やコンポーネントが参照された場合、関数の戻り値やレンダリング結果がStatic Shellに含まれます。また、Static ShellにはDynamic Contentの`fallback`が含まれており、Dynamic Content自体はレンダリング完了次第chunkが配信されます。
+`"use cache"`によりCache可能とマークされた関数やコンポーネントが事前レンダリング中に参照されると、レンダリング結果がStatic Shellに含まれます。また、Static ShellにはDynamic Contentの`fallback`が含まれており、Dynamic Content自体はレンダリング完了次第ブラウザに配信されます。
 
 ### Dynamic Content
 
 Dynamic Contentはネットワーク通信などを伴う動的な処理や、[Runtime Data↗︎](https://nextjs.org/docs/app/getting-started/cache-components#runtime-data)、[非決定的操作↗︎](https://nextjs.org/docs/app/getting-started/cache-components#non-deterministic-operations)を扱うような`<Suspense>`境界の内側^[[事前レンダリング時に解決されうるような動的処理↗︎](https://nextjs.org/docs/app/getting-started/cache-components#automatically-prerendered-content)はStatic Shell内でも扱うことが可能です]のコンテンツを指します。
 
-### Cached Data（Component）
+### Cached Data
 
 `"use cache"`が宣言された関数やコンポーネントはStatic Shellに含まれる以外にも、Dynamic Content内から参照することが可能です。この場合`"use cache"`は、デフォルトではインメモリCacheのマーカーとして機能します。
 
@@ -59,7 +59,7 @@ export default async function PostPage({
   return (
     <>
       <PostContainer id={id} />
-      <CommentsContainerContainer id={id} />
+      <CommentsContainer id={id} />
     </>
   );
 }
@@ -130,13 +130,13 @@ export async function generateStaticParams() {
 }
 ```
 
-このように、事前レンダリング時に大部分は生成可能だが一部のみが動的なRouteにおいては、PageやLayout内で明示的に`<Suspense>`境界を追加することを推奨します。
+このように、大部分は事前レンダリング可能で一部のみが動的なRouteにおいては、PageやLayout内で明示的に`<Suspense>`境界を追加することを推奨します。
 
 ### パフォーマンスチューニング
 
 パフォーマンスチューニングの観点から、明示的な`<Suspense>`境界を追加することが有用となることがあります。一部のコンポーネントが非常に低速なデータフェッチを含むなどしてパフォーマンスボトルネックである場合、`<Suspense>`境界を追加することでクライアントへのchunk送信が分割されるため、パフォーマンスが改善する可能性があります。
 
-以下は商品ページにおいて、おすすめ商品の表示がボトルネックで遅延させる実装例です。
+以下は商品ページにおいて、おすすめ商品の表示を遅延させる実装例です。
 
 ```tsx
 // loading.tsx
@@ -165,13 +165,13 @@ export default async function ProductPage({
 }
 ```
 
-ただし、`<Suspense>`境界を多用しStreaming配信を分割しすぎると、[ポップコーンUI](#ポップコーンui)を引き起こす可能性があるため、慎重に設計しましょう。
+ただし、`<Suspense>`境界を多用しchunkの配信を分割しすぎると、[ポップコーンUI](#ポップコーンui)を引き起こす可能性があるため、慎重に設計しましょう。
 
 ## トレードオフ
 
 ### 下層Routeと共有される`layout.tsx`
 
-前述の通り、LayoutはRouteにおけるStatic Shell部分とみなすことが可能ですが、Layoutは[Nesting Layouts↗︎](https://nextjs.org/docs/app/getting-started/layouts-and-pages#nesting-layouts)なため、下層Routeと共有されることに注意が必要です。
+LayoutはRouteにおけるStatic Shell部分とみなすことが可能ですが、Next.jsのLayoutは[Nesting Layouts↗︎](https://nextjs.org/docs/app/getting-started/layouts-and-pages#nesting-layouts)なため、下層Routeと共有されることに注意が必要です。
 
 ```
 ./app/products/[id]/
