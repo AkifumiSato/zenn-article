@@ -2,7 +2,7 @@
 title: "ポップコーンUIとSuspense"
 emoji: "🍿"
 type: "tech" # tech: 技術記事 / idea: アイデア
-topics: ["ui", "frontend"]
+topics: ["react", "ui"]
 published: false
 ---
 
@@ -10,8 +10,7 @@ published: false
 
 - ポップコーンUI：ポップコーンが弾けるように順次表示されるUI
 - 避けるべきUX：個別フェッチによるスピナー乱立と連続的なガタつき
-- AI Agent時代の開発：Reconciliation Loopと人間によるゴール定義の重要性
-- フロントエンドの責務：UX要件の詳細定義とアンチパターンの認識が重要
+- より良いUXとReact: Reactチームはより良いUXの抽象化を追求しており、`<Suspense>`もまさにその追求の結果生まれたもの
 - 本記事の目的：ポップコーンUI問題の提起と`<Suspense>`による解決策
 
 ## 前提
@@ -35,17 +34,27 @@ published: false
 - 定義：ポップコーンのように、複数のスピナーがランダムに置き換わっていくような体験
 - 影響：Layout Shiftの発生=CLS悪化
 - Tanstack Queryの例：`useQuery`によるローディング状態（`isLoading`）の取得をもとに、バケツリレーを避けて実装すると自然とポップコーンUIになる
-- 構造的ジレンマ：hooksベースのAPIをもとに「自然な実装」をするとポップコーンUIになる
+  - hooksベースでデータフェッチを扱うと、コンポーネント単位でのLoading解決に目が向きがち
+  - 統合的なLoading体験を実装するには上位で管理しバケツリレーするなど、工夫が必要
+- 構造的ジレンマ：hooksベースのAPIをもとに自然な実装をしようとすると、ポップコーンUIになる
+
+### `useIsFetching()`
+
+- `useIsFetching()`で上位のコンポーネントでLoading状態を管理することができる
+- 実装例
+- 問題は、意図して避けようとしないといけないという点
 
 ### Suspense
 
 - 概要：React 18導入の非同期処理ハンドリング機能
 - アプローチ：Hooksでの状態管理から、Suspend（Promise throw）と`<Suspense>`境界によるUXの抽象化へ
-- TBW
+- コード例の対比
+  - Suspense境界の設計指針
+- SuspenseはSuspense境界単位でのLoading解決=より統合的なLoading体験の実装の抽象化
 
 ## 私見
 
 - 従来: Reactは`UI = f(state)`と表現していた時期がある
 - パラダイムシフト：UIを「非同期的なもの」として捉える重要性
-- Async React：`await UI = await f(await state)`
+- Async React：`await UI = await f(await state)`（昨年のReact Confより）
 - Reactの進化：より良いUXの追求とその抽象化の歴史
