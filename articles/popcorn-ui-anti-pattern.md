@@ -6,39 +6,37 @@ topics: ["react", "ui"]
 published: false
 ---
 
-- 現象の共有：複数APIを叩くページで、スピナーがバラバラと消えてレイアウトがガタつく体験
-- 命名：この現象を「ポップコーンUI」と呼ぶ（ポップコーンが弾けるように順次表示される様子）
-- 構造的な問題：hooksベースのデータフェッチを素朴に使うと自然に発生する
-  - AI Agentによるコード生成でもこの傾向は顕在化しやすい
-- Reactはより良いUXの抽象化を追求してきており、`<Suspense>`はその成果
-- 本記事の目的：ポップコーンUI問題の整理と、Reactがこの問題にどう向き合ってきたかの解説
+ページアクセス時に複数のローディングスピナーがランダムに表示され、徐々にコンテンツに置き換わっていくような体験に遭遇したこと、もしくは実装した経験はあるでしょうか？ReactチームはこのようなUIを、ポップコーンが弾ける様子に例えて**ポップコーンUI**と揶揄しています。
+
+このようなUIはユーザー体験として好ましくありませんが、よくみられるUIでもあります。Reactにおいて、コンポーネント内でデータフェッチを扱う方法は様々ありますが、複数のコンポーネントでローディング状態をハンドリングしてしまうとポップコーンUIになりがちです。
+
+開発者が意図してより良い体験を実装すべきとも考えられますが、単独のコンポーネントで見ると自然な実装になってしまうことは構造的な問題とも捉えられます。特に、AI Agent時代においてはコンポーネント単体を考慮する機会が多いと考えられるので、AI Agentがシンプルにコンポーネントのみを考慮して実装した結果、ポップコーンUIになることもあるでしょう。
+
+この記事ではポップコーンUIの実装について整理しつつ、ポップコーンUIを避けるための`<Suspense>`活用について考察します。
 
 ## ポップコーンUI
 
-- 定義：ポップコーンのように、複数のスピナーがランダムに置き換わっていくような体験
-- 影響：Layout Shiftの発生=CLS悪化
+ポップコーンUIは冒頭述べたように、UIがポップコーンのようにランダムに置き換わっていくような体験のことを指します。これはパフォーマンス観点では、Core Web Vitalsの1つである[Cumulative Layout Shift (CLS)](https://web.dev/articles/cls?hl=ja)という指標で定量化して計測可能です。
 
-:::details Cumulative Layout Shift（CLS）とは
-- Webパフォーマンスの潮流：ユーザー体験（UX）の定量化
-- Core Web Vitals：UX定量化のための重要指標群
-- CLS：予期せぬレイアウト変化（ガタつき）による不快感の計測
-:::
+TODO: gif - ポップコーンUIのデモ（スピナーがバラバラに解決される様子）
 
-- Tanstack Queryの例：`useQuery`によるローディング状態（`isLoading`）の取得をもとに、バケツリレーを避けて実装すると自然とポップコーンUIになる
+### 実装例
 
-:::details Propsのバケツリレー（Props Drilling）とは
-- 定義：上位でのデータフェッチと末端へのProps引き回し
-- 歴史：React初期の忌避パターンで、Redux等により解決されていた
-- 再燃：Next.js（Pages Router）の`getInitialProps`や`getServerSideProps`などにより、バケツリレー設計に回帰した
-- 反動：バケツリレーへの忌避から、各コンポーネントが個別にデータフェッチする設計が広まった
-:::
-  - hooksベースでデータフェッチを扱うと、コンポーネント単位でのLoading解決に目が向きがち
-  - 統合的なLoading体験を実装するには上位で管理しバケツリレーするなど、工夫が必要
-- 構造的ジレンマ：hooksベースのAPIをもとに自然な実装をしようとすると、ポップコーンUIになる
-
-- TODO: gif - ポップコーンUIのデモ（スピナーがバラバラに解決される様子）
+以下は[Tanstack Query](https://tanstack.com/query/latest)を使ったポップコーンUIの実装例です。
 
 ```tsx
+// 親はただ並べるだけ → 3つのスピナーがバラバラに解決される
+export default function DashboardPage() {
+  return (
+    <main>
+      <h1>Dashboard</h1>
+      <UserProfile />
+      <UserPosts />
+      <UserStats />
+    </main>
+  );
+}
+
 // 各コンポーネントが個別にfetch → ポップコーンUI
 function UserProfile() {
   const { data, isLoading } = useQuery({
@@ -72,26 +70,44 @@ function UserStats() {
   if (isLoading) return <Spinner />;
   return <div>{data.totalPosts} posts</div>;
 }
+```
 
-// 親はただ並べるだけ → 3つのスピナーがバラバラに解決される
-function Dashboard() {
+このように、データを参照するコンポーネント内でデータフェッチを扱いつつ、ローディング状態を管理するとポップコーンUIになってしまいます。
+
+### Propsのバケツリレー問題
+
+前述のTanstack Queryを使った実装例は、末端のコンポーネントでデータフェッチとローディングを扱ってるが故にポップコーンUIになります。親コンポーネントでこれらを中央集権的に管理すれば、統合的なローディング状態の管理を行うことができます。
+
+```tsx
+// 親コンポーネントで集権的にデータフェッチを管理
+export default function DashboardPage() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["dashboard"],
+    queryFn: () => Promise.all([fetchUser(), fetchPosts(), fetchStats()]),
+  });
+
+  if (isLoading) return <Spinner />;
+
+  const [user, posts, stats] = data;
+
   return (
-    <div>
-      <UserProfile />
-      <UserPosts />
-      <UserStats />
-    </div>
+    <main>
+      <h1>Dashboard</h1>
+      <UserProfile user={user} />
+      <UserPosts posts={posts} />
+      <UserStats stats={stats} />
+    </main>
   );
 }
 ```
 
-### エコシステム内での対処：useIsFetching()
+しかし、このような実装では親から子、もしくは孫やその子孫コンポーネントまでデータを引き回す必要があります。このように、上位のコンポーネントで中央集権的にデータフェッチを管理してPropsを引き回すことはPropsの**バケツリレー**（Props Drilling）と呼ばれ、冗長で認知負荷が高い実装になるため、古くから忌避されてきました。
 
-- Tanstack Queryでは`useIsFetching()`で上位のコンポーネントでLoading状態を管理することができる
-- 問題点：
-  - デフォルトがポップコーンUIのままであり、意図して避けないといけない
-  - 子コンポーネント側の`isLoading`分岐が残りうるので、二重管理になりがち
-- 位置づけ：hooksベースのエコシステム内での対症療法であり、設計レベルの解決ではない
+バケツリレーを避けようとすると末端でデータフェッチを行うこととなりますが、そのままローディング状態を管理するとポップコーンUIになってしまいます。
+
+### 統合的なローディング状態管理
+
+Tanstack Queryにおいては、末端でデータフェッチを扱いつつ上位コンポーネントでローディング状態を管理するために、`useIsFetching()`というhooksが用意されています。
 
 ```tsx
 function Dashboard() {
@@ -108,6 +124,10 @@ function Dashboard() {
   );
 }
 ```
+
+ただし、これはTanstack Query固有のhooksであり、データフェッチを扱う他ライブラリに必ずしも用意されてるわけではありません。例えば[SWR](https://swr.vercel.app/ja)には同様のhooksは用意されていません。そのため、ライブラリによっては自作しないと末端のデータフェッチと統合的なローディング管理は難しい可能性があります。
+
+また、このようなhooksの利用はあくまで開発者側が意図的にポップコーンUIを避ける意識が必要です。
 
 ## Suspense
 
