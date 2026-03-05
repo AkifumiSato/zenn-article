@@ -105,7 +105,7 @@ export default function DashboardPage() {
 
 バケツリレーを避けようとすると末端でデータフェッチを行うこととなりますが、そのままローディング状態を管理するとポップコーンUIになってしまいます。
 
-### 統合的なローディング状態管理
+## Tanstack Query（`useIsFetching()`）
 
 Tanstack Queryにおいては、末端でデータフェッチを扱いつつ上位コンポーネントでローディング状態を管理するために、`useIsFetching()`というhooksが用意されています。
 
@@ -129,7 +129,7 @@ function Dashboard() {
 
 また、このようなhooksの利用はあくまで開発者側が意図的にポップコーンUIを避ける意識が必要です。
 
-## `<Suspense>`
+## Tanstack Query + `<Suspense>`
 
 [`<Suspense>`](https://ja.react.dev/reference/react/Suspense)はReactでデータフェッチを扱うための組み込みコンポーネントで、レンダリングの中断や再開、フォールバックUIなどを扱うことができます。`<Suspense>`を利用すると、開発者はローディング状態の管理をhooksベースではなく境界単位で考えることが強制されます。
 
@@ -170,9 +170,7 @@ TODO: gif - Suspense版のデモ（境界単位で一括表示される様子）
 
 このように、`<Suspense>`はローディング体験を統合的に考えやすい設計となっています。ただし、各コンポーネントを個別の`<Suspense>`で囲めばポップコーンUIと同じ結果になるので、乱用には注意が必要です。
 
-## フレームワーク
-
-### Next.js
+## Next.js
 
 [Next.js](https://nextjs.org/docs)は[React Server Components↗︎](https://ja.react.dev/learn/creating-a-react-app#which-features-make-up-the-react-teams-full-stack-architecture-vision)をサポートしているため、Server Componentsでより直感的にデータフェッチを扱うことができます。
 
@@ -209,13 +207,15 @@ async function UserStats() {
 }
 ```
 
-Next.jsでは`loading.tsx`をRoute単位で配置可能で、統合的なローディング体験を実現することができます。Streaming SSRなどもサポートしているため、`<Suspense>`境界単位でchunkを分割することも可能です。
+上記のような実装でローディングを配置したい場合、Next.jsではRoute単位で`loading.tsx`を配置することで、統合的なローディング体験を実現することができます。
+
+また、Streaming SSRなどもサポートしているため、重いデータフェッチを含むコンポーネントを`<Suspense>`境界単位で分割することなども可能です。
 
 :::message
 Next.jsにおける`<Suspense>`の活用については、[Next.jsの考え方 - SuspenseとStreaming](https://zenn.dev/akfm/books/nextjs-basic-principle/viewer/part_4_suspense_and_streaming)で詳しく解説しているので、ご参照ください。
 :::
 
-このように、Next.jsなどフレームワーク側でデータフェッチの統合的なローディング体験をサポートしてることは、ポップコーンUIを避けるための一助となります。
+このように、Next.jsなどフレームワーク側でデータフェッチの統合的なローディング体験をサポートしていることは、ポップコーンUIを避けるための一助となります。
 
 ## 私見
 
