@@ -172,12 +172,50 @@ TODO: gif - Suspense版のデモ（境界単位で一括表示される様子）
 
 ## フレームワーク
 
-### Next.js App Router
+### Next.js
 
-- Suspenseをフレームワークレベルで統合した例としてNext.js App Routerがある
-- `loading.tsx`：ファイルを置くだけでルート単位のSuspense境界が設定される = デフォルトが統合的なLoading体験になる
-- Server Components：サーバーサイドでデータを取得し、クライアントでのfetchライブラリ自体が不要になるケースもある
-- フレームワークがSuspenseを前提に設計されていると、そもそもポップコーンUIが起きにくい構造になる
+[Next.js](https://nextjs.org/docs)は[React Server Components↗︎](https://ja.react.dev/learn/creating-a-react-app#which-features-make-up-the-react-teams-full-stack-architecture-vision)をサポートしているため、Server Componentsでより直感的にデータフェッチを扱うことができます。
+
+```tsx
+export default function Dashboard() {
+  return (
+    <div>
+      <UserProfile />
+      <UserPosts />
+      <UserStats />
+    </div>
+  );
+}
+
+async function UserProfile() {
+  const user = await fetchUser();
+  return <div>{user.name}</div>;
+}
+
+async function UserPosts() {
+  const posts = await fetchPosts();
+  return (
+    <ul>
+      {posts.map((post) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  );
+}
+
+async function UserStats() {
+  const stats = await fetchStats();
+  return <div>{stats.totalPosts} posts</div>;
+}
+```
+
+Next.jsでは`loading.tsx`をRoute単位で配置可能で、統合的なローディング体験を実現することができます。Streaming SSRなどもサポートしているため、`<Suspense>`境界単位でchunkを分割することも可能です。
+
+:::message
+Next.jsにおける`<Suspense>`の活用については、[Next.jsの考え方 - SuspenseとStreaming](https://zenn.dev/akfm/books/nextjs-basic-principle/viewer/part_4_suspense_and_streaming)で詳しく解説しているので、ご参照ください。
+:::
+
+このように、Next.jsなどフレームワーク側でデータフェッチの統合的なローディング体験をサポートしてることは、ポップコーンUIを避けるための一助となります。
 
 ## 私見
 
