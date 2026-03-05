@@ -129,16 +129,30 @@ function Dashboard() {
 
 また、このようなhooksの利用はあくまで開発者側が意図的にポップコーンUIを避ける意識が必要です。
 
-## Suspense
+## `<Suspense>`
 
-- 概要：Reactが提供する非同期処理ハンドリングの仕組み
-- アプローチ：Hooksでの状態管理から、Suspend（Promise throw）と`<Suspense>`境界によるUXの抽象化へ
-- 子コンポーネントは`isLoading`を意識せず、データがある前提で書ける
-- SuspenseはSuspense境界単位でのLoading解決=より統合的なLoading体験の抽象化
-- デフォルトが統合的なLoading体験になる（`useIsFetching()`との対比：opt-in vs opt-out）
+[`<Suspense>`](https://ja.react.dev/reference/react/Suspense)はReactでデータフェッチを扱うための組み込みコンポーネントで、レンダリングの中断や再開、フォールバックUIなどを扱うことができます。`<Suspense>`を利用すると、開発者はローディング状態の管理をhooksベースではなく境界単位で考えることが強制されます。
+
+:::message
+より詳細に`<Suspense>`について知りたい方は、uhyoさんの[jotaiによるReact再入門 - Suspenseの基本](https://zenn.dev/uhyo/books/learn-react-with-jotai/viewer/suspense-basics)がわかりやすいと思うので、ご参照ください。
+:::
+
+Tanstack Queryにおいては、`useSuspenseQuery()`というhooksで`<Suspense>`とデータフェッチを統合することができます。
 
 ```tsx
-// 子コンポーネントはローディング状態を扱わない
+export default function DashboardPage() {
+  return (
+    <main>
+      <h1>Dashboard</h1>
+      <Suspense fallback={<Spinner />}>
+        <UserProfile />
+        <UserPosts />
+        <UserStats />
+      </Suspense>
+    </main>
+  );
+}
+
 function UserProfile() {
   const { data } = useSuspenseQuery({
     queryKey: ["user"],
@@ -147,81 +161,14 @@ function UserProfile() {
   return <div>{data.name}</div>;
 }
 
-function UserPosts() {
-  const { data } = useSuspenseQuery({
-    queryKey: ["posts"],
-    queryFn: fetchPosts,
-  });
-  return (
-    <ul>
-      {data.map((post) => (
-        <li key={post.id}>{post.title}</li>
-      ))}
-    </ul>
-  );
-}
-
-function UserStats() {
-  const { data } = useSuspenseQuery({
-    queryKey: ["stats"],
-    queryFn: fetchStats,
-  });
-  return <div>{data.totalPosts} posts</div>;
-}
-
-// Suspense境界でLoading体験を一括管理
-function Dashboard() {
-  return (
-    <Suspense fallback={<Spinner />}>
-      <UserProfile />
-      <UserPosts />
-      <UserStats />
-    </Suspense>
-  );
-}
+// ...
 ```
 
-- hooksベースとの本質的な違い：hooksは各コンポーネントがLoadingを自己解決する、Suspenseは境界がLoadingを代理解決する。Loading体験の責務の所在が異なる
-- Suspense境界の設計指針：境界の粒度でUXをコントロールできる
-- 注意：Suspenseも乱用すれば（全コンポーネントを個別のSuspense境界で囲むなど）ポップコーンUIになりうる。銀の弾丸ではないが、hooksベースに比べてLoading体験の単位が明示的なため、問題に意識が向きやすい
+TODO: gif - Suspense版のデモ（境界単位で一括表示される様子）。ポップコーンUI版との対比
 
-- TODO: gif - Suspense版のデモ（境界単位で一括表示される様子）。ポップコーンUI版との対比
+この場合、開発者（もしくはAI Agent）はローディング状態をどの単位で表示するか考えることになります。`useQuery()`ではコンポーネントに閉じるように実装しようとすると自然とポップコーンUIになってしまいましたが、`useSuspenseQuery()`を利用すると自然とSuspense境界やローディング体験を意識することになります。
 
-### Waterfall（注意点）
-
-- SuspenseでもWaterfallは起きうる（Suspense/hooks共通の注意点）
-- ネストしたコンポーネントで順次fetchすると、親のSuspendが解決されるまで子のfetchが開始されない
-- 対策：並列fetch（`Promise.all`、Tanstack Queryの`prefetchQuery`、Next.jsのServer Componentsでの並列fetchなど）
-
-```tsx
-// Tanstack Query: ルートやローダーで事前にfetchを開始する
-async function dashboardLoader(queryClient: QueryClient) {
-  await Promise.all([
-    queryClient.prefetchQuery({ queryKey: ["user"], queryFn: fetchUser }),
-    queryClient.prefetchQuery({ queryKey: ["posts"], queryFn: fetchPosts }),
-    queryClient.prefetchQuery({ queryKey: ["stats"], queryFn: fetchStats }),
-  ]);
-}
-```
-
-```tsx
-// Next.js Server Components: サーバー側で並列fetchする
-async function Dashboard() {
-  const [user, posts, stats] = await Promise.all([
-    fetchUser(),
-    fetchPosts(),
-    fetchStats(),
-  ]);
-
-  return (
-    <div>
-      <UserProfile user={user} />
-      <UserPosts posts={posts} />
-      <UserStats stats={stats} />
-    </div>
-  );
-}
-```
+このように、`<Suspense>`はローディング体験を統合的に考えやすい設計となっています。ただし、各コンポーネントを個別の`<Suspense>`で囲めばポップコーンUIと同じ結果になるので、乱用には注意が必要です。
 
 ## フレームワーク
 
