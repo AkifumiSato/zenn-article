@@ -22,7 +22,7 @@ published: false
 
 ポップコーンUIは冒頭で述べたように、UIがポップコーンのようにランダムに置き換わっていくような体験のことを指します。これはパフォーマンス観点では、Core Web Vitalsの1つである[Cumulative Layout Shift (CLS)](https://web.dev/articles/cls?hl=ja)という指標で定量化して計測可能です。
 
-TODO: gif - ポップコーンUIのデモ（スピナーがバラバラに解決される様子）
+![Popcorn UI](/images/popcorn-ui-anti-pattern/use-query-with-popcorn-ui.gif)
 
 ### 実装例
 
@@ -172,7 +172,7 @@ function UserProfile() {
 // ...
 ```
 
-TODO: gif - Suspense版のデモ（境界単位で一括表示される様子）。ポップコーンUI版との対比
+![1つのSuspense境界でローディングを配置した場合](/images/popcorn-ui-anti-pattern/suspense-with-single-loader.png)
 
 この場合、開発者（もしくはAI Agent）はローディング状態をどの単位で表示するか考えることになります。`useQuery()`ではコンポーネントに閉じるように実装しようとすると自然とポップコーンUIになってしまいましたが、`useSuspenseQuery()`を利用すると自然とSuspense境界やローディング体験を意識することになります。
 
