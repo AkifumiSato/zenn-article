@@ -20,15 +20,15 @@ published: true
 
 ## ポップコーンUI
 
-ポップコーンUIは冒頭で述べたように、UIがポップコーンのようにランダムに置き換わっていくような体験のことを指します。
+ポップコーンUIは、Layout Shiftを伴いながら徐々にUIが完成していく様子を指します。
 
 ![Popcorn UI](/images/popcorn-ui-anti-pattern/use-query-with-popcorn-ui.gif)
 
-これはパフォーマンス観点では、Core Web Vitalsの1つである[Cumulative Layout Shift (CLS)](https://web.dev/articles/cls?hl=ja)という指標で定量化して計測可能です。
+Layout Shiftは、Core Web Vitalsの1つである[Cumulative Layout Shift (CLS)](https://web.dev/articles/cls?hl=ja)という指標で定量的に計測可能です。
 
 ### 実装例
 
-以下は[Tanstack Query](https://tanstack.com/query/latest)を使ったポップコーンUIの実装例です。わかりやすくするために、DEMOの実装より簡素化しています。
+以下は[Tanstack Query](https://tanstack.com/query/latest)を使ったポップコーンUIの実装例です。わかりやすくするために、前述のgifで示したデモ実装より簡素化しています。
 
 ```tsx
 // 親はただ並べるだけ → 3つのスピナーがバラバラに解決される
@@ -174,7 +174,7 @@ function UserProfile() {
 // ...
 ```
 
-前述のDEMOにおいてこのような実装を行った場合、以下のようになります。
+前述のgifで示したデモにおいてこのような実装を行った場合、以下のようになります。
 
 ![1つのSuspense境界でローディングを配置した場合](/images/popcorn-ui-anti-pattern/suspense-with-single-loader.png)
 
