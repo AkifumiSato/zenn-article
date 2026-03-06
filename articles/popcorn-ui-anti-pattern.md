@@ -3,7 +3,7 @@ title: "ポップコーンUIとReact"
 emoji: "🍿"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["react", "ui"]
-published: false
+published: true
 ---
 
 ページアクセス時に複数のローディングスピナーがランダムに表示され、徐々にコンテンツに置き換わっていくような体験に遭遇したこと、もしくは実装した経験はあるでしょうか？ReactチームはこのようなUIを、ポップコーンが弾ける様子に例えて**ポップコーンUI**と揶揄しています。
@@ -20,13 +20,15 @@ published: false
 
 ## ポップコーンUI
 
-ポップコーンUIは冒頭で述べたように、UIがポップコーンのようにランダムに置き換わっていくような体験のことを指します。これはパフォーマンス観点では、Core Web Vitalsの1つである[Cumulative Layout Shift (CLS)](https://web.dev/articles/cls?hl=ja)という指標で定量化して計測可能です。
+ポップコーンUIは冒頭で述べたように、UIがポップコーンのようにランダムに置き換わっていくような体験のことを指します。
 
 ![Popcorn UI](/images/popcorn-ui-anti-pattern/use-query-with-popcorn-ui.gif)
 
+これはパフォーマンス観点では、Core Web Vitalsの1つである[Cumulative Layout Shift (CLS)](https://web.dev/articles/cls?hl=ja)という指標で定量化して計測可能です。
+
 ### 実装例
 
-以下は[Tanstack Query](https://tanstack.com/query/latest)を使ったポップコーンUIの実装例です。
+以下は[Tanstack Query](https://tanstack.com/query/latest)を使ったポップコーンUIの実装例です。わかりやすくするために、DEMOの実装より簡素化しています。
 
 ```tsx
 // 親はただ並べるだけ → 3つのスピナーがバラバラに解決される
@@ -76,7 +78,7 @@ function UserStats() {
 }
 ```
 
-このように、データを参照するコンポーネント内でデータフェッチを扱いつつ、ローディング状態を管理するとポップコーンUIになってしまいます。
+このように、データを参照するコンポーネント内でデータフェッチを扱いつつ、ローディング状態も管理するとポップコーンUIになってしまいます。
 
 ### Propsのバケツリレー問題
 
@@ -105,7 +107,7 @@ export default function DashboardPage() {
 }
 ```
 
-しかし、このような実装では親から子、もしくは孫やその子孫コンポーネントまでデータを引き回す必要があります。このように、上位のコンポーネントで中央集権的にデータフェッチを管理してPropsを引き回すことはPropsの**バケツリレー**（Props Drilling）と呼ばれ、冗長で認知負荷が高い実装になるため、古くから忌避されてきました。
+しかし、このような実装では親から子、もしくは孫やその子孫コンポーネントまでデータを引き回す必要があります。このように、上位のコンポーネントで中央集権的にデータフェッチを管理して、Propsを引き回すことはPropsの**バケツリレー**（Props Drilling）と呼ばれ、冗長で認知負荷が高い実装になるため、古くから忌避されてきました。
 
 バケツリレーを避けようとすると末端でデータフェッチを行うこととなりますが、そのままローディング状態を管理するとポップコーンUIになってしまいます。
 
@@ -115,7 +117,7 @@ Tanstack Queryにおいて、末端でデータフェッチを扱いつつ上位
 
 ### `useIsFetching()`
 
-`useIsFetching()`は、Tanstack Queryがデータフェッチを行っているかどうかを管理するhooksです。これを利用すると、ページ全体でデータフェッチを行っているかどうかを管理することができます。
+`useIsFetching()`は、Tanstack Queryがデータフェッチを行っているかどうかを監視するhooksです。これを利用すると、ページ全体でデータフェッチを行っているかどうかを管理することができます。
 
 ```tsx
 function Dashboard() {
@@ -133,13 +135,13 @@ function Dashboard() {
 }
 ```
 
-ただし、これはTanstack Query固有のhooksであり、データフェッチを扱う他ライブラリに必ずしも用意されてるわけではありません。例えば[SWR](https://swr.vercel.app/ja)には同様のhooksは用意されていません。そのため、ライブラリによっては自作しないと末端のデータフェッチと統合的なローディング管理は難しい可能性があります。
+ただし、これはTanstack Query固有のhooksであり、データフェッチを扱う他ライブラリに必ずしも用意されているわけではありません。例えば[SWR](https://swr.vercel.app/ja)には同様のhooksは用意されていないため、自作しないと末端のデータフェッチと統合的なローディング管理はできないと思われます。
 
-また、このようなhooksの利用はあくまで開発者側が意図的にポップコーンUIを避ける意識が必要です。
+また、このようなhooksを利用するには、開発者側が意図的にポップコーンUIをアンチパターンとして認識して避ける意識が必要となります。
 
 ### `<Suspense>`
 
-[`<Suspense>`](https://ja.react.dev/reference/react/Suspense)はReactでデータフェッチを扱うための組み込みコンポーネントで、レンダリングの中断や再開、フォールバックUIなどを扱うことができます。`<Suspense>`を利用すると、開発者はローディング状態の管理をhooksベースではなく境界単位で考えることが強制されます。
+[`<Suspense>`](https://ja.react.dev/reference/react/Suspense)はReactにデータフェッチを統合するための組み込みコンポーネントで、レンダリングの中断や再開、フォールバックUIなどを扱うことができます。`<Suspense>`を利用すると、開発者はローディング状態の管理を境界単位で考えることになります。
 
 :::message
 より詳細に`<Suspense>`について知りたい方は、uhyoさんの[jotaiによるReact再入門 - Suspenseの基本](https://zenn.dev/uhyo/books/learn-react-with-jotai/viewer/suspense-basics)がわかりやすいと思うので、ご参照ください。
@@ -172,17 +174,19 @@ function UserProfile() {
 // ...
 ```
 
+前述のDEMOにおいてこのような実装を行った場合、以下のようになります。
+
 ![1つのSuspense境界でローディングを配置した場合](/images/popcorn-ui-anti-pattern/suspense-with-single-loader.png)
 
 この場合、開発者（もしくはAI Agent）はローディング状態をどの単位で表示するか考えることになります。`useQuery()`ではコンポーネントに閉じるように実装しようとすると自然とポップコーンUIになってしまいましたが、`useSuspenseQuery()`を利用すると自然とSuspense境界やローディング体験を意識することになります。
 
-このように、`<Suspense>`はローディング体験を統合的に考えやすい設計となっています。ただし、各コンポーネントを個別の`<Suspense>`で囲めばポップコーンUIと同じ結果になるので、乱用には注意が必要です。
+このように、`<Suspense>`はローディング体験を統合的に考えやすい設計となっています。ただし、**各コンポーネントを個別の`<Suspense>`で囲めばポップコーンUIになる**ので、乱用には注意が必要です。
 
 ## Next.jsでの考え方
 
-この記事ではNext.jsを例に、メタフレームワークにおけるポップコーンUI対策について解説します。
+メタフレームワークにおけるポップコーンUIの考え方についても、[Next.js](https://nextjs.org/docs)を例に解説します。
 
-[Next.js](https://nextjs.org/docs)は[React Server Components↗︎](https://ja.react.dev/learn/creating-a-react-app#which-features-make-up-the-react-teams-full-stack-architecture-vision)をサポートしているため、Server Componentsでより直感的にデータフェッチを扱うことができます。
+Next.jsは[React Server Components](https://ja.react.dev/learn/creating-a-react-app#which-features-make-up-the-react-teams-full-stack-architecture-vision)をサポートしているため、Server Componentsでより直感的にデータフェッチを扱うことができます。
 
 ```tsx
 export default function Dashboard() {
@@ -225,7 +229,7 @@ async function UserStats() {
 Next.jsにおける`<Suspense>`の活用については、[Next.jsの考え方 - SuspenseとStreaming](https://zenn.dev/akfm/books/nextjs-basic-principle/viewer/part_4_suspense_and_streaming)で詳しく解説しているので、ご参照ください。
 :::
 
-このように、Next.jsなどメタフレームワーク側でデータフェッチの統合的なローディング体験をサポートしていることは、ポップコーンUIを避けるための一助となります。
+このように、Next.jsなどメタフレームワーク側でデータフェッチの統合的なローディング体験の実装をサポートしている場合、ポップコーンUIを避けるための一助となります。
 
 ## 私見
 
@@ -233,12 +237,12 @@ Tanstack Queryなどのライブラリレベルでは、`useIsFetching()`や`use
 
 一方、`<Suspense>`は境界の実装であり、データを消費するコンポーネントの外でローディングの配置を考えることになります。hooksでは意図して防ぐ必要があるのに対し、`<Suspense>`は自然と考える余地が生まれるため、ポップコーンUIを避ける上でより適切な抽象化と考えられます。ただし、`<Suspense>`を乱用すればポップコーンUIになるのは同様なので、アンチパターンとしての認識は前提として重要です。
 
-Next.jsなどメタフレームワークの規約に基づいたローディング体験は、開発者が意識せずとも統合的なローディングに導かれやすい設計になっています。AI Agent時代においては特に、開発者が意識すべきことが少ないことは大きなメリットとなるため、ポップコーンUIなどを防ぐ観点でもメタフレームワークを使うことの意義は大きいと考えられます。
+Next.jsなどメタフレームワークの規約に基づいたローディング体験は、開発者が意識せずとも統合的なローディングに導かれやすい設計になっています。AI Agent時代においては特に、開発者が意識すべきことが少ないことは大きなメリットとなるため、ポップコーンUIなどを防ぐ観点でもメタフレームワークを使うことの意義は大きいと考えられます。また、Next.jsにおいては必要な時にしかローダーを表示しないよう工夫されているため、ローディングを表示する実装ではなく**必要な時に表示されるローディングの実装**を開発者が提供すればいいという点は、UX観点でも非常に優れていると思います。
 
 ## 考察
 
-Reactは登場当初、設計思想として`UI = f(state)`という式でUIを表現していました。jQuery全盛の時代で、手続的なJavaScript実装が主流だった当時、この式は非常に革命的でした。この設計思想においてデータフェッチを統合するには、ローディングを状態として扱う必要があり、ポップコーンUI実装の構造的な原因となっていました。
+Reactは登場当初、設計思想として`UI = f(state)`という式でUIを表現していました。jQuery全盛の時代で、手続的なJavaScript実装が主流だった当時、この式は非常に革命的でした。この設計思想においてデータフェッチを統合するには、ローディングを状態として扱う必要があり、ポップコーンUIが生まれる構造的な原因となっていました。
 
-Reactはその後、データフェッチをReactに統合する方向を模索し、その結果生まれたのが`<Suspense>`です。`<Suspense>`は`UI = f(state)`で表しきれなかったデータフェッチを補う抽象化であり、データフェッチを状態として扱うのではなく、レンダリングの中断と再開によって統合します。2025年のReact Confで発表された[Async React](https://www.youtube.com/watch?v=B_2E96URooA)では、`await UI = await f(await state)`という式が紹介されました。この式はUIそのものを非同期的なものとして再定義しており、昨今のReactの考え方を適切に表現していると考えられます。
+Reactはその後、データフェッチをReactに統合する方向を模索し、その結果生まれたのが`<Suspense>`です。`<Suspense>`は`UI = f(state)`で表しきれなかったデータフェッチを補う抽象化であり、データフェッチを状態として扱うのではなく、レンダリングの中断と再開によって統合します。
 
-このように、Reactはより良いUXを追求しており、その抽象化をReactに反映してきました。我々開発者は、ReactのAPIを学ぶだけではなく、Reactが抽象化しようとしてるより良いUXについても学ぶことが、AI Agent時代においてはより重要なのかもしれません。
+2025年のReact Confで発表された[Async React](https://www.youtube.com/watch?v=B_2E96URooA)では`await UI = await f(await state)`という式がReactチームより紹介されました。この式はUIそのものを非同期的なものとして再定義しており、昨今のReactの考え方を適切に表現していると考えられます。このように、Reactはより良いUXを追求しており、その抽象化をReactに反映してきました。AI Agent時代において重要なのは、ReactのAPIを学ぶだけではなく、ReactのAPIの背景にある考え方や価値観の理解そのものかもしれません。
