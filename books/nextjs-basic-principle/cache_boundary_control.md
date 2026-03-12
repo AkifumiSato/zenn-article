@@ -8,7 +8,7 @@ title: "Cacheの境界と制御"
 
 ## 背景
 
-[明示的で合成可能なCache戦略](explicit_cache_composability)で解説したように、Cache Componentsでは`"use cache"`を関数やファイルで宣言することで関数やコンポーネントが**Cache可能である**ことを表明します。
+[明示的で合成可能なCache戦略](explicit_cache_composability)で解説したように、Cache Componentsでは`"use cache"`を関数やファイルで宣言することで、関数やコンポーネントが**Cache可能である**ことを表明します。
 
 ```tsx
 async function PostContainer({ slug }: { slug: string }) {
