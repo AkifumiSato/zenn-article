@@ -26,10 +26,10 @@ chapters:
   - part_3_router_cache
   - part_3_data_mutation
   - part_3_1
-  - vision_of_cache_components
-  - cache_and_suspense
-  - use_cache_directive
-  - cache_stores_setting
+  - explicit_cache_composability
+  - dynamic_content_boundary
+  - cache_boundary_control
+  - remote_cache
   - part_4
   - part_4_pure_server_components
   - part_4_suspense_and_streaming

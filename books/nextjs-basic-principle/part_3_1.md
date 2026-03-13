@@ -1,12 +1,10 @@
 ---
-title: "第3.1部 Cache Components"
+title: "第3.1部 Cache Componentsの考え方"
 ---
 
-- Cache Componentsはv16で導入された、新たなCache戦略に基づく機能群を有効にする機能フラグ
-- v14で発表されたPPRやv15で発表されたDynamic IO・`"use cache"`などを統合し、1つの世界観として整理されたもの
-- 執筆時時点では将来的にデフォルトになるのかどうかなどは不明だが、Cache Componentsが従来のCache戦略と比べて非常に洗練された設計であると筆者は感じている
+[Cache Components↗︎](https://nextjs.org/docs/app/getting-started/cache-components)はv16で導入された機能フラグで、v14~15で実験的機能だったPPR・Dynamic IO・`"use cache"`などを統合したものです。Cache Componentsは、従来のCache戦略の課題を根本解決すべく再設計されており、優れたパフォーマンスと開発者体験を実現しています。
 
-第3.1部では、Cache ComponentsのCache戦略について解説します。
+第3.1部では、Cache Componentsについて解説します。
 
 :::message
 Cache ComponentsのCache戦略は従来のものとは全く異なるため、第3部とは同テーマながら別物であることを表現するため、第3.1部としています。
