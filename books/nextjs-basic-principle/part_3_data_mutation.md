@@ -18,7 +18,7 @@ Pages Routerではデータ取得のために[`getServerSideProps()`↗︎](http
 - [tRPC↗︎](https://trpc.io/)
 - etc...
 
-しかし、API RouteはApp Routerにおいて[Route Handler↗︎](https://nextjs.org/docs/app/api-reference/file-conventions/route)となり、定義の方法や参照できる情報などが変更されました。また、App Routerは多層のキャッシュを活用しているため、データ操作時にはキャッシュのrevalidate機能との統合が必要となるため、上記にあげたライブラリや実装パターンをApp Routerで利用するには多くの工夫や実装が必要となります。
+しかし、API RouteはApp Routerにおいて[Route Handlers↗︎](https://nextjs.org/docs/app/api-reference/file-conventions/route)となり、定義の方法や参照できる情報などが変更されました。また、App Routerは多層のキャッシュを活用しているため、データ操作時にはキャッシュのrevalidate機能との統合が必要となるため、上記にあげたライブラリや実装パターンをApp Routerで利用するには多くの工夫や実装が必要となります。
 
 ## 設計・プラクティス
 
@@ -122,10 +122,10 @@ https://zenn.dev/akfm/articles/server-actions-with-conform
 
 Server Actionsは基本的にサイト内でのみ利用することが可能ですが、データ操作がサイト内でのみ発生するとは限りません。具体的にはヘッドレスCMSでのデータ更新など、サイト外でデータ操作が発生した場合にも、Next.jsで保持しているキャッシュをrevalidateする必要があります。
 
-Route Handlerが`revalidatePath()`などを扱えるのはまさに上記のようなユースケースをフォローするためです。サイト外でデータ操作が行われた時には、Route Handlerで定義したAPIをWeb hookで呼び出すなどしてキャッシュをrevalidateしましょう。
+Route Handlersが`revalidatePath()`などを扱えるのはまさに上記のようなユースケースをフォローするためです。サイト外でデータ操作が行われた時には、Route Handlersで定義したAPIをWeb hookで呼び出すなどしてキャッシュをrevalidateしましょう。
 
 :::message
-Router Cacheはユーザー端末のインメモリに保存されており、全ユーザーのRouter Cacheを一括で破棄する方法はありません。上記の方法で破棄できるのは、サーバー側キャッシュのData CacheとFull Route Cacheのみです。
+Router Cacheはユーザー端末のインメモリに保存されており、全ユーザーのRouter Cacheを一括で破棄する方法はありません。上記の方法で破棄できるのは、サーバーサイドキャッシュのData CacheとFull Route Cacheのみです。
 :::
 
 ### ブラウザバックにおけるスクロール位置の喪失

@@ -137,7 +137,7 @@ export default function SearchBar() {
 
 #### `headers()`
 
-[`headers()`↗︎](https://nextjs.org/docs/app/api-reference/functions/headers)は、リクエストヘッダーを参照するための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
+[`headers()`↗︎](https://nextjs.org/docs/app/api-reference/functions/headers)は、リクエストヘッダーを参照するための関数です。この関数はServer Componentsなどのサーバーサイド処理でのみ利用することができます。
 
 ```tsx
 import { headers } from "next/headers";
@@ -154,10 +154,10 @@ export default async function Page() {
 
 #### `cookies()`
 
-[`cookies()`↗︎](https://nextjs.org/docs/app/api-reference/functions/cookies)は、Cookie情報の参照や変更を担うオブジェクトを取得するための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
+[`cookies()`↗︎](https://nextjs.org/docs/app/api-reference/functions/cookies)は、Cookie情報の参照や変更を担うオブジェクトを取得するための関数です。この関数はServer Componentsなどのサーバーサイド処理でのみ利用することができます。
 
 :::message
-Cookieの`.set()`や`.delete()`といった操作は、Server ActionsやRoute Handlerでのみ利用でき、Server Componentsでは利用できません。詳しくは[Server Componentsの純粋性](part_4_pure_server_components)を参照ください。
+Cookieの`.set()`や`.delete()`といった操作は、Server ActionsやRoute Handlersでのみ利用でき、Server Componentsでは利用できません。詳しくは[Server Componentsの純粋性](part_4_pure_server_components)を参照ください。
 :::
 
 ```tsx :app/page.tsx
@@ -211,7 +211,7 @@ export default async function Profile({ params }: { params: { id: string } }) {
 
 #### `redirect()`
 
-[`redirect()`↗︎](https://nextjs.org/docs/app/api-reference/functions/redirect)は、リダイレクトを行うための関数です。この関数はServer ComponentsやClient Components、Server FunctionsやRouter Handlerなど、多くの場所で利用できます。
+[`redirect()`↗︎](https://nextjs.org/docs/app/api-reference/functions/redirect)は、リダイレクトを行うための関数です。この関数はServer ComponentsやClient Components、Server FunctionsやRoute Handlersなど、多くの場所で利用できます。
 
 ```tsx
 import { redirect } from "next/navigation";
@@ -230,7 +230,7 @@ export default async function Profile({ params }: { params: { id: string } }) {
 
 #### `permanentRedirect()`
 
-[`permanentRedirect()`↗︎](https://nextjs.org/docs/app/api-reference/functions/permanentRedirect)は、永続的なリダイレクトを行うための関数です。この関数はServer ComponentsやClient Components、Server FunctionsやRouter Handlerなど、多くの場所で利用できます。
+[`permanentRedirect()`↗︎](https://nextjs.org/docs/app/api-reference/functions/permanentRedirect)は、永続的なリダイレクトを行うための関数です。この関数はServer ComponentsやClient Components、Server FunctionsやRoute Handlersなど、多くの場所で利用できます。
 
 ```tsx
 import { permanentRedirect } from "next/navigation";
@@ -249,7 +249,7 @@ export default async function Profile({ params }: { params: { id: string } }) {
 
 ### `unauthorized()`
 
-[`unauthorized()`↗︎](https://nextjs.org/docs/app/api-reference/functions/unauthorized)は認証エラーを示すための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
+[`unauthorized()`↗︎](https://nextjs.org/docs/app/api-reference/functions/unauthorized)は認証エラーを示すための関数です。この関数はServer Componentsなどのサーバーサイド処理でのみ利用することができます。
 
 :::message
 このAPIは執筆時現在、実験的機能です。
@@ -271,7 +271,7 @@ export default async function DashboardPage() {
 
 ### `forbidden()`
 
-[`forbidden()`↗︎](https://nextjs.org/docs/app/api-reference/functions/forbidden)は認可エラーを示すための関数です。この関数はServer Componentsなどのサーバー側処理でのみ利用することができます。
+[`forbidden()`↗︎](https://nextjs.org/docs/app/api-reference/functions/forbidden)は認可エラーを示すための関数です。この関数はServer Componentsなどのサーバーサイド処理でのみ利用することができます。
 
 :::message
 このAPIは執筆時現在、実験的機能です。

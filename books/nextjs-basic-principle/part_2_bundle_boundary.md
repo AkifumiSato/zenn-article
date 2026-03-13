@@ -14,7 +14,7 @@ Server Bundleでのみ利用可能なモジュールは、`server-only`を使っ
 
 ## 背景
 
-RSCは多段階計算^[参考: [一言で理解するReact Server Components↗︎](https://zenn.dev/uhyo/articles/react-server-components-multi-stage)]アーキテクチャであり、サーバー側処理とクライアント側処理の2段階計算で構成されます。これはつまり、バンドルもサーバーバンドル（**Server Bundle**）とクライアントバンドル（**Client Bundle**^[Next.jsの内部的には、Client Bundleはブラウザで実行されるCSR用とNode.jsで実行されるSSR/SSG用それぞれのバンドルファイルが作成されるようです]）の2つに分けられることを意味し、Server ComponentsやServer FunctionsはServer Bundleに、Client ComponentsはClient Bundleに含められます。
+RSCは多段階計算^[参考: [一言で理解するReact Server Components↗︎](https://zenn.dev/uhyo/articles/react-server-components-multi-stage)]アーキテクチャであり、サーバーサイド処理とクライアントサイド処理の2段階計算で構成されます。これはつまり、バンドルもサーバーバンドル（**Server Bundle**）とクライアントバンドル（**Client Bundle**^[Next.jsの内部的には、Client Bundleはブラウザで実行されるCSR用とNode.jsで実行されるSSR/SSG用それぞれのバンドルファイルが作成されるようです]）の2つに分けられることを意味し、Server ComponentsやServer FunctionsはServer Bundleに、Client ComponentsはClient Bundleに含められます。
 
 多くの人は、`"use client"`や`"use server"`などのディレクティブがバンドルに関する重要なルールであることは知っています。しかし、これらのディレクティブの役割については「実行環境を示すためのもの」と誤解されることがよくあるようです^[`"use server"`に関する誤解を発端とした議論例: [Dan Abramov氏のBlueSkyでのやりとり↗︎](https://bsky.app/profile/danabra.mov/post/3lnw334g5jc24)]。実際には、これらのディレクティブは**実行環境を示すものではありません**。
 

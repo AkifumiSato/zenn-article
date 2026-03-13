@@ -10,7 +10,7 @@ Router Cacheはクライアントサイドのキャッシュで、prefetch時や
 
 [Router Cache↗︎](https://nextjs.org/docs/app/guides/caching#client-side-router-cache)は、App Routerにおけるクライアントサイドキャッシュで、Server Componentsのレンダリング結果である[RSC Payload↗︎](https://nextjs.org/docs/app/getting-started/server-and-client-components#on-the-server)を保持しています。Router Cacheはprefetchやsoft navigation時に更新され、有効期間内であれば再利用されます。
 
-v14.1以前のApp RouterではRouter Cacheの有効期間を開発者から設定することはできず、`<Link>`の`prefetch`指定などに基づいてキャッシュの有効期限は**30秒か5分**とされていました。これに対しNext.jsリポジトリの[Discussion↗︎](https://github.com/vercel/next.js/discussions/54075)上では、Router Cacheをアプリケーション毎に適切に設定できるようにして欲しいという要望が相次いでいました。
+v14.1以前のApp RouterではRouter Cacheの有効期間を開発者から設定することはできず、`<Link>`の`prefetch`指定などに基づいてキャッシュの有効期間は**30秒か5分**とされていました。これに対しNext.jsリポジトリの[Discussion↗︎](https://github.com/vercel/next.js/discussions/54075)上では、Router Cacheをアプリケーション毎に適切に設定できるようにして欲しいという要望が相次いでいました。
 
 ## 設計・プラクティス
 
@@ -43,7 +43,7 @@ export default nextConfig;
 [#トレードオフ](#トレードオフ)にて後述しますが、実際にはRouter Cacheの動作は非常に複雑なためこの対応の限りではありません。
 :::
 
-多くの場合、変更を考えるべくは`dynamic`の方になります。v14では特に、デフォルトだと30sとなっているために多くの混乱が見られました。利用するNext.jsのバージョンごとの挙動に注意して、キャッシュの有効期限としてどこまで許容できるか考えて適切に設定しましょう。
+多くの場合、変更を考えるべくは`dynamic`の方になります。v14では特に、デフォルトだと30sとなっているために多くの混乱が見られました。利用するNext.jsのバージョンごとの挙動に注意して、キャッシュの有効期間としてどこまで許容できるか考えて適切に設定しましょう。
 
 ### 任意のタイミングでrevalidate
 
@@ -55,7 +55,7 @@ export default nextConfig;
 
 Router Cacheを任意のタイミングで破棄したい多くのユースケースは、ユーザーによるデータ操作時です。Server Actions内で`revalidatePath()`や`cookies.set()`を呼び出しているなら特に追加実装する必要はありません。一方これらを呼び出していない場合には、データ操作のsubmit完了後にClient Components側で`router.refresh()`を呼び出すなどの対応を行いましょう。
 
-特に`revalidatePath()`/`revalidateTag()`はサーバー側キャッシュだけでなくRouter Cacheにも影響を及ぼすことは直感的ではないので、よく覚えておきましょう。
+特に`revalidatePath()`/`revalidateTag()`はサーバーサイドキャッシュだけでなくRouter Cacheにも影響を及ぼすことは直感的ではないので、よく覚えておきましょう。
 
 :::message
 Router Cacheはクライアントサイドのキャッシュのため、上記によるキャッシュ破棄はあくまでユーザー端末内で起こります。**全ユーザーのRouter Cacheを同時に破棄する方法はありません**。

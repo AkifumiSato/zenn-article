@@ -96,7 +96,7 @@ https://nextjs.org/docs/app/api-reference/functions/cookies
 
 ### Request Memoizationのオプトアウト
 
-Request Memoizationは`fetch()`を拡張することで実現しています。`fetch()`の拡張をやめるようなオプトアウト手段は現状ありません。ただし、`fetch()`に渡す引数次第でRequest Memoizationをオプトアプトして都度データフェッチすることは可能です。
+Request Memoizationは`fetch()`を拡張することで実現しています。`fetch()`の拡張をやめるようなオプトアウト手段は現状ありません。ただし、`fetch()`に渡す引数次第でRequest Memoizationをオプトアウトして都度データフェッチすることは可能です。
 
 ```ts
 // クエリー文字列にランダムな値を付与する
