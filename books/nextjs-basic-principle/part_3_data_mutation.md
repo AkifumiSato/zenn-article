@@ -59,7 +59,7 @@ export default function CreateTodo() {
 
 ### キャッシュのrevalidate
 
-Next.jsは多層のキャッシュを活用しているため、データ操作時には関連するキャッシュのrevalidateが必要になります。Server Actions内で[`revalidatePath()`↗︎](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`↗︎](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を呼び出すと、サーバーサイドの関連するキャッシュ([Data Cache↗︎](https://nextjs.org/docs/app/guides/caching#data-cache)や[Full Route Cache↗︎](https://nextjs.org/docs/app/guides/caching#full-route-cache))とクライアントサイドのキャッシュ([Router Cache↗︎](https://nextjs.org/docs/app/guides/caching#client-side-router-cache))がrevalidateされます。
+Next.jsは多層のキャッシュを活用しているため、データ操作時には関連するキャッシュのrevalidateが必要になります。Server Actions内で[`revalidatePath()`↗︎](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`↗︎](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を呼び出すと、サーバーサイドの関連するキャッシュ（[Data Cache↗︎](https://nextjs.org/docs/app/guides/caching#data-cache)や[Full Route Cache↗︎](https://nextjs.org/docs/app/guides/caching#full-route-cache)）とクライアントサイドのキャッシュ（[Router Cache↗︎](https://nextjs.org/docs/app/guides/caching#client-side-router-cache)）がrevalidateされます。
 
 ```tsx :app/actions.ts
 "use server";
@@ -112,7 +112,7 @@ https://developer.mozilla.org/ja/docs/Glossary/Progressive_Enhancement
 
 :::
 
-これにより、[FID↗︎](https://web.dev/articles/fid?hl=ja)(First Input Delay)の向上も見込めます。実際のアプリケーション開発においては、Formライブラリを利用しつつServer Actionsを利用するケースが多いと思われるので、筆者はJavaScript非動作時もサポートしてるFormライブラリの[Conform↗︎](https://conform.guide/)をおすすめします。
+これにより、[FID↗︎](https://web.dev/articles/fid?hl=ja)（First Input Delay）の向上も見込めます。実際のアプリケーション開発においては、Formライブラリを利用しつつServer Actionsを利用するケースが多いと思われるので、筆者はJavaScript非動作時もサポートしてるFormライブラリの[Conform↗︎](https://conform.guide/)をおすすめします。
 
 https://zenn.dev/akfm/articles/server-actions-with-conform
 
