@@ -8,7 +8,7 @@ Static Renderingでは、HTMLやRSC PayloadのキャッシュであるFull Route
 
 ## 背景
 
-Next.jsは、従来Pages Routerで[SSR↗︎](https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering)・[SSG↗︎](https://nextjs.org/docs/pages/building-your-application/rendering/static-site-generation)・[ISR↗︎](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)という3つのレンダリングモデル^[[こちらの記事↗︎](https://vercel.com/blog/partial-prerendering-with-next-js-creating-a-new-default-rendering-model)より引用。レンダリング戦略とも呼ばれます。]をサポートしてきました。App Routerでは上記相当のレンダリングをサポートしつつ、revalidateがより整理され、SSGとISRを大きく区別せずまとめて**Static Rendering**、従来のSSR相当を**Dynamic Rendering**と呼称する形で[サーバー側レンダリングが再定義↗︎](https://nextjs.org/docs/app/getting-started/linking-and-navigating#server-rendering)されました。
+Next.jsは、従来Pages Routerで[SSR↗︎](https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering)・[SSG↗︎](https://nextjs.org/docs/pages/building-your-application/rendering/static-site-generation)・[ISR↗︎](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)という3つのレンダリングモデル^[[こちらの記事↗︎](https://vercel.com/blog/partial-prerendering-with-next-js-creating-a-new-default-rendering-model)より引用。レンダリング戦略とも呼ばれます。]をサポートしてきました。App Routerでは上記相当のレンダリングをサポートしつつ、revalidateがより整理され、SSGとISRを大きく区別せずまとめて**Static Rendering**、従来のSSR相当を**Dynamic Rendering**と呼称する形で[サーバーサイドレンダリングが再定義↗︎](https://nextjs.org/docs/app/getting-started/linking-and-navigating#server-rendering)されました。
 
 | レンダリング          | タイミング            | Pages Routerとの比較 |
 | --------------------- | --------------------- | -------------------- |
@@ -131,7 +131,7 @@ export const revalidate = 10; // 10s
 重複になりますが、`layout.tsx`に`revalidate`を設定するとLayoutが利用される下層ページにも適用されるため、注意しましょう。
 :::
 
-例えば1秒などの非常に短い時間でも設定すれば、瞬間的に非常に多くのリクエストが発生したとしてもレンダリングは1回で済むため、バックエンドAPIへの負荷軽減や安定したパフォーマンスに繋がります。更新頻度が非常に高いページでもユーザー間で共有できる(=ユーザー固有の情報などを含まない)のであれば、設定を検討しましょう。
+例えば1秒などの非常に短い時間でも設定すれば、瞬間的に非常に多くのリクエストが発生したとしてもレンダリングは1回で済むため、バックエンドAPIへの負荷軽減や安定したパフォーマンスに繋がります。更新頻度が非常に高いページでもユーザー間で共有できる（=ユーザー固有の情報などを含まない）のであれば、設定を検討しましょう。
 
 ## トレードオフ
 

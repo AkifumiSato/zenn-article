@@ -25,7 +25,7 @@ Client Componentsを使うべき代表的なユースケースを覚えておき
 最もわかりやすくClient Componentsが必要な場合は、クライアントサイド処理を必要とする場合です。以下のような場合が考えられます。
 
 - `onClick()`や`onChange()`といったイベントハンドラの利用
-- 状態hooks(`useState()`や`useReducer()`など)やライフサイクルhooks(`useEffect()`など)の利用
+- 状態hooks（`useState()`や`useReducer()`など）やライフサイクルhooks（`useEffect()`など）の利用
 - ブラウザAPIの利用
 
 ```tsx

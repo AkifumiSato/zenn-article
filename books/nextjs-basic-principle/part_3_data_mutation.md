@@ -18,7 +18,7 @@ Pages Routerではデータ取得のために[`getServerSideProps()`↗︎](http
 - [tRPC↗︎](https://trpc.io/)
 - etc...
 
-しかし、API RouteはApp Routerにおいて[Route Handler↗︎](https://nextjs.org/docs/app/api-reference/file-conventions/route)となり、定義の方法や参照できる情報などが変更されました。また、App Routerは多層のキャッシュを活用しているため、データ操作時にはキャッシュのrevalidate機能との統合が必要となるため、上記にあげたライブラリや実装パターンをApp Routerで利用するには多くの工夫や実装が必要となります。
+しかし、API RouteはApp Routerにおいて[Route Handlers↗︎](https://nextjs.org/docs/app/api-reference/file-conventions/route)となり、定義の方法や参照できる情報などが変更されました。また、App Routerは多層のキャッシュを活用しているため、データ操作時にはキャッシュのrevalidate機能との統合が必要となるため、上記にあげたライブラリや実装パターンをApp Routerで利用するには多くの工夫や実装が必要となります。
 
 ## 設計・プラクティス
 
@@ -59,7 +59,7 @@ export default function CreateTodo() {
 
 ### キャッシュのrevalidate
 
-Next.jsは多層のキャッシュを活用しているため、データ操作時には関連するキャッシュのrevalidateが必要になります。Server Actions内で[`revalidatePath()`↗︎](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`↗︎](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を呼び出すと、サーバーサイドの関連するキャッシュ([Data Cache↗︎](https://nextjs.org/docs/app/guides/caching#data-cache)や[Full Route Cache↗︎](https://nextjs.org/docs/app/guides/caching#full-route-cache))とクライアントサイドのキャッシュ([Router Cache↗︎](https://nextjs.org/docs/app/guides/caching#client-side-router-cache))がrevalidateされます。
+Next.jsは多層のキャッシュを活用しているため、データ操作時には関連するキャッシュのrevalidateが必要になります。Server Actions内で[`revalidatePath()`↗︎](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)や[`revalidateTag()`↗︎](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)を呼び出すと、サーバーサイドの関連するキャッシュ（[Data Cache↗︎](https://nextjs.org/docs/app/guides/caching#data-cache)や[Full Route Cache↗︎](https://nextjs.org/docs/app/guides/caching#full-route-cache)）とクライアントサイドのキャッシュ（[Router Cache↗︎](https://nextjs.org/docs/app/guides/caching#client-side-router-cache)）がrevalidateされます。
 
 ```tsx :app/actions.ts
 "use server";
@@ -112,7 +112,7 @@ https://developer.mozilla.org/ja/docs/Glossary/Progressive_Enhancement
 
 :::
 
-これにより、[FID↗︎](https://web.dev/articles/fid?hl=ja)(First Input Delay)の向上も見込めます。実際のアプリケーション開発においては、Formライブラリを利用しつつServer Actionsを利用するケースが多いと思われるので、筆者はJavaScript非動作時もサポートしてるFormライブラリの[Conform↗︎](https://conform.guide/)をおすすめします。
+これにより、[FID↗︎](https://web.dev/articles/fid?hl=ja)（First Input Delay）の向上も見込めます。実際のアプリケーション開発においては、Formライブラリを利用しつつServer Actionsを利用するケースが多いと思われるので、筆者はJavaScript非動作時もサポートしてるFormライブラリの[Conform↗︎](https://conform.guide/)をおすすめします。
 
 https://zenn.dev/akfm/articles/server-actions-with-conform
 
@@ -122,10 +122,10 @@ https://zenn.dev/akfm/articles/server-actions-with-conform
 
 Server Actionsは基本的にサイト内でのみ利用することが可能ですが、データ操作がサイト内でのみ発生するとは限りません。具体的にはヘッドレスCMSでのデータ更新など、サイト外でデータ操作が発生した場合にも、Next.jsで保持しているキャッシュをrevalidateする必要があります。
 
-Route Handlerが`revalidatePath()`などを扱えるのはまさに上記のようなユースケースをフォローするためです。サイト外でデータ操作が行われた時には、Route Handlerで定義したAPIをWeb hookで呼び出すなどしてキャッシュをrevalidateしましょう。
+Route Handlersが`revalidatePath()`などを扱えるのはまさに上記のようなユースケースをフォローするためです。サイト外でデータ操作が行われた時には、Route Handlersで定義したAPIをWeb hookで呼び出すなどしてキャッシュをrevalidateしましょう。
 
 :::message
-Router Cacheはユーザー端末のインメモリに保存されており、全ユーザーのRouter Cacheを一括で破棄する方法はありません。上記の方法で破棄できるのは、サーバー側キャッシュのData CacheとFull Route Cacheのみです。
+Router Cacheはユーザー端末のインメモリに保存されており、全ユーザーのRouter Cacheを一括で破棄する方法はありません。上記の方法で破棄できるのは、サーバーサイドキャッシュのData CacheとFull Route Cacheのみです。
 :::
 
 ### ブラウザバックにおけるスクロール位置の喪失

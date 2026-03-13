@@ -12,7 +12,7 @@ title: "Container/Presentationalパターン"
 
 ## 背景
 
-Reactコンポーネントのテストといえば[React Testing Library↗︎](https://testing-library.com/docs/react-testing-library/intro/)(RTL)や[Storybook↗︎](https://storybook.js.org/)などを利用することが主流ですが、本書執筆時点でこれらのRSC対応状況は芳しくありません。
+Reactコンポーネントのテストといえば[React Testing Library↗︎](https://testing-library.com/docs/react-testing-library/intro/)（RTL）や[Storybook↗︎](https://storybook.js.org/)などを利用することが主流ですが、本書執筆時点でこれらのRSC対応状況は芳しくありません。
 
 ### React Testing Library
 
@@ -78,7 +78,7 @@ export const Success = {
 
 ### 従来のContainer/Presentationalパターン
 
-Container/Presentationalパターンは元々、Flux全盛だったReact初期に提唱された設計手法です。データの読み取り・振る舞い(主にFluxのaction呼び出しなど)の定義をContainer Componentsが、データを参照し表示するのはPresentational Componentsが担うという責務分割がなされていました。
+Container/Presentationalパターンは元々、Flux全盛だったReact初期に提唱された設計手法です。データの読み取り・振る舞い（主にFluxのaction呼び出しなど）の定義をContainer Componentsが、データを参照し表示するのはPresentational Componentsが担うという責務分割がなされていました。
 
 :::message
 興味のある方は、当時Container/Presentationalパターンを提唱した[Dan Abramov氏の記事↗︎](https://medium.com/@dan_abramov/smart-and-dumb-components-7ca2f9a7c7d0)をご参照ください。
@@ -170,7 +170,7 @@ describe("PostAPIよりデータ取得成功時", () => {
 
 このように、コンポーネントを通常の関数のように実行すると`type`や`props`を得ることができるので、これらを元に期待値通りかテストすることができます。
 
-ただし、上記のようなテストは`ReactElement`の構造に強く依存してしまいFlaky(壊れやすい)なテストになってしまいます。そのため、実際には[こちらの記事↗︎](https://quramy.medium.com/react-server-component-%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8-container-presentation-separation-7da455d66576#:~:text=%E3%81%8A%E3%81%BE%E3%81%912%3A%20Container%20%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8%20JSX%20%E3%81%AE%E6%A7%8B%E9%80%A0)にあるように、`ReactElement`を扱うユーティリティの作成やスナップショットテストなどを検討すると良いでしょう。
+ただし、上記のようなテストは`ReactElement`の構造に強く依存してしまいFlaky（壊れやすい）なテストになってしまいます。そのため、実際には[こちらの記事↗︎](https://quramy.medium.com/react-server-component-%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8-container-presentation-separation-7da455d66576#:~:text=%E3%81%8A%E3%81%BE%E3%81%912%3A%20Container%20%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%81%A8%20JSX%20%E3%81%AE%E6%A7%8B%E9%80%A0)にあるように、`ReactElement`を扱うユーティリティの作成やスナップショットテストなどを検討すると良いでしょう。
 
 ```tsx
 describe("PostAPIよりデータ取得成功時", () => {
