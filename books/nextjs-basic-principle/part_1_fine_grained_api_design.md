@@ -7,7 +7,7 @@ title: "細粒度のREST API設計"
 バックエンドのAPI設計は、フロントエンドの設計にも大きく影響をもたらします。Next.jsに対するバックエンドAPIは細粒度な単位に分割されていることが望ましく、可能な限りこれを意識した設計を行いましょう。
 
 :::message alert
-このchapterの主題は「Next.jsが呼び出すバックエンドAPIの設計」です。「Next.jsの[Route Handler↗︎](https://nextjs.org/docs/app/api-reference/file-conventions/route)として実装するAPIの設計」ではないのでご注意ください。
+このchapterの主題は「Next.jsが呼び出すバックエンドAPIの設計」です。「Next.jsの[Route Handlers↗︎](https://nextjs.org/docs/app/api-reference/file-conventions/route)として実装するAPIの設計」ではないのでご注意ください。
 :::
 
 ## 背景

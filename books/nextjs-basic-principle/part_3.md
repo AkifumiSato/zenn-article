@@ -7,9 +7,9 @@ Next.jsには4層のキャッシュが存在し、デフォルトで積極的に
 | Mechanism               | What              | Where  | Purpose                                    | Duration                                |
 | ----------------------- | ----------------- | ------ | ------------------------------------------ | --------------------------------------- |
 | **Request Memoization** | APIレスポンスなど | Server | React Component treeにおけるデータの再利用 | リクエストごと                          |
-| **Data Cache**          | APIレスポンスなど | Server | ユーザーやデプロイをまたぐデータの再利用   | 永続的 (revalidate可)                   |
-| **Full Route Cache**    | HTMLやRSC payload | Server | レンダリングコストの最適化                 | 永続的 (revalidate可)                   |
-| **Router Cache**        | RSC Payload       | Client | ナビゲーションごとのリクエスト削減         | ユーザーセッション・時間 (revalidate可) |
+| **Data Cache**          | APIレスポンスなど | Server | ユーザーやデプロイをまたぐデータの再利用   | 永続的 （revalidate可）                   |
+| **Full Route Cache**    | HTMLやRSC payload | Server | レンダリングコストの最適化                 | 永続的 （revalidate可）                   |
+| **Router Cache**        | RSC Payload       | Client | ナビゲーションごとのリクエスト削減         | ユーザーセッション・時間 （revalidate可） |
 
 :::message
 Next.js v15で[キャッシュのデフォルト設定の見直し↗︎](https://nextjs.org/blog/next-15-rc#caching-updates)が行われ、従来ほど積極的なキャッシュは行われなくなりました。
