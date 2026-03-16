@@ -116,8 +116,8 @@ export default async function getUser() {
   "use cache: private";
 
   // ✅ `"use cache: private"`なら`cookies()`をコンポーネント内で直接利用可能
-  const cookies = await cookies();
-  const sessionId = cookies.get("session-id");
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get("session-id");
   const user = await fetch(`/api/user?sessionId=${sessionId}`);
   return user;
 }

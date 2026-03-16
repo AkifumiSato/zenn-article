@@ -205,7 +205,7 @@ export default async function ProductPage({
 
 ```tsx
 // page.tsx
-export default function ProductPage({
+export default async function ProductPage({
   params,
 }: {
   params: Promise<{ id: string }>;
