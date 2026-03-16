@@ -1,5 +1,5 @@
 ---
-title: "Cacheの境界と制御"
+title: "キャッシュの境界と制御"
 ---
 
 ## 要約
@@ -146,8 +146,8 @@ export default async function updatePost() {
 
 ```tsx
 export default function Page() {
-  // <CachedComponents>はCacheされる
-  // <NotCachedComponent>はchildrenなのでCacheされない
+  // <CachedComponents>はキャッシュされる
+  // <NotCachedComponent>はchildrenなのでキャッシュされない
   return (
     <CachedComponents>
       <NotCachedComponent />

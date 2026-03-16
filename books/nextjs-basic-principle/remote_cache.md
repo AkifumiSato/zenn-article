@@ -1,12 +1,12 @@
 ---
-title: "Cacheの保存先と共有"
+title: "キャッシュの保存先と共有"
 ---
 
 ## 要約
 
 Next.jsには`"use cache"`以外にも、`"use cache: remote"`や`"use cache: private"`というディレクティブが用意されています。これらはキャッシュの保存先がそれぞれ異なり、`"use cache"`と`"use cache: remote"`は`next.config.ts`などの`cacheHandlers`で保存先を設定することができます。
 
-CacheをRedisなどで永続化・共有したい場合には、`"use cache: remote"`を積極的に活用しましょう。
+キャッシュをRedisなどで永続化・共有したい場合には、`"use cache: remote"`を積極的に活用しましょう。
 
 ## 背景
 
@@ -85,7 +85,7 @@ export default nextConfig;
 
 ### `"use cache: {name}"`
 
-Cache保存先を複数用意したい場合には、`cacheHandlers`で任意の名前の保存先を設定しておくことで、`"use cache: {name}"`を利用することができます。以下は`"use cache: session"`の例です。
+キャッシュ保存先を複数用意したい場合には、`cacheHandlers`で任意の名前の保存先を設定しておくことで、`"use cache: {name}"`を利用することができます。以下は`"use cache: session"`の例です。
 
 ```ts :next.config.ts
 import type { NextConfig } from "next";
