@@ -32,7 +32,7 @@ Next.jsには、`"use cache"`以外にもキャッシュ関連のディレクテ
 
 ### `"use cache"`
 
-`"use cache"`は、Static ShellにDynamicな処理やコンポーネントを含めることを主なユースケースとして想定していますが、Dynamic Content内の一部から利用することも可能です。
+`"use cache"`は、Static Shellに動的な処理やコンポーネントを含めることを主なユースケースとして想定していますが、Dynamic Content内の一部から利用することも可能です。
 
 `"use cache"`の保存先は、デフォルトではインメモリとなっており、`next.config.ts`の`cacheHandlers.default`で設定することができます。
 

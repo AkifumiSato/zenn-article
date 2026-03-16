@@ -63,7 +63,7 @@ _RSCの世界観とNext.jsのキャッシュ_
 
 ### `"use cache"`のユースケース
 
-`"use cache"`は、Static ShellにDynamicな処理やコンポーネントを含めることを主なユースケースとして想定していますが、Dynamic Content内から参照することも可能で、この場合にはインメモリキャッシュ^[次章の[`cacheHandlers.default`](cache_stores_setting#use-cache-default)を設定することで、保存先を変更することができます。]のマーカーとして機能します。
+`"use cache"`は、Static Shellに動的な処理やコンポーネントを含めることを主なユースケースとして想定していますが、Dynamic Content内から参照することも可能で、この場合にはインメモリキャッシュ^[次章の[`cacheHandlers.default`](cache_stores_setting#use-cache-default)を設定することで、保存先を変更することができます。]のマーカーとして機能します。
 
 しかし、現代のホスティング環境は多くの場合複数プロセスで動作するため、インメモリなキャッシュはリクエスト間で共有できません。リクエスト間でキャッシュを共有したい場合には、`"use cache"`ではなく、次章で解説する[`"use cache: remote"`](cache_stores_setting)を利用しましょう。
 
