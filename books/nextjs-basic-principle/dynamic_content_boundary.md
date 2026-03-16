@@ -171,7 +171,7 @@ export default async function ProductPage({
 
 ### 下層Routeと共有される`layout.tsx`
 
-LayoutはRouteにおけるStatic Shell部分とみなすことが可能ですが、Next.jsのLayoutは[Nesting Layouts↗︎](https://nextjs.org/docs/app/getting-started/layouts-and-pages#nesting-layouts)なため、下層Routeと共有されることに注意が必要です。
+レイアウトはRouteにおけるStatic Shell部分とみなすことが可能ですが、Next.jsのレイアウトは[Nesting Layouts↗︎](https://nextjs.org/docs/app/getting-started/layouts-and-pages#nesting-layouts)なため、下層Routeと共有されることに注意が必要です。
 
 ```
 ./app/products/[id]/
@@ -201,7 +201,7 @@ LayoutはRouteにおけるStatic Shell部分とみなすことが可能ですが
 
 #### 明示的な`<Suspense>`境界
 
-Layoutは共有レイアウトのみを記述する場所と割り切り、Page内に`<Suspense>`境界を明示的に追加することも戦略として考えられます。
+レイアウトは共有レイアウトのみを記述する場所と割り切り、ページ内に`<Suspense>`境界を明示的に追加することも戦略として考えられます。
 
 ```tsx
 // page.tsx
