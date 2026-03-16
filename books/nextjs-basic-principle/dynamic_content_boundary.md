@@ -28,7 +28,7 @@ Dynamic Contentはネットワーク通信などを伴う動的な処理や、[R
 
 ### Cached Content
 
-Cached Contentは`"use cache"`が宣言された関数やコンポーネントはStatic Shellに含まれる以外にも、Dynamic Content内から参照することが可能です。この場合`"use cache"`は、デフォルトではインメモリキャッシュのマーカーとして機能します。
+Cached Contentは`"use cache"`が宣言された関数やコンポーネントで、Static Shellに含まれる以外にもDynamic Content内から参照することが可能です。この場合`"use cache"`は、デフォルトではインメモリキャッシュのマーカーとして機能します。
 
 ## 設計・プラクティス
 
@@ -100,7 +100,7 @@ export default async function PostPage({
 
 ページやレイアウトの一部のみが動的な場合には、明示的に`<Suspense>`境界を追加しましょう。
 
-先ほどのブログ記事ページの実装例において、`generateStaticParams()`を使って全ての`id`を事前に取得することができるとします^[現実的にbuild時解決が可能な量のデータである前提です。]。この場合、Pageに含まれるブログ記事の本文は一般的にキャッシュ可能である可能性が高いですが、記事のコメントはリアルタイム性が高いためキャッシュすべきでないと考えられます。
+先ほどのブログ記事ページの実装例において、`generateStaticParams()`を使って全ての`id`を事前に取得することができるとします^[現実的にbuild時解決が可能な量のデータである前提です。]。この場合、ページに含まれるブログ記事の本文は一般的にキャッシュ可能である可能性が高いですが、記事のコメントはリアルタイム性が高いためキャッシュすべきでないと考えられます。
 
 ```tsx
 // page.tsx: Static Shell+Dynamic Content

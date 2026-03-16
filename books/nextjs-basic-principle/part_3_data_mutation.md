@@ -18,7 +18,7 @@ Pages Routerではデータ取得のために[`getServerSideProps()`↗︎](http
 - [tRPC↗︎](https://trpc.io/)
 - etc...
 
-しかし、API RouteはApp Routerにおいて[Route Handlers↗︎](https://nextjs.org/docs/app/api-reference/file-conventions/route)となり、定義の方法や参照できる情報などが変更されました。また、App Routerは多層のキャッシュを活用しているため、データ操作時にはキャッシュのrevalidate機能との統合が必要となるため、上記にあげたライブラリや実装パターンをApp Routerで利用するには多くの工夫や実装が必要となります。
+しかし、API RoutesはApp Routerにおいて[Route Handlers↗︎](https://nextjs.org/docs/app/api-reference/file-conventions/route)となり、定義の方法や参照できる情報などが変更されました。また、App Routerは多層のキャッシュを活用しているため、データ操作時にはキャッシュのrevalidate機能との統合が必要となるため、上記にあげたライブラリや実装パターンをApp Routerで利用するには多くの工夫や実装が必要となります。
 
 ## 設計・プラクティス
 

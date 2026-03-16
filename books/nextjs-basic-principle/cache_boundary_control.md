@@ -131,9 +131,9 @@ export default async function updatePost() {
 
 ## トレードオフ
 
-### 自動で算出されるキャッシュのkey
+### 自動で算出されるキャッシュのキー
 
-`"use cache"`によるキャッシュのkeyは、Next.jsによって[自動で算出↗︎](https://nextjs.org/docs/app/api-reference/directives/use-cache#cache-keys)されます。
+`"use cache"`によるキャッシュのキーは、Next.jsによって[自動で算出↗︎](https://nextjs.org/docs/app/api-reference/directives/use-cache#cache-keys)されます。
 
 1. Build ID: 各ビルドごとに一意なID
 2. Function ID: コード内の関数の場所やシグネチャから計算される安全なハッシュ
@@ -147,7 +147,7 @@ export default async function updatePost() {
 ```tsx
 export default function Page() {
   // <CachedComponents>はキャッシュされる
-  // <NotCachedComponent>はchildrenなのでキャッシュされない
+  // <NotCachedComponent>はキャッシュされない
   return (
     <CachedComponents>
       <NotCachedComponent />
