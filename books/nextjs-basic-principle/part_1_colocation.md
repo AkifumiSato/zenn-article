@@ -12,7 +12,7 @@ title: "データフェッチ コロケーション"
 
 Pages Routerにおけるサーバーサイドでのデータフェッチは、[getServerSideProps↗︎](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)や[getStaticProps↗︎](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-static-props)などページコンポーネントの外側で非同期関数を宣言し、Next.jsが実行結果をpropsとしてページコンポーネントに渡すという設計がなされてました。
 
-これはいわゆる**バケツリレー**(Props Drilling)と呼ばれるpropsを親から子・孫へと渡していくような実装を必要とし、冗長で依存関係が広がりやすいというデメリットがありました。
+これはいわゆる**バケツリレー**（Props Drilling）と呼ばれるpropsを親から子・孫へと渡していくような実装を必要とし、冗長で依存関係が広がりやすいというデメリットがありました。
 
 ### 実装例
 
